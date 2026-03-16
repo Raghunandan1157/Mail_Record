@@ -10,18 +10,11 @@
 
     /* ===== LOGIN ===== */
     .login-screen {
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      min-height: 100vh; display: flex; align-items: center; justify-content: center;
       background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
     }
     .login-card {
-      background: #fff;
-      border-radius: 16px;
-      padding: 40px 44px;
-      width: 420px;
-      max-width: 95vw;
+      background: #fff; border-radius: 16px; padding: 40px 44px; width: 420px; max-width: 95vw;
       box-shadow: 0 8px 32px rgba(0,0,0,0.2);
     }
     .login-card h1 { font-size: 1.5rem; color: #0f3460; margin-bottom: 6px; }
@@ -33,23 +26,22 @@
     }
     .login-card select:focus, .login-card input:focus { outline: none; border-color: #0f3460; box-shadow: 0 0 0 3px rgba(15,52,96,0.1); }
     .login-error { color: #e74c3c; font-size: 0.85rem; margin-bottom: 12px; display: none; }
-    .login-profiles { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; max-height: 220px; overflow-y: auto; }
+    .login-profiles { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; max-height: 240px; overflow-y: auto; }
     .profile-card {
       display: flex; align-items: center; gap: 14px; padding: 12px 16px;
       border: 2px solid #e8ecf1; border-radius: 10px; cursor: pointer; transition: all 0.2s;
     }
     .profile-card:hover, .profile-card.selected { border-color: #0f3460; background: rgba(15,52,96,0.04); }
     .profile-card .avatar {
-      width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #0f3460, #16213e);
-      color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem; flex-shrink: 0;
+      width: 42px; height: 42px; border-radius: 50%; background: linear-gradient(135deg, #0f3460, #16213e);
+      color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; flex-shrink: 0;
     }
     .profile-card .info { flex: 1; }
     .profile-card .info .pname { font-weight: 600; font-size: 0.95rem; }
     .profile-card .info .prole { font-size: 0.78rem; color: #888; }
     .login-step { display: none; }
     .login-step.active { display: block; }
-    .temp-user-section { margin-bottom: 18px; }
-    .admin-link { text-align: center; margin-top: 16px; }
+    .admin-link { text-align: center; margin-top: 18px; }
     .admin-link a { color: #0f3460; font-size: 0.82rem; cursor: pointer; text-decoration: underline; }
     .otp-inputs { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; }
     .otp-inputs input {
@@ -57,6 +49,7 @@
       border: 2px solid #dde1e7; border-radius: 10px; background: #fafbfc;
     }
     .otp-inputs input:focus { border-color: #0f3460; outline: none; box-shadow: 0 0 0 3px rgba(15,52,96,0.1); }
+    .name-input-section { margin-bottom: 18px; }
 
     /* ===== HEADER ===== */
     header {
@@ -103,7 +96,6 @@
     /* ===== MAIN CONTENT ===== */
     .main-content { display: none; animation: fadeIn 0.3s ease; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
     .mode-badge {
       display: inline-block; padding: 4px 14px; border-radius: 20px; font-size: 0.72rem;
       font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-left: 10px; vertical-align: middle;
@@ -135,7 +127,6 @@
     }
     .form-group textarea { resize: vertical; min-height: 72px; }
     .form-actions { display: flex; gap: 10px; margin-top: 22px; }
-
     .btn {
       padding: 10px 26px; border: none; border-radius: 8px;
       font-size: 0.88rem; font-weight: 600; cursor: pointer; transition: all 0.2s;
@@ -181,10 +172,7 @@
     .admin-nav-btn:hover { border-color: #0f3460; color: #0f3460; }
     .admin-nav-btn.active { background: #0f3460; color: #fff; border-color: #0f3460; }
     .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 28px; }
-    .kpi-card {
-      background: #fff; border-radius: 12px; padding: 20px 24px; box-shadow: 0 1px 6px rgba(0,0,0,0.06);
-      text-align: center;
-    }
+    .kpi-card { background: #fff; border-radius: 12px; padding: 20px 24px; box-shadow: 0 1px 6px rgba(0,0,0,0.06); text-align: center; }
     .kpi-card .kpi-value { font-size: 2rem; font-weight: 700; color: #0f3460; }
     .kpi-card .kpi-label { font-size: 0.78rem; color: #888; text-transform: uppercase; letter-spacing: 0.4px; margin-top: 4px; }
     .admin-section { display: none; }
@@ -200,7 +188,6 @@
     .toast.info { background: #0f3460; }
     .toast.show { transform: translateY(0); opacity: 1; }
 
-    /* ===== RESPONSIVE ===== */
     @media (max-width: 700px) {
       .form-grid { grid-template-columns: 1fr; }
       header { padding: 14px 16px; }
@@ -216,7 +203,7 @@
 </head>
 <body>
 
-  <!-- ===== LOGIN SCREEN ===== -->
+  <!-- ===== LOGIN ===== -->
   <div class="login-screen" id="loginScreen">
     <div class="login-card">
       <!-- Step 1: Location -->
@@ -224,24 +211,21 @@
         <h1>Mail Record</h1>
         <p class="sub">Select your branch to continue</p>
         <label>Branch / Location</label>
-        <select id="loginLocation"><option value="">Loading...</option></select>
+        <select id="loginLocation"><option value="">Loading locations...</option></select>
         <div class="login-error" id="loginError1"></div>
-        <button class="btn btn-primary" style="width:100%" onclick="loginSelectLocation()">Continue</button>
+        <button class="btn btn-primary" style="width:100%" id="loginContinueBtn" onclick="loginSelectLocation()">Continue</button>
         <div class="admin-link"><a onclick="loginAdminStart()">Login as Admin</a></div>
       </div>
 
-      <!-- Step 2: Profile -->
+      <!-- Step 2: Profile Select -->
       <div class="login-step" id="loginStep2">
         <h1>Select Profile</h1>
         <p class="sub" id="loginStep2Sub">Choose your profile</p>
         <div class="login-profiles" id="loginProfiles"></div>
-        <div class="temp-user-section" id="tempUserSection" style="display:none">
-          <label>Your Name</label>
-          <input type="text" id="tempUserName" placeholder="Enter your full name">
-        </div>
+        <div class="name-input-section" id="nameInputSection" style="display:none"></div>
         <div class="login-error" id="loginError2"></div>
-        <button class="btn btn-primary" style="width:100%" onclick="loginConfirm()">Start Session</button>
-        <button class="btn btn-secondary" style="width:100%;margin-top:10px" onclick="loginGoBack(1)">Back</button>
+        <button class="btn btn-primary" style="width:100%" id="loginConfirmBtn" onclick="loginConfirm()">Start Session</button>
+        <button class="btn btn-secondary" style="width:100%;margin-top:10px" onclick="loginGoBack()">Back</button>
       </div>
 
       <!-- Step 3: Admin OTP -->
@@ -256,7 +240,7 @@
         </div>
         <div class="login-error" id="loginError3"></div>
         <button class="btn btn-primary" style="width:100%" onclick="loginVerifyOTP()">Verify</button>
-        <button class="btn btn-secondary" style="width:100%;margin-top:10px" onclick="loginGoBack(1)">Back</button>
+        <button class="btn btn-secondary" style="width:100%;margin-top:10px" onclick="loginGoBack()">Back</button>
       </div>
     </div>
   </div>
@@ -271,10 +255,9 @@
         <button class="header-btn" onclick="logout()">Logout</button>
       </div>
     </header>
-
     <div class="container">
 
-      <!-- ===== MODE SELECT (Regular User) ===== -->
+      <!-- Mode Select -->
       <div class="mode-select" id="modeSelect">
         <div class="mode-select-inner">
           <h2 class="mode-select-title">What would you like to record?</h2>
@@ -294,7 +277,7 @@
         </div>
       </div>
 
-      <!-- ===== MAIN CONTENT (Form + Table) ===== -->
+      <!-- Main Content -->
       <div class="main-content" id="mainContent">
         <div class="card">
           <h2 id="formTitle">New Record <span class="mode-badge" id="modeBadge"></span></h2>
@@ -310,8 +293,8 @@
                 <input type="text" id="employeeId" placeholder="e.g. EMP-1024" required>
               </div>
               <div class="form-group">
-                <label for="name" id="nameLabel">To</label>
-                <input type="text" id="name" placeholder="Recipient name" required>
+                <label for="recName" id="nameLabel">To</label>
+                <input type="text" id="recName" placeholder="Recipient name" required>
               </div>
               <div class="form-group">
                 <label for="dept">Department</label>
@@ -337,7 +320,6 @@
             </div>
           </form>
         </div>
-
         <div class="card">
           <div class="table-header">
             <div style="display:flex;align-items:center;gap:10px">
@@ -348,12 +330,10 @@
           </div>
           <div class="table-scroll">
             <table>
-              <thead>
-                <tr>
-                  <th>#</th><th>Date</th><th>Emp ID</th><th id="thName">To</th>
-                  <th>Dept</th><th id="thDocs">Documents Sent</th><th>Particular</th><th>Details</th><th>Actions</th>
-                </tr>
-              </thead>
+              <thead><tr>
+                <th>#</th><th>Date</th><th>Emp ID</th><th id="thName">To</th>
+                <th>Dept</th><th id="thDocs">Documents Sent</th><th>Particular</th><th>Details</th><th>Actions</th>
+              </tr></thead>
               <tbody id="tableBody"></tbody>
             </table>
           </div>
@@ -361,15 +341,13 @@
         </div>
       </div>
 
-      <!-- ===== ADMIN CONTENT ===== -->
+      <!-- Admin Content -->
       <div class="admin-content" id="adminContent">
         <div class="admin-nav">
-          <button class="admin-nav-btn active" onclick="adminNav('dashboard')">Dashboard</button>
-          <button class="admin-nav-btn" onclick="adminNav('records')">All Records</button>
-          <button class="admin-nav-btn" onclick="adminNav('editlog')">Edit Log</button>
+          <button class="admin-nav-btn active" data-section="dashboard" onclick="adminNav('dashboard')">Dashboard</button>
+          <button class="admin-nav-btn" data-section="records" onclick="adminNav('records')">All Records</button>
+          <button class="admin-nav-btn" data-section="editlog" onclick="adminNav('editlog')">Edit Log</button>
         </div>
-
-        <!-- Admin Dashboard -->
         <div class="admin-section active" id="adminDashboard">
           <div class="kpi-grid" id="adminKpis"></div>
           <div class="card">
@@ -382,8 +360,6 @@
             </div>
           </div>
         </div>
-
-        <!-- Admin All Records -->
         <div class="admin-section" id="adminRecords">
           <div class="card">
             <div class="table-header">
@@ -393,9 +369,7 @@
               </div>
               <div style="display:flex;gap:10px">
                 <select id="adminTypeFilter" onchange="renderAdminRecords()" style="padding:8px 12px;border:1.5px solid #dde1e7;border-radius:8px;font-size:0.85rem">
-                  <option value="">All Types</option>
-                  <option value="inward">Inward</option>
-                  <option value="outward">Outward</option>
+                  <option value="">All Types</option><option value="inward">Inward</option><option value="outward">Outward</option>
                 </select>
                 <input type="text" class="search-bar" id="adminSearchInput" placeholder="Search..." oninput="renderAdminRecords()">
               </div>
@@ -409,8 +383,6 @@
             <div class="empty-state" id="adminEmptyState" style="display:none"><p>No records found.</p></div>
           </div>
         </div>
-
-        <!-- Admin Edit Log -->
         <div class="admin-section" id="adminEditlog">
           <div class="card">
             <h2>Edit Log</h2>
@@ -432,6 +404,8 @@
 
   <script>
     const API = 'http://52.66.163.52:3001/api';
+
+    // ===== STATE =====
     let currentEmployee = null;
     let selectedLocation = null;
     let isAdmin = false;
@@ -443,27 +417,21 @@
 
     // ===== HELPERS =====
     function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+
     function showToast(msg, type = 'success') {
       const t = document.getElementById('toast');
       t.textContent = msg; t.className = 'toast ' + type + ' show';
       setTimeout(() => t.classList.remove('show'), 2500);
     }
-    async function api(path, opts) {
+
+    async function apiFetch(path, opts) {
       const r = await fetch(API + path, { headers: { 'Content-Type': 'application/json' }, ...opts });
       return r.json();
     }
 
-    // ===== LOGIN =====
-    async function initLogin() {
-      try {
-        const locs = await api('/locations');
-        const sel = document.getElementById('loginLocation');
-        sel.innerHTML = '<option value="">-- Select Branch --</option>' +
-          locs.map(l => `<option value="${esc(l)}">${esc(l)}</option>`).join('');
-      } catch (e) {
-        document.getElementById('loginError1').textContent = 'Failed to load locations';
-        document.getElementById('loginError1').style.display = 'block';
-      }
+    function getInitials(name) {
+      if (!name) return '?';
+      return name.split(/\s+/).map(w => w[0]).join('').substring(0, 2).toUpperCase();
     }
 
     function showStep(n) {
@@ -471,47 +439,111 @@
       document.getElementById('loginStep' + n).classList.add('active');
     }
 
-    function loginGoBack(step) { showStep(step); }
+    function showLoginError(step, msg) {
+      const el = document.getElementById('loginError' + step);
+      el.textContent = msg; el.style.display = 'block';
+      setTimeout(() => el.style.display = 'none', 3000);
+    }
 
+    function loginGoBack() { showStep(1); }
+
+    // ===== LOGIN: INIT =====
+    async function initLogin() {
+      try {
+        const locs = await apiFetch('/locations');
+        const sel = document.getElementById('loginLocation');
+        sel.innerHTML = '<option value="">-- Select Branch --</option>' +
+          locs.map(l => `<option value="${esc(l)}">${esc(l)}</option>`).join('');
+      } catch (e) {
+        showLoginError(1, 'Failed to load locations');
+      }
+    }
+
+    // ===== LOGIN: SELECT LOCATION =====
     async function loginSelectLocation() {
       const loc = document.getElementById('loginLocation').value;
       if (!loc) { showLoginError(1, 'Please select a branch'); return; }
       selectedLocation = loc;
 
-      // Head Office / Corporate Office shortcuts
+      // Head Office / Corporate Office — hardcoded user, skip profile selection
       if (loc === 'Head Office' || loc === 'Corporate Office') {
-        currentEmployee = { id: 0, emp_id: loc === 'Head Office' ? 'HO-USER' : 'CO-USER', name: loc === 'Head Office' ? 'Head Office' : 'Corporate Office', role: 'Admin Executive', location: loc };
-        startApp();
+        currentEmployee = {
+          id: 0,
+          emp_id: loc === 'Head Office' ? 'HO-USER' : 'CO-USER',
+          name: loc === 'Head Office' ? 'Head Office' : 'Corporate Office',
+          role: 'Admin Executive',
+          location: loc,
+        };
+        startSession();
         return;
       }
 
+      // Fetch BOE profiles for this location
       try {
-        profilesList = await api('/employees?location=' + encodeURIComponent(loc));
-        const container = document.getElementById('loginProfiles');
-        document.getElementById('loginStep2Sub').textContent = `Branch: ${loc}`;
+        const data = await apiFetch('/employees?location=' + encodeURIComponent(loc));
+        profilesList = data;
 
-        if (profilesList.length === 0) {
-          container.innerHTML = '';
-          document.getElementById('tempUserSection').style.display = 'block';
-          showStep(2);
+        // Case 1: No BOEs — check for saved temp user or show name input
+        if (data.length === 0) {
+          const saved = localStorage.getItem('mr_temp_user_' + loc);
+          if (saved) {
+            currentEmployee = JSON.parse(saved);
+            startSession();
+            return;
+          }
+          showNameInput(loc);
           return;
         }
 
-        document.getElementById('tempUserSection').style.display = 'none';
-        selectedProfileIdx = profilesList.length === 1 ? 0 : -1;
-        container.innerHTML = profilesList.map((p, i) => `
-          <div class="profile-card ${profilesList.length === 1 ? 'selected' : ''}" onclick="selectProfile(${i})" id="prof-${i}">
-            <div class="avatar">${esc(p.name).substring(0, 2).toUpperCase()}</div>
-            <div class="info">
-              <div class="pname">${esc(p.name)}</div>
-              <div class="prole">${esc(p.emp_id)} &middot; ${esc(p.role || 'BOE')}</div>
-            </div>
-          </div>
-        `).join('');
-        showStep(2);
+        // Case 2: Exactly 1 BOE — auto-select, skip profile UI
+        if (data.length === 1) {
+          currentEmployee = data[0];
+          startSession();
+          return;
+        }
+
+        // Case 3: Multiple BOEs — show profile cards
+        showProfileCards(loc, data);
       } catch (e) {
         showLoginError(1, 'Failed to load profiles');
       }
+    }
+
+    // ===== LOGIN: SHOW NAME INPUT (no BOE at branch) =====
+    function showNameInput(loc) {
+      document.getElementById('loginStep2Sub').textContent = `Branch: ${loc}`;
+      document.getElementById('loginProfiles').innerHTML = '';
+      document.getElementById('loginConfirmBtn').textContent = 'Continue';
+
+      const section = document.getElementById('nameInputSection');
+      section.style.display = 'block';
+      section.innerHTML = `
+        <p style="font-size:0.88rem;color:#888;margin-bottom:14px">No profiles found for this branch. Enter your name to continue.</p>
+        <label style="display:block;font-size:0.8rem;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:6px">Your Name</label>
+        <input type="text" id="newUserName" placeholder="Enter your full name" style="width:100%;padding:11px 14px;border:1.5px solid #dde1e7;border-radius:8px;font-size:0.95rem;font-family:inherit;background:#fafbfc;margin-bottom:4px">
+      `;
+      showStep(2);
+      setTimeout(() => document.getElementById('newUserName').focus(), 100);
+    }
+
+    // ===== LOGIN: SHOW PROFILE CARDS (multiple BOEs) =====
+    function showProfileCards(loc, profiles) {
+      document.getElementById('loginStep2Sub').textContent = `Branch: ${loc}`;
+      document.getElementById('nameInputSection').style.display = 'none';
+      document.getElementById('loginConfirmBtn').textContent = 'Start Session';
+      selectedProfileIdx = -1;
+
+      const container = document.getElementById('loginProfiles');
+      container.innerHTML = profiles.map((p, i) => `
+        <div class="profile-card" onclick="selectProfile(${i})" id="prof-${i}">
+          <div class="avatar">${getInitials(p.name)}</div>
+          <div class="info">
+            <div class="pname">${esc(p.name)}</div>
+            <div class="prole">${esc(p.emp_id)} &middot; ${esc(p.role || 'BOE')}</div>
+          </div>
+        </div>
+      `).join('');
+      showStep(2);
     }
 
     function selectProfile(i) {
@@ -519,30 +551,43 @@
       document.querySelectorAll('.profile-card').forEach((c, j) => c.classList.toggle('selected', j === i));
     }
 
+    // ===== LOGIN: CONFIRM =====
     function loginConfirm() {
-      if (document.getElementById('tempUserSection').style.display !== 'none') {
-        const name = document.getElementById('tempUserName').value.trim();
+      const nameSection = document.getElementById('nameInputSection');
+
+      // Temp user flow
+      if (nameSection.style.display !== 'none') {
+        const nameInput = document.getElementById('newUserName');
+        const name = nameInput ? nameInput.value.trim() : '';
         if (!name) { showLoginError(2, 'Please enter your name'); return; }
-        currentEmployee = { id: 0, emp_id: 'TEMP-' + Date.now(), name, role: 'BOE', location: selectedLocation };
-      } else {
-        if (selectedProfileIdx < 0) { showLoginError(2, 'Please select a profile'); return; }
-        currentEmployee = profilesList[selectedProfileIdx];
+        currentEmployee = {
+          id: 'temp-' + Date.now(),
+          emp_id: 'TEMP-' + Math.floor(Math.random() * 10000),
+          name: name,
+          role: 'BOE',
+          location: selectedLocation,
+        };
+        localStorage.setItem('mr_temp_user_' + selectedLocation, JSON.stringify(currentEmployee));
+        startSession();
+        return;
       }
-      startApp();
+
+      // Profile selection flow
+      if (selectedProfileIdx < 0) { showLoginError(2, 'Please select a profile'); return; }
+      currentEmployee = profilesList[selectedProfileIdx];
+      startSession();
     }
 
+    // ===== LOGIN: ADMIN OTP =====
     function loginAdminStart() {
       showStep(3);
-      const inputs = document.querySelectorAll('.otp-inputs input');
-      inputs.forEach(inp => { inp.value = ''; });
-      inputs[0].focus();
+      document.querySelectorAll('.otp-inputs input').forEach(inp => { inp.value = ''; });
+      setTimeout(() => document.querySelector('.otp-inputs input').focus(), 100);
     }
 
     // OTP auto-advance
     document.querySelectorAll('.otp-inputs input').forEach((inp, i, all) => {
-      inp.addEventListener('input', () => {
-        if (inp.value && i < 3) all[i + 1].focus();
-      });
+      inp.addEventListener('input', () => { if (inp.value && i < 3) all[i + 1].focus(); });
       inp.addEventListener('keydown', (e) => {
         if (e.key === 'Backspace' && !inp.value && i > 0) all[i - 1].focus();
         if (e.key === 'Enter') loginVerifyOTP();
@@ -553,43 +598,43 @@
       const otp = [...document.querySelectorAll('.otp-inputs input')].map(i => i.value).join('');
       if (otp.length < 4) { showLoginError(3, 'Enter all 4 digits'); return; }
       try {
-        const r = await api('/verify-otp', { method: 'POST', body: JSON.stringify({ otp }) });
+        const r = await apiFetch('/verify-otp', { method: 'POST', body: JSON.stringify({ otp }) });
         if (r.success) {
           isAdmin = true;
-          currentEmployee = { id: 0, emp_id: 'ADMIN', name: 'Admin', role: 'Administrator', location: 'Head Office' };
+          currentEmployee = { id: 0, emp_id: 'HO-ADMIN', name: 'Admin', role: 'Administrator', location: 'Head Office' };
           selectedLocation = 'Head Office';
-          startApp();
+          startSession();
         } else {
           showLoginError(3, 'Invalid OTP');
         }
-      } catch (e) {
-        showLoginError(3, 'Verification failed');
-      }
-    }
-
-    function showLoginError(step, msg) {
-      const el = document.getElementById('loginError' + step);
-      el.textContent = msg; el.style.display = 'block';
-      setTimeout(() => el.style.display = 'none', 3000);
+      } catch (e) { showLoginError(3, 'Verification failed'); }
     }
 
     // ===== SESSION =====
-    function startApp() {
+    function startSession() {
       sessionStorage.setItem('mr_employee', JSON.stringify(currentEmployee));
       sessionStorage.setItem('mr_location', selectedLocation);
       sessionStorage.setItem('mr_admin', isAdmin ? 'true' : 'false');
       sessionStorage.setItem('mr_login_time', Date.now().toString());
+      localStorage.setItem('mr_employee', JSON.stringify(currentEmployee));
+      localStorage.setItem('mr_location', selectedLocation);
+      localStorage.setItem('mr_admin', isAdmin ? 'true' : 'false');
+      localStorage.setItem('mr_login_time', Date.now().toString());
       showApp();
     }
 
     function checkSession() {
-      const emp = sessionStorage.getItem('mr_employee');
+      let emp = sessionStorage.getItem('mr_employee');
+      let loginTime = sessionStorage.getItem('mr_login_time');
+      if (!emp) {
+        emp = localStorage.getItem('mr_employee');
+        loginTime = localStorage.getItem('mr_login_time');
+      }
       if (!emp) return false;
-      const loginTime = parseInt(sessionStorage.getItem('mr_login_time') || '0');
-      if (Date.now() - loginTime > 24 * 60 * 60 * 1000) { logout(); return false; }
+      if (Date.now() - parseInt(loginTime || '0') > 24 * 60 * 60 * 1000) { logout(); return false; }
       currentEmployee = JSON.parse(emp);
-      selectedLocation = sessionStorage.getItem('mr_location');
-      isAdmin = sessionStorage.getItem('mr_admin') === 'true';
+      selectedLocation = sessionStorage.getItem('mr_location') || localStorage.getItem('mr_location');
+      isAdmin = (sessionStorage.getItem('mr_admin') || localStorage.getItem('mr_admin')) === 'true';
       return true;
     }
 
@@ -597,7 +642,6 @@
       document.getElementById('loginScreen').style.display = 'none';
       document.getElementById('appScreen').style.display = 'block';
       document.getElementById('headerUser').textContent = `${currentEmployee.name} (${selectedLocation})`;
-
       if (isAdmin) {
         document.getElementById('modeSelect').style.display = 'none';
         document.getElementById('adminContent').style.display = 'block';
@@ -609,7 +653,10 @@
     }
 
     function logout() {
-      sessionStorage.clear();
+      ['mr_employee', 'mr_location', 'mr_admin', 'mr_login_time'].forEach(k => {
+        sessionStorage.removeItem(k);
+        localStorage.removeItem(k);
+      });
       currentEmployee = null; selectedLocation = null; isAdmin = false; currentMode = null;
       document.getElementById('appScreen').style.display = 'none';
       document.getElementById('loginScreen').style.display = 'flex';
@@ -617,8 +664,9 @@
       document.getElementById('adminContent').style.display = 'none';
       document.getElementById('modeSelect').style.display = 'flex';
       document.getElementById('backBtn').style.display = 'none';
-      body.classList.remove('mode-inward', 'mode-outward');
+      document.body.classList.remove('mode-inward', 'mode-outward');
       showStep(1);
+      initLogin();
     }
 
     // ===== MODE SELECT =====
@@ -627,27 +675,23 @@
       document.getElementById('modeSelect').style.display = 'none';
       document.getElementById('mainContent').style.display = 'block';
       document.getElementById('backBtn').style.display = 'inline-block';
-
       document.body.classList.remove('mode-inward', 'mode-outward');
       document.body.classList.add('mode-' + mode);
-
       const badge = document.getElementById('modeBadge');
       badge.textContent = mode; badge.className = 'mode-badge ' + mode;
-
       if (mode === 'outward') {
         document.getElementById('nameLabel').textContent = 'To';
-        document.getElementById('name').placeholder = 'Recipient name';
+        document.getElementById('recName').placeholder = 'Recipient name';
         document.getElementById('docsLabel').textContent = 'List of Documents Sent';
         document.getElementById('thName').textContent = 'To';
         document.getElementById('thDocs').textContent = 'Documents Sent';
       } else {
         document.getElementById('nameLabel').textContent = 'From';
-        document.getElementById('name').placeholder = 'Sender name';
+        document.getElementById('recName').placeholder = 'Sender name';
         document.getElementById('docsLabel').textContent = 'List of Documents Received';
         document.getElementById('thName').textContent = 'From';
         document.getElementById('thDocs').textContent = 'Documents Received';
       }
-
       document.getElementById('date').valueAsDate = new Date();
       document.getElementById('searchInput').value = '';
       await loadRecords();
@@ -666,29 +710,23 @@
     // ===== RECORDS =====
     async function loadRecords() {
       try {
-        records = await api(`/records?mail_type=${currentMode}&location=${encodeURIComponent(selectedLocation)}`);
+        records = await apiFetch(`/records?mail_type=${currentMode}&location=${encodeURIComponent(selectedLocation)}`);
         renderRecords();
       } catch (e) { showToast('Failed to load records', 'info'); }
     }
 
-    function renderRecords(filter = '') {
+    function renderRecords(filter) {
+      filter = filter || '';
       const tbody = document.getElementById('tableBody');
       const empty = document.getElementById('emptyState');
       const lf = filter.toLowerCase();
       const filtered = records.filter(r => !filter || Object.values(r).some(v => String(v).toLowerCase().includes(lf)));
-
       document.getElementById('recordCount').textContent = `${filtered.length} record${filtered.length !== 1 ? 's' : ''}`;
-
       if (!filtered.length) { tbody.innerHTML = ''; empty.style.display = 'block'; return; }
       empty.style.display = 'none';
       tbody.innerHTML = filtered.map((r, i) => `<tr>
-        <td>${i + 1}</td>
-        <td>${esc(r.date)}</td>
-        <td>${esc(r.employee_id)}</td>
-        <td>${esc(r.name)}</td>
-        <td>${esc(r.department)}</td>
-        <td>${esc(r.documents)}</td>
-        <td>${esc(r.particular)}</td>
+        <td>${i + 1}</td><td>${esc(r.date)}</td><td>${esc(r.employee_id)}</td><td>${esc(r.name)}</td>
+        <td>${esc(r.department)}</td><td>${esc(r.documents)}</td><td>${esc(r.particular)}</td>
         <td>${esc(r.details || '')}</td>
         <td class="actions-cell"><button class="btn btn-edit" onclick="editRecord(${r.id})">Edit</button></td>
       </tr>`).join('');
@@ -703,7 +741,7 @@
         mail_type: currentMode,
         date: document.getElementById('date').value,
         employee_id: document.getElementById('employeeId').value.trim(),
-        name: document.getElementById('name').value.trim(),
+        name: document.getElementById('recName').value.trim(),
         department: document.getElementById('dept').value.trim(),
         documents: document.getElementById('documents').value.trim(),
         particular: document.getElementById('particular').value.trim(),
@@ -711,15 +749,14 @@
         location: selectedLocation,
         created_by: currentEmployee.name,
       };
-
       const editId = document.getElementById('editId').value;
       try {
         if (editId) {
-          await api(`/records/${editId}`, { method: 'PUT', body: JSON.stringify({ ...data, edited_by: currentEmployee.name }) });
+          await apiFetch(`/records/${editId}`, { method: 'PUT', body: JSON.stringify({ ...data, edited_by: currentEmployee.name }) });
           showToast('Record updated');
           cancelEdit();
         } else {
-          await api('/records', { method: 'POST', body: JSON.stringify(data) });
+          await apiFetch('/records', { method: 'POST', body: JSON.stringify(data) });
           showToast('Record added');
         }
         await loadRecords();
@@ -732,7 +769,7 @@
       if (!r) return;
       document.getElementById('date').value = r.date;
       document.getElementById('employeeId').value = r.employee_id;
-      document.getElementById('name').value = r.name;
+      document.getElementById('recName').value = r.name;
       document.getElementById('dept').value = r.department;
       document.getElementById('documents').value = r.documents;
       document.getElementById('particular').value = r.particular;
@@ -746,7 +783,9 @@
 
     function cancelEdit() {
       document.getElementById('editId').value = '';
-      document.getElementById('formTitle').innerHTML = 'New Record <span class="mode-badge ' + currentMode + '">' + currentMode + '</span>';
+      if (currentMode) {
+        document.getElementById('formTitle').innerHTML = 'New Record <span class="mode-badge ' + currentMode + '">' + currentMode + '</span>';
+      }
       document.getElementById('submitBtn').textContent = 'Add Record';
       document.getElementById('cancelBtn').style.display = 'none';
       clearForm();
@@ -759,98 +798,68 @@
 
     // ===== ADMIN =====
     function adminNav(section) {
-      document.querySelectorAll('.admin-nav-btn').forEach((b, i) => b.classList.toggle('active', b.textContent.toLowerCase().includes(section.substring(0, 4))));
+      document.querySelectorAll('.admin-nav-btn').forEach(b => b.classList.toggle('active', b.dataset.section === section));
       document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active'));
-      document.getElementById('admin' + section.charAt(0).toUpperCase() + section.slice(1)).classList.add('active');
+      const target = section === 'dashboard' ? 'adminDashboard' : section === 'records' ? 'adminRecords' : 'adminEditlog';
+      document.getElementById(target).classList.add('active');
     }
 
     async function loadAdminData() {
       try {
         const [stats, recs, logs] = await Promise.all([
-          api('/admin/stats'),
-          api('/admin/records'),
-          api('/admin/edit-logs'),
+          apiFetch('/admin/stats'), apiFetch('/admin/records'), apiFetch('/admin/edit-logs'),
         ]);
         adminRecords = recs;
-
-        // KPIs
         document.getElementById('adminKpis').innerHTML = [
-          { v: stats.total, l: 'Total Records' },
-          { v: stats.inward, l: 'Inward' },
-          { v: stats.outward, l: 'Outward' },
-          { v: stats.locations, l: 'Locations' },
-          { v: stats.today, l: 'Today' },
+          { v: stats.total, l: 'Total Records' }, { v: stats.inward, l: 'Inward' },
+          { v: stats.outward, l: 'Outward' }, { v: stats.locations, l: 'Locations' }, { v: stats.today, l: 'Today' },
         ].map(k => `<div class="kpi-card"><div class="kpi-value">${k.v}</div><div class="kpi-label">${k.l}</div></div>`).join('');
 
-        // Recent
         document.getElementById('adminRecentBody').innerHTML = recs.slice(0, 15).map(r => `<tr>
-          <td>${esc(r.date)}</td>
-          <td><span class="mode-badge ${r.mail_type}">${r.mail_type}</span></td>
-          <td>${esc(r.name)}</td>
-          <td>${esc(r.department)}</td>
-          <td>${esc(r.documents)}</td>
-          <td>${esc(r.location)}</td>
-          <td>${esc(r.created_by)}</td>
+          <td>${esc(r.date)}</td><td><span class="mode-badge ${r.mail_type}">${r.mail_type}</span></td>
+          <td>${esc(r.name)}</td><td>${esc(r.department)}</td><td>${esc(r.documents)}</td>
+          <td>${esc(r.location)}</td><td>${esc(r.created_by)}</td>
         </tr>`).join('') || '<tr><td colspan="7" style="text-align:center;color:#aaa;padding:24px">No records yet</td></tr>';
 
-        // Edit logs
         const editBody = document.getElementById('adminEditBody');
         const editEmpty = document.getElementById('editlogEmpty');
         if (logs.length) {
           editEmpty.style.display = 'none';
           editBody.innerHTML = logs.map(l => `<tr>
-            <td>${new Date(l.edited_at).toLocaleString()}</td>
-            <td>${esc(l.record_name || '#' + l.record_id)}</td>
+            <td>${new Date(l.edited_at).toLocaleString()}</td><td>${esc(l.record_name || '#' + l.record_id)}</td>
             <td><span class="mode-badge ${l.mail_type}">${l.mail_type}</span></td>
-            <td>${esc(l.field_changed)}</td>
-            <td>${esc(l.old_value)}</td>
-            <td>${esc(l.new_value)}</td>
-            <td>${esc(l.edited_by)}</td>
+            <td>${esc(l.field_changed)}</td><td>${esc(l.old_value)}</td><td>${esc(l.new_value)}</td><td>${esc(l.edited_by)}</td>
           </tr>`).join('');
-        } else {
-          editBody.innerHTML = '';
-          editEmpty.style.display = 'block';
-        }
-
+        } else { editBody.innerHTML = ''; editEmpty.style.display = 'block'; }
         renderAdminRecords();
       } catch (e) { showToast('Failed to load admin data', 'info'); }
     }
 
     function renderAdminRecords() {
-      const typeFilter = document.getElementById('adminTypeFilter').value;
+      const tf = document.getElementById('adminTypeFilter').value;
       const search = (document.getElementById('adminSearchInput').value || '').toLowerCase();
       let filtered = adminRecords;
-      if (typeFilter) filtered = filtered.filter(r => r.mail_type === typeFilter);
+      if (tf) filtered = filtered.filter(r => r.mail_type === tf);
       if (search) filtered = filtered.filter(r => Object.values(r).some(v => String(v).toLowerCase().includes(search)));
-
       document.getElementById('adminRecordCount').textContent = filtered.length + ' records';
       const body = document.getElementById('adminAllBody');
       const empty = document.getElementById('adminEmptyState');
-
       if (!filtered.length) { body.innerHTML = ''; empty.style.display = 'block'; return; }
       empty.style.display = 'none';
       body.innerHTML = filtered.map((r, i) => `<tr>
-        <td>${i + 1}</td>
-        <td>${esc(r.date)}</td>
-        <td><span class="mode-badge ${r.mail_type}">${r.mail_type}</span></td>
-        <td>${esc(r.employee_id)}</td>
-        <td>${esc(r.name)}</td>
-        <td>${esc(r.department)}</td>
-        <td>${esc(r.documents)}</td>
-        <td>${esc(r.particular)}</td>
-        <td>${esc(r.details || '')}</td>
-        <td>${esc(r.location)}</td>
-        <td>${esc(r.created_by)}</td>
+        <td>${i + 1}</td><td>${esc(r.date)}</td><td><span class="mode-badge ${r.mail_type}">${r.mail_type}</span></td>
+        <td>${esc(r.employee_id)}</td><td>${esc(r.name)}</td><td>${esc(r.department)}</td>
+        <td>${esc(r.documents)}</td><td>${esc(r.particular)}</td><td>${esc(r.details || '')}</td>
+        <td>${esc(r.location)}</td><td>${esc(r.created_by)}</td>
       </tr>`).join('');
     }
 
-    // ===== KEYBOARD SHORTCUTS =====
+    // ===== KEYBOARD =====
     document.addEventListener('keydown', function(e) {
       if (e.key === 'Escape' && currentMode) goBack();
     });
 
     // ===== INIT =====
-    const body = document.body;
     if (checkSession()) {
       showApp();
     } else {
