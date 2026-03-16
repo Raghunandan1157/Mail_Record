@@ -806,35 +806,65 @@
       XLSX.writeFile(wb, filename);
     }
 
-    function exportDailyReport(admin) {
+    async function exportDailyReport(admin) {
       const date = document.getElementById(admin ? 'adminReportDate' : 'reportDate').value;
       if (!date) { showToast('Select a date first'); return; }
       const fy = getFY(date);
       const dateStr = new Date(date + 'T00:00:00').toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-      const tables = document.querySelectorAll(`#${admin ? 'adminDailyReportContent' : 'dailyReportContent'} table`);
-      if (!tables.length) { showToast('No data to export'); return; }
+      const eId = currentEmployee.id || 0;
+
+      // Fetch records for the date
+      let locFilter = admin ? '' : `&location=eq.${encodeURIComponent(selectedLocation)}`;
+      const [outRecs, inRecs] = await Promise.all([
+        sbGet('mail_records', `select=*&mail_type=eq.outward&date=eq.${date}${locFilter}&order=created_at.asc`),
+        sbGet('mail_records', `select=*&mail_type=eq.inward&date=eq.${date}${locFilter}&order=created_at.asc`),
+      ]);
+
+      // Get FY-based sequential IDs
+      const [allOut, allIn] = await Promise.all([
+        sbGet('mail_records', `select=id,date&mail_type=eq.outward${locFilter}&date=gte.${fy.start}&date=lte.${fy.end}&order=created_at.asc`),
+        sbGet('mail_records', `select=id,date&mail_type=eq.inward${locFilter}&date=gte.${fy.start}&date=lte.${fy.end}&order=created_at.asc`),
+      ]);
+      const outSeq = {}; allOut.forEach((r, i) => outSeq[r.id] = i + 1);
+      const inSeq = {}; allIn.forEach((r, i) => inSeq[r.id] = i + 1);
+
+      if (!outRecs.length && !inRecs.length) { showToast('No records for this date'); return; }
 
       const wb = XLSX.utils.book_new();
-      const sheetNames = ['Outward', 'Inward'];
-      tables.forEach((t, i) => {
-        const name = sheetNames[i] || `Sheet_${i + 1}`;
-        const headerRows = [
-          [`${name} Mail Register - Daily Report`],
-          [dateStr, '', `${admin ? 'All Branches' : selectedLocation}`, '', fy.label],
-          []
-        ];
+      const branch = admin ? 'All Branches' : selectedLocation;
+
+      // Outward sheet
+      if (outRecs.length) {
+        const data = outRecs.map(r => {
+          const seq = outSeq[r.id] || '-';
+          return { 'ID': `OUT/${eId}/${seq}`, 'Sl No': seq, 'Date': r.date, 'Employee ID': r.employee_id, 'To': r.name, 'Department': r.department, 'Documents Sent': r.documents, 'Particular': r.particular, 'Details': r.details || '', ...(admin ? { 'Location': r.location } : {}), 'Created By': r.created_by };
+        });
+        const headerRows = [['Outward Mail Register - Daily Report'], [dateStr, '', branch, '', fy.label], []];
         const ws = XLSX.utils.aoa_to_sheet(headerRows);
-        const tableData = XLSX.utils.sheet_to_json(XLSX.utils.table_to_sheet(t), { header: 1 });
-        const numCols = tableData[0] ? tableData[0].length : 1;
+        const numCols = Object.keys(data[0]).length;
         ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: numCols - 1 } }];
-        XLSX.utils.sheet_add_aoa(ws, tableData, { origin: 'A4' });
-        // Auto column widths
-        const maxWidths = [];
-        tableData.forEach(row => { row.forEach((cell, c) => { maxWidths[c] = Math.max(maxWidths[c] || 0, String(cell || '').length); }); });
-        ws['!cols'] = maxWidths.map(w => ({ wch: Math.min(Math.max(w + 3, 8), 45) }));
-        XLSX.utils.book_append_sheet(wb, ws, name);
-      });
+        XLSX.utils.sheet_add_json(ws, data, { origin: 'A4' });
+        styleSheet(ws, data, headerRows[0]);
+        XLSX.utils.book_append_sheet(wb, ws, 'Outward');
+      }
+
+      // Inward sheet
+      if (inRecs.length) {
+        const data = inRecs.map(r => {
+          const seq = inSeq[r.id] || '-';
+          return { 'ID': `IN/${eId}/${seq}`, 'Sl No': seq, 'Date': r.date, 'Employee ID': r.employee_id, 'From': r.name, 'Department': r.department, 'Documents Received': r.documents, 'Particular': r.particular, 'Details': r.details || '', ...(admin ? { 'Location': r.location } : {}), 'Created By': r.created_by };
+        });
+        const headerRows = [['Inward Mail Register - Daily Report'], [dateStr, '', branch, '', fy.label], []];
+        const ws = XLSX.utils.aoa_to_sheet(headerRows);
+        const numCols = Object.keys(data[0]).length;
+        ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: numCols - 1 } }];
+        XLSX.utils.sheet_add_json(ws, data, { origin: 'A4' });
+        styleSheet(ws, data, headerRows[0]);
+        XLSX.utils.book_append_sheet(wb, ws, 'Inward');
+      }
+
       XLSX.writeFile(wb, `Daily_Report_${date}.xlsx`);
+      showToast('Report exported');
     }
 
     function printReport() { window.print(); }
