@@ -166,9 +166,15 @@
                 <div><label class="block text-xs font-semibold text-slate-500 uppercase mb-1">To</label><input type="text" id="outName" required placeholder="Recipient name" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"></div>
                 <div><label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Department</label><input type="text" id="outDept" required placeholder="e.g. Finance, HR" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"></div>
                 <div class="md:col-span-2">
-                  <label class="block text-xs font-semibold text-slate-500 uppercase mb-2">List of Documents Sent</label>
-                  <div class="flex flex-wrap gap-2 mb-2" id="outDocsChips"></div>
-                  <input type="text" id="outDocsOther" placeholder="Other - type here..." class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary hidden">
+                  <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">List of Documents Sent</label>
+                  <div class="relative">
+                    <input type="text" id="outDocsDisplay" readonly placeholder="Select category..." onclick="toggleDropdown('outDocsDrop')" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary cursor-pointer bg-white pr-9">
+                    <span class="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 text-lg pointer-events-none">expand_more</span>
+                    <div id="outDocsDrop" class="absolute z-30 left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-xl shadow-xl max-h-56 overflow-y-auto hidden">
+                      <div class="p-2 space-y-0.5" id="outDocsOptions"></div>
+                    </div>
+                  </div>
+                  <input type="text" id="outDocsOther" placeholder="Other - type here..." class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary mt-2 hidden">
                   <input type="hidden" id="outDocs">
                 </div>
                 <div><label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Particular</label><input type="text" id="outParticular" required placeholder="Mail type / category" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"></div>
@@ -205,9 +211,15 @@
                 <div><label class="block text-xs font-semibold text-slate-500 uppercase mb-1">From</label><input type="text" id="inName" required placeholder="Sender name" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"></div>
                 <div><label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Department</label><input type="text" id="inDept" required placeholder="e.g. Finance, HR" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"></div>
                 <div class="md:col-span-2">
-                  <label class="block text-xs font-semibold text-slate-500 uppercase mb-2">List of Documents Received</label>
-                  <div class="flex flex-wrap gap-2 mb-2" id="inDocsChips"></div>
-                  <input type="text" id="inDocsOther" placeholder="Other - type here..." class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent hidden">
+                  <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">List of Documents Received</label>
+                  <div class="relative">
+                    <input type="text" id="inDocsDisplay" readonly placeholder="Select category..." onclick="toggleDropdown('inDocsDrop')" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent cursor-pointer bg-white pr-9">
+                    <span class="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 text-lg pointer-events-none">expand_more</span>
+                    <div id="inDocsDrop" class="absolute z-30 left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-xl shadow-xl max-h-56 overflow-y-auto hidden">
+                      <div class="p-2 space-y-0.5" id="inDocsOptions"></div>
+                    </div>
+                  </div>
+                  <input type="text" id="inDocsOther" placeholder="Other - type here..." class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent mt-2 hidden">
                   <input type="hidden" id="inDocs">
                 </div>
                 <div><label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Particular</label><input type="text" id="inParticular" required placeholder="Mail type / category" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"></div>
@@ -357,97 +369,97 @@
     function getInitials(n) { return n ? n.split(/\s+/).map(w => w[0]).join('').substring(0, 2).toUpperCase() : '?'; }
     function setToday(id) { document.getElementById(id).valueAsDate = new Date(); }
 
-    // ===== DOCUMENT CATEGORY CHIPS =====
+    // ===== DOCUMENT CATEGORY DROPDOWN =====
     const DOC_CATEGORIES = ['Printing', 'IT related', 'Assets', 'Admin', 'Insurance - Customer', 'Insurance - Staff', 'Human Resources', 'Operations', 'Business', 'Building', 'Festival Gifts', 'Staff Awards/Prizes', 'Others'];
 
-    function initDocChips(containerId, hiddenId, otherId) {
-      const container = document.getElementById(containerId);
-      const selected = new Set();
-      container.innerHTML = DOC_CATEGORIES.map(cat => {
-        const isOther = cat === 'Others';
-        return `<button type="button" data-cat="${esc(cat)}" data-other="${isOther}" class="doc-chip px-3 py-1.5 rounded-full text-xs font-semibold border transition cursor-pointer border-slate-200 bg-white text-slate-600 hover:border-slate-400" onclick="toggleDocChip(this,'${containerId}','${hiddenId}','${otherId}')">${esc(cat)}</button>`;
-      }).join('');
+    function initDocDropdown(optionsId, displayId, hiddenId, otherId) {
+      const container = document.getElementById(optionsId);
+      container.innerHTML = DOC_CATEGORIES.map(cat =>
+        `<label class="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-slate-50 cursor-pointer text-sm">
+          <input type="checkbox" value="${esc(cat)}" onchange="onDocCheck('${optionsId}','${displayId}','${hiddenId}','${otherId}')" class="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary/20">
+          <span>${esc(cat)}</span>
+        </label>`
+      ).join('');
+      document.getElementById(displayId).value = '';
+      document.getElementById(hiddenId).value = '';
+      document.getElementById(otherId).value = '';
+      document.getElementById(otherId).classList.add('hidden');
     }
 
-    function toggleDocChip(btn, containerId, hiddenId, otherId) {
-      const cat = btn.dataset.cat;
-      const isActive = btn.classList.contains('bg-primary') || btn.classList.contains('bg-accent');
-      const container = document.getElementById(containerId);
-      const isInward = containerId.startsWith('in');
-
-      if (isActive) {
-        btn.classList.remove(isInward ? 'bg-accent' : 'bg-primary', 'text-white', isInward ? 'border-accent' : 'border-primary');
-        btn.classList.add('bg-white', 'text-slate-600', 'border-slate-200');
-      } else {
-        btn.classList.add(isInward ? 'bg-accent' : 'bg-primary', 'text-white', isInward ? 'border-accent' : 'border-primary');
-        btn.classList.remove('bg-white', 'text-slate-600', 'border-slate-200');
-      }
-
-      // Show/hide Others text field
-      const otherInput = document.getElementById(otherId);
-      const othersBtn = container.querySelector('[data-other="true"]');
-      const othersActive = othersBtn && (othersBtn.classList.contains('bg-primary') || othersBtn.classList.contains('bg-accent'));
-      otherInput.classList.toggle('hidden', !othersActive);
-      if (!othersActive) otherInput.value = '';
-
-      updateDocHidden(containerId, hiddenId, otherId);
+    function toggleDropdown(dropId) {
+      const drop = document.getElementById(dropId);
+      drop.classList.toggle('hidden');
     }
 
-    function updateDocHidden(containerId, hiddenId, otherId) {
-      const container = document.getElementById(containerId);
-      const chips = container.querySelectorAll('.doc-chip');
+    // Close dropdowns on outside click
+    document.addEventListener('click', function(e) {
+      ['outDocsDrop', 'inDocsDrop'].forEach(id => {
+        const drop = document.getElementById(id);
+        if (!drop) return;
+        const parent = drop.closest('.relative');
+        if (parent && !parent.contains(e.target)) drop.classList.add('hidden');
+      });
+    });
+
+    function onDocCheck(optionsId, displayId, hiddenId, otherId) {
+      const checks = document.querySelectorAll(`#${optionsId} input[type=checkbox]`);
       const selected = [];
-      chips.forEach(c => {
-        if (c.classList.contains('bg-primary') || c.classList.contains('bg-accent')) {
-          if (c.dataset.other === 'true') {
-            const otherVal = document.getElementById(otherId).value.trim();
-            if (otherVal) selected.push('Others: ' + otherVal);
-          } else {
-            selected.push(c.dataset.cat);
-          }
+      let othersChecked = false;
+      checks.forEach(c => {
+        if (c.checked) {
+          if (c.value === 'Others') othersChecked = true;
+          else selected.push(c.value);
         }
       });
-      document.getElementById(hiddenId).value = selected.join(', ');
+
+      const otherInput = document.getElementById(otherId);
+      if (othersChecked) {
+        otherInput.classList.remove('hidden');
+        const otherVal = otherInput.value.trim();
+        if (otherVal) selected.push('Others: ' + otherVal);
+      } else {
+        otherInput.classList.add('hidden');
+        otherInput.value = '';
+      }
+
+      document.getElementById(displayId).value = selected.join(', ') + (othersChecked && !selected.some(s => s.startsWith('Others:')) ? (selected.length ? ', Others' : 'Others') : '');
+      document.getElementById(hiddenId).value = selected.join(', ') || (othersChecked ? 'Others' : '');
     }
 
-    function setDocChipsFromValue(containerId, hiddenId, otherId, value) {
-      const container = document.getElementById(containerId);
-      const chips = container.querySelectorAll('.doc-chip');
-      const isInward = containerId.startsWith('in');
-      const parts = (value || '').split(',').map(s => s.trim()).filter(Boolean);
+    function updateDocHidden(optionsId, hiddenId, otherId) {
+      const displayId = optionsId.replace('Options', 'Display').replace('Chips', 'Display');
+      onDocCheck(optionsId, displayId, hiddenId, otherId);
+    }
 
-      // Reset all
-      chips.forEach(c => {
-        c.classList.remove(isInward ? 'bg-accent' : 'bg-primary', 'text-white', isInward ? 'border-accent' : 'border-primary');
-        c.classList.add('bg-white', 'text-slate-600', 'border-slate-200');
-      });
-      document.getElementById(otherId).classList.add('hidden');
-      document.getElementById(otherId).value = '';
+    function setDocFromValue(optionsId, displayId, hiddenId, otherId, value) {
+      const checks = document.querySelectorAll(`#${optionsId} input[type=checkbox]`);
+      const parts = (value || '').split(',').map(s => s.trim()).filter(Boolean);
+      const otherInput = document.getElementById(otherId);
+
+      checks.forEach(c => { c.checked = false; });
+      otherInput.classList.add('hidden');
+      otherInput.value = '';
 
       parts.forEach(p => {
         if (p.startsWith('Others:')) {
-          const othersBtn = container.querySelector('[data-other="true"]');
-          if (othersBtn) {
-            othersBtn.classList.add(isInward ? 'bg-accent' : 'bg-primary', 'text-white', isInward ? 'border-accent' : 'border-primary');
-            othersBtn.classList.remove('bg-white', 'text-slate-600', 'border-slate-200');
-          }
-          document.getElementById(otherId).value = p.replace('Others: ', '').trim();
-          document.getElementById(otherId).classList.remove('hidden');
+          const othersBox = [...checks].find(c => c.value === 'Others');
+          if (othersBox) othersBox.checked = true;
+          otherInput.value = p.replace('Others:', '').trim();
+          otherInput.classList.remove('hidden');
         } else {
-          const chip = container.querySelector(`[data-cat="${p}"]`);
-          if (chip) {
-            chip.classList.add(isInward ? 'bg-accent' : 'bg-primary', 'text-white', isInward ? 'border-accent' : 'border-primary');
-            chip.classList.remove('bg-white', 'text-slate-600', 'border-slate-200');
-          }
+          const box = [...checks].find(c => c.value === p);
+          if (box) box.checked = true;
         }
       });
+
+      document.getElementById(displayId).value = value;
       document.getElementById(hiddenId).value = value;
     }
 
     // Listen for Others text input changes
     document.addEventListener('input', function(e) {
-      if (e.target.id === 'outDocsOther') updateDocHidden('outDocsChips', 'outDocs', 'outDocsOther');
-      if (e.target.id === 'inDocsOther') updateDocHidden('inDocsChips', 'inDocs', 'inDocsOther');
+      if (e.target.id === 'outDocsOther') onDocCheck('outDocsOptions', 'outDocsDisplay', 'outDocs', 'outDocsOther');
+      if (e.target.id === 'inDocsOther') onDocCheck('inDocsOptions', 'inDocsDisplay', 'inDocs', 'inDocsOther');
     });
     function showToast(msg) { const t = document.getElementById('toast'); document.getElementById('toastMsg').textContent = msg; t.classList.remove('translate-y-24', 'opacity-0'); t.classList.add('translate-y-0', 'opacity-100'); setTimeout(() => { t.classList.add('translate-y-24', 'opacity-0'); t.classList.remove('translate-y-0', 'opacity-100'); }, 2500); }
     function showStep(n) { document.querySelectorAll('.login-step').forEach(s => s.classList.remove('active')); document.getElementById('loginStep' + n).classList.add('active'); }
@@ -473,8 +485,8 @@
       const titles = { dashboard: 'Dashboard', outward: 'Outward Mail', inward: 'Inward Mail', reports: 'Reports', 'admin-dashboard': 'Admin Dashboard', 'admin-records': 'All Records', 'admin-editlog': 'Edit Log', 'admin-reports': 'Reports' };
       document.getElementById('headerTitle').textContent = titles[page] || page;
       document.getElementById('sidebar').classList.remove('open');
-      if (page === 'outward') { loadRecords('outward'); setToday('outDate'); initDocChips('outDocsChips', 'outDocs', 'outDocsOther'); }
-      if (page === 'inward') { loadRecords('inward'); setToday('inDate'); initDocChips('inDocsChips', 'inDocs', 'inDocsOther'); }
+      if (page === 'outward') { loadRecords('outward'); setToday('outDate'); initDocDropdown('outDocsOptions', 'outDocsDisplay', 'outDocs', 'outDocsOther'); }
+      if (page === 'inward') { loadRecords('inward'); setToday('inDate'); initDocDropdown('inDocsOptions', 'inDocsDisplay', 'inDocs', 'inDocsOther'); }
       if (page === 'reports') { setToday('reportDate'); renderDailyReport(); }
       if (page === 'admin-dashboard') loadAdminData();
       if (page === 'admin-records') loadAdminData();
@@ -612,7 +624,7 @@
       e.preventDefault();
       const pre = type === 'outward' ? 'out' : 'in';
       // Update hidden docs field before reading
-      updateDocHidden(pre + 'DocsChips', pre + 'Docs', pre + 'DocsOther');
+      onDocCheck(pre + 'DocsOptions', pre + 'DocsDisplay', pre + 'Docs', pre + 'DocsOther');
       const docsVal = document.getElementById(pre + 'Docs').value.trim();
       if (!docsVal) { showToast('Please select at least one document category'); return false; }
       const data = {
@@ -646,26 +658,26 @@
       editingOutId = id;
       document.getElementById('outDate').value = r.date; document.getElementById('outEmpId').value = r.employee_id;
       document.getElementById('outName').value = r.name; document.getElementById('outDept').value = r.department;
-      setDocChipsFromValue('outDocsChips', 'outDocs', 'outDocsOther', r.documents); document.getElementById('outParticular').value = r.particular;
+      setDocFromValue('outDocsOptions', 'outDocsDisplay', 'outDocs', 'outDocsOther', r.documents); document.getElementById('outParticular').value = r.particular;
       document.getElementById('outDetails').value = r.details || '';
       document.getElementById('outSubmitBtn').textContent = 'Update Record';
       document.getElementById('outCancelBtn').classList.remove('hidden');
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
-    function cancelOutEdit() { editingOutId = null; document.getElementById('outwardForm').reset(); setToday('outDate'); document.getElementById('outSubmitBtn').textContent = 'Add Record'; document.getElementById('outCancelBtn').classList.add('hidden'); initDocChips('outDocsChips', 'outDocs', 'outDocsOther'); }
+    function cancelOutEdit() { editingOutId = null; document.getElementById('outwardForm').reset(); setToday('outDate'); document.getElementById('outSubmitBtn').textContent = 'Add Record'; document.getElementById('outCancelBtn').classList.add('hidden'); initDocDropdown('outDocsOptions', 'outDocsDisplay', 'outDocs', 'outDocsOther'); }
 
     function editInRecord(id) {
       const r = inRecords.find(x => x.id === id); if (!r) return;
       editingInId = id;
       document.getElementById('inDate').value = r.date; document.getElementById('inEmpId').value = r.employee_id;
       document.getElementById('inName').value = r.name; document.getElementById('inDept').value = r.department;
-      setDocChipsFromValue('inDocsChips', 'inDocs', 'inDocsOther', r.documents); document.getElementById('inParticular').value = r.particular;
+      setDocFromValue('inDocsOptions', 'inDocsDisplay', 'inDocs', 'inDocsOther', r.documents); document.getElementById('inParticular').value = r.particular;
       document.getElementById('inDetails').value = r.details || '';
       document.getElementById('inSubmitBtn').textContent = 'Update Record';
       document.getElementById('inCancelBtn').classList.remove('hidden');
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
-    function cancelInEdit() { editingInId = null; document.getElementById('inwardForm').reset(); setToday('inDate'); document.getElementById('inSubmitBtn').textContent = 'Add Record'; document.getElementById('inCancelBtn').classList.add('hidden'); initDocChips('inDocsChips', 'inDocs', 'inDocsOther'); }
+    function cancelInEdit() { editingInId = null; document.getElementById('inwardForm').reset(); setToday('inDate'); document.getElementById('inSubmitBtn').textContent = 'Add Record'; document.getElementById('inCancelBtn').classList.add('hidden'); initDocDropdown('inDocsOptions', 'inDocsDisplay', 'inDocs', 'inDocsOther'); }
 
     // ===== DASHBOARD =====
     async function loadDashboard() {
