@@ -542,7 +542,6 @@
       const today = new Date().toISOString().split('T')[0];
       const todayOut = outFY.filter(r => r.date === today).length;
       const todayIn = inFY.filter(r => r.date === today).length;
-      const fy = getCurrentFY();
 
       document.getElementById('dashKpis').innerHTML = [
         { v: outFY.length, l: `Outward (${fy.label})`, icon: 'call_made', bg: 'bg-blue-100', tc: 'text-blue-600' },
