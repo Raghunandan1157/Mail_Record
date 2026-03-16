@@ -6,523 +6,633 @@
   <title>Mail Record</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: #f0f2f5; color: #1a1a2e; min-height: 100vh; }
 
-    body {
-      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-      background: #f0f2f5;
-      color: #1a1a2e;
+    /* ===== LOGIN ===== */
+    .login-screen {
       min-height: 100vh;
-    }
-
-    header {
-      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-      color: #fff;
-      padding: 24px 40px;
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.15);
-    }
-
-    header h1 {
-      font-size: 1.6rem;
-      font-weight: 700;
-      letter-spacing: 0.5px;
-    }
-
-    .header-right {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-    }
-
-    header span {
-      font-size: 0.85rem;
-      opacity: 0.7;
-    }
-
-    .back-btn {
-      background: rgba(255,255,255,0.15);
-      color: #fff;
-      border: 1px solid rgba(255,255,255,0.25);
-      padding: 7px 18px;
-      border-radius: 8px;
-      font-size: 0.85rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-      display: none;
-    }
-
-    .back-btn:hover {
-      background: rgba(255,255,255,0.25);
-    }
-
-    .container {
-      max-width: 1100px;
-      margin: 32px auto;
-      padding: 0 20px;
-    }
-
-    /* Mode Selection */
-    .mode-select {
-      display: flex;
       justify-content: center;
-      align-items: center;
-      min-height: 60vh;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
     }
-
-    .mode-cards {
-      display: flex;
-      gap: 32px;
-    }
-
-    .mode-card {
+    .login-card {
       background: #fff;
       border-radius: 16px;
-      padding: 48px 56px;
-      text-align: center;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-      cursor: pointer;
-      transition: all 0.25s;
-      border: 3px solid transparent;
+      padding: 40px 44px;
+      width: 420px;
+      max-width: 95vw;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
     }
-
-    .mode-card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 8px 28px rgba(0,0,0,0.12);
+    .login-card h1 { font-size: 1.5rem; color: #0f3460; margin-bottom: 6px; }
+    .login-card p.sub { font-size: 0.88rem; color: #888; margin-bottom: 28px; }
+    .login-card label { display: block; font-size: 0.8rem; font-weight: 600; color: #555; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 6px; }
+    .login-card select, .login-card input[type="text"], .login-card input[type="password"] {
+      width: 100%; padding: 11px 14px; border: 1.5px solid #dde1e7; border-radius: 8px;
+      font-size: 0.95rem; font-family: inherit; background: #fafbfc; margin-bottom: 18px;
     }
-
-    .mode-card.outward:hover {
-      border-color: #0f3460;
+    .login-card select:focus, .login-card input:focus { outline: none; border-color: #0f3460; box-shadow: 0 0 0 3px rgba(15,52,96,0.1); }
+    .login-error { color: #e74c3c; font-size: 0.85rem; margin-bottom: 12px; display: none; }
+    .login-profiles { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; max-height: 220px; overflow-y: auto; }
+    .profile-card {
+      display: flex; align-items: center; gap: 14px; padding: 12px 16px;
+      border: 2px solid #e8ecf1; border-radius: 10px; cursor: pointer; transition: all 0.2s;
     }
-
-    .mode-card.inward:hover {
-      border-color: #27ae60;
+    .profile-card:hover, .profile-card.selected { border-color: #0f3460; background: rgba(15,52,96,0.04); }
+    .profile-card .avatar {
+      width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #0f3460, #16213e);
+      color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem; flex-shrink: 0;
     }
-
-    .mode-card .icon {
-      font-size: 2.8rem;
-      margin-bottom: 16px;
+    .profile-card .info { flex: 1; }
+    .profile-card .info .pname { font-weight: 600; font-size: 0.95rem; }
+    .profile-card .info .prole { font-size: 0.78rem; color: #888; }
+    .login-step { display: none; }
+    .login-step.active { display: block; }
+    .temp-user-section { margin-bottom: 18px; }
+    .admin-link { text-align: center; margin-top: 16px; }
+    .admin-link a { color: #0f3460; font-size: 0.82rem; cursor: pointer; text-decoration: underline; }
+    .otp-inputs { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; }
+    .otp-inputs input {
+      width: 52px; height: 56px; text-align: center; font-size: 1.5rem; font-weight: 700;
+      border: 2px solid #dde1e7; border-radius: 10px; background: #fafbfc;
     }
+    .otp-inputs input:focus { border-color: #0f3460; outline: none; box-shadow: 0 0 0 3px rgba(15,52,96,0.1); }
 
-    .mode-card h2 {
-      font-size: 1.4rem;
-      margin-bottom: 8px;
+    /* ===== HEADER ===== */
+    header {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      color: #fff; padding: 18px 32px; display: flex; align-items: center; justify-content: space-between;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.15);
     }
-
-    .mode-card p {
-      font-size: 0.9rem;
-      color: #888;
+    body.mode-inward header { background: linear-gradient(135deg, #1a5632 0%, #1e7a45 50%, #27ae60 100%); }
+    header h1 { font-size: 1.4rem; font-weight: 700; }
+    .header-right { display: flex; align-items: center; gap: 14px; }
+    .header-user { font-size: 0.82rem; opacity: 0.85; }
+    .header-btn {
+      background: rgba(255,255,255,0.15); color: #fff; border: 1px solid rgba(255,255,255,0.25);
+      padding: 6px 16px; border-radius: 8px; font-size: 0.82rem; font-weight: 600; cursor: pointer; transition: all 0.2s;
     }
+    .header-btn:hover { background: rgba(255,255,255,0.25); }
 
+    .container { max-width: 1100px; margin: 28px auto; padding: 0 20px; }
+
+    /* ===== MODE SELECT ===== */
+    .mode-select { display: flex; justify-content: center; align-items: center; min-height: 55vh; }
+    .mode-select-inner { text-align: center; }
+    .mode-select-title { font-size: 1.5rem; color: #1a1a2e; margin-bottom: 6px; }
+    .mode-select-sub { font-size: 0.92rem; color: #888; margin-bottom: 32px; }
+    .mode-cards { display: flex; gap: 28px; }
+    .mode-card {
+      background: #fff; border-radius: 16px; padding: 44px 52px; text-align: center;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08); cursor: pointer; transition: all 0.25s; border: 3px solid transparent;
+    }
+    .mode-card:hover { transform: translateY(-4px); box-shadow: 0 8px 28px rgba(0,0,0,0.12); }
+    .mode-card.outward:hover { border-color: #0f3460; }
+    .mode-card.inward:hover { border-color: #27ae60; }
+    .icon-circle {
+      width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center;
+      justify-content: center; font-size: 1.6rem; margin: 0 auto 14px;
+    }
+    .icon-circle.outward { background: rgba(15,52,96,0.1); color: #0f3460; }
+    .icon-circle.inward { background: rgba(39,174,96,0.1); color: #27ae60; }
+    .mode-card h2 { font-size: 1.3rem; margin-bottom: 6px; }
+    .mode-card p { font-size: 0.85rem; color: #888; }
     .mode-card.outward h2 { color: #0f3460; }
     .mode-card.inward h2 { color: #27ae60; }
 
-    /* Main Content (hidden by default) */
-    .main-content {
-      display: none;
-    }
+    /* ===== MAIN CONTENT ===== */
+    .main-content { display: none; animation: fadeIn 0.3s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
     .mode-badge {
-      display: inline-block;
-      padding: 4px 14px;
-      border-radius: 20px;
-      font-size: 0.75rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-left: 12px;
-      vertical-align: middle;
+      display: inline-block; padding: 4px 14px; border-radius: 20px; font-size: 0.72rem;
+      font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-left: 10px; vertical-align: middle;
     }
+    .mode-badge.outward { background: rgba(15,52,96,0.12); color: #0f3460; }
+    .mode-badge.inward { background: rgba(39,174,96,0.12); color: #27ae60; }
 
-    .mode-badge.outward {
-      background: rgba(15, 52, 96, 0.15);
-      color: #0f3460;
+    /* ===== CARDS ===== */
+    .card {
+      background: #fff; border-radius: 12px; padding: 28px 32px;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.08); margin-bottom: 28px;
     }
+    .card h2 { font-size: 1.1rem; margin-bottom: 20px; color: #0f3460; border-bottom: 2px solid #e8ecf1; padding-bottom: 10px; }
+    body.mode-inward .card h2 { color: #1e7a45; }
 
-    .mode-badge.inward {
-      background: rgba(39, 174, 96, 0.15);
-      color: #27ae60;
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    .form-group { display: flex; flex-direction: column; }
+    .form-group.full-width { grid-column: 1 / -1; }
+    .form-group label { font-size: 0.8rem; font-weight: 600; color: #555; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.4px; }
+    .form-group input, .form-group textarea, .form-group select {
+      padding: 10px 14px; border: 1.5px solid #dde1e7; border-radius: 8px;
+      font-size: 0.95rem; font-family: inherit; background: #fafbfc; transition: border-color 0.2s, box-shadow 0.2s;
     }
-
-    /* Form Card */
-    .form-card {
-      background: #fff;
-      border-radius: 12px;
-      padding: 32px;
-      box-shadow: 0 1px 6px rgba(0,0,0,0.08);
-      margin-bottom: 32px;
+    .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
+      outline: none; border-color: #0f3460; box-shadow: 0 0 0 3px rgba(15,52,96,0.1); background: #fff;
     }
-
-    .form-card h2 {
-      font-size: 1.15rem;
-      margin-bottom: 24px;
-      color: #0f3460;
-      border-bottom: 2px solid #e8ecf1;
-      padding-bottom: 12px;
+    body.mode-inward .form-group input:focus, body.mode-inward .form-group textarea:focus {
+      border-color: #27ae60; box-shadow: 0 0 0 3px rgba(39,174,96,0.1);
     }
-
-    .form-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 20px;
-    }
-
-    .form-group {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .form-group.full-width {
-      grid-column: 1 / -1;
-    }
-
-    .form-group label {
-      font-size: 0.82rem;
-      font-weight: 600;
-      color: #555;
-      margin-bottom: 6px;
-      text-transform: uppercase;
-      letter-spacing: 0.4px;
-    }
-
-    .form-group input,
-    .form-group textarea {
-      padding: 10px 14px;
-      border: 1.5px solid #dde1e7;
-      border-radius: 8px;
-      font-size: 0.95rem;
-      font-family: inherit;
-      transition: border-color 0.2s, box-shadow 0.2s;
-      background: #fafbfc;
-    }
-
-    .form-group input:focus,
-    .form-group textarea:focus {
-      outline: none;
-      border-color: #0f3460;
-      box-shadow: 0 0 0 3px rgba(15, 52, 96, 0.1);
-      background: #fff;
-    }
-
-    .form-group textarea {
-      resize: vertical;
-      min-height: 80px;
-    }
-
-    .form-actions {
-      display: flex;
-      gap: 12px;
-      margin-top: 24px;
-    }
+    .form-group textarea { resize: vertical; min-height: 72px; }
+    .form-actions { display: flex; gap: 10px; margin-top: 22px; }
 
     .btn {
-      padding: 11px 28px;
-      border: none;
-      border-radius: 8px;
-      font-size: 0.9rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
+      padding: 10px 26px; border: none; border-radius: 8px;
+      font-size: 0.88rem; font-weight: 600; cursor: pointer; transition: all 0.2s;
     }
+    .btn-primary { background: linear-gradient(135deg, #0f3460, #16213e); color: #fff; }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(15,52,96,0.3); }
+    body.mode-inward .btn-primary { background: linear-gradient(135deg, #27ae60, #1e7a45); }
+    body.mode-inward .btn-primary:hover { box-shadow: 0 4px 12px rgba(39,174,96,0.3); }
+    .btn-secondary { background: #e8ecf1; color: #555; }
+    .btn-secondary:hover { background: #dde1e7; }
+    .btn-edit { background: #3498db; color: #fff; padding: 5px 12px; font-size: 0.78rem; }
+    .btn-edit:hover { background: #2980b9; }
 
-    .btn-primary {
-      background: linear-gradient(135deg, #0f3460, #16213e);
-      color: #fff;
-    }
-
-    .btn-primary:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(15, 52, 96, 0.3);
-    }
-
-    .btn-secondary {
-      background: #e8ecf1;
-      color: #555;
-    }
-
-    .btn-secondary:hover {
-      background: #dde1e7;
-    }
-
-    .btn-edit {
-      background: #3498db;
-      color: #fff;
-      padding: 6px 14px;
-      font-size: 0.8rem;
-    }
-
-    .btn-edit:hover {
-      background: #2980b9;
-    }
-
-    /* Table Card */
-    .table-card {
-      background: #fff;
-      border-radius: 12px;
-      padding: 32px;
-      box-shadow: 0 1px 6px rgba(0,0,0,0.08);
-    }
-
-    .table-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-      border-bottom: 2px solid #e8ecf1;
-      padding-bottom: 12px;
-    }
-
-    .table-header h2 {
-      font-size: 1.15rem;
-      color: #0f3460;
-    }
-
-    .record-count {
-      font-size: 0.85rem;
-      color: #888;
-      background: #f0f2f5;
-      padding: 4px 12px;
-      border-radius: 20px;
-    }
-
+    /* ===== TABLE ===== */
+    .table-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 2px solid #e8ecf1; padding-bottom: 10px; }
+    .table-header h2 { border: none; padding: 0; margin: 0; }
+    .record-count { font-size: 0.82rem; color: #888; background: #f0f2f5; padding: 3px 12px; border-radius: 20px; }
     .search-bar {
-      padding: 9px 14px;
-      border: 1.5px solid #dde1e7;
-      border-radius: 8px;
-      font-size: 0.9rem;
-      width: 260px;
-      font-family: inherit;
-      background: #fafbfc;
+      padding: 8px 14px; border: 1.5px solid #dde1e7; border-radius: 8px;
+      font-size: 0.88rem; width: 240px; font-family: inherit; background: #fafbfc;
     }
-
-    .search-bar:focus {
-      outline: none;
-      border-color: #0f3460;
-      box-shadow: 0 0 0 3px rgba(15, 52, 96, 0.1);
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-
+    .search-bar:focus { outline: none; border-color: #0f3460; box-shadow: 0 0 0 3px rgba(15,52,96,0.1); }
+    .table-scroll { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; min-width: 700px; }
     thead th {
-      text-align: left;
-      padding: 12px 14px;
-      font-size: 0.78rem;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      color: #888;
-      background: #f8f9fb;
-      border-bottom: 2px solid #e8ecf1;
+      text-align: left; padding: 10px 12px; font-size: 0.76rem; text-transform: uppercase;
+      letter-spacing: 0.5px; color: #888; background: #f8f9fb; border-bottom: 2px solid #e8ecf1; white-space: nowrap;
     }
+    tbody tr { border-bottom: 1px solid #f0f2f5; transition: background 0.15s; }
+    tbody tr:hover { background: #f8f9fb; }
+    tbody td { padding: 10px 12px; font-size: 0.88rem; color: #333; }
+    .actions-cell { display: flex; gap: 6px; }
+    .empty-state { text-align: center; padding: 40px 20px; color: #aaa; }
+    .empty-state p { font-size: 0.95rem; }
 
-    tbody tr {
-      border-bottom: 1px solid #f0f2f5;
-      transition: background 0.15s;
+    /* ===== ADMIN ===== */
+    .admin-content { display: none; animation: fadeIn 0.3s ease; }
+    .admin-nav { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+    .admin-nav-btn {
+      padding: 9px 20px; border: 2px solid #e8ecf1; border-radius: 8px; background: #fff;
+      font-size: 0.85rem; font-weight: 600; cursor: pointer; color: #555; transition: all 0.2s;
     }
-
-    tbody tr:hover {
-      background: #f8f9fb;
-    }
-
-    tbody td {
-      padding: 12px 14px;
-      font-size: 0.9rem;
-      color: #333;
-    }
-
-    .actions-cell {
-      display: flex;
-      gap: 6px;
-    }
-
-    .empty-state {
+    .admin-nav-btn:hover { border-color: #0f3460; color: #0f3460; }
+    .admin-nav-btn.active { background: #0f3460; color: #fff; border-color: #0f3460; }
+    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 28px; }
+    .kpi-card {
+      background: #fff; border-radius: 12px; padding: 20px 24px; box-shadow: 0 1px 6px rgba(0,0,0,0.06);
       text-align: center;
-      padding: 48px 20px;
-      color: #aaa;
     }
+    .kpi-card .kpi-value { font-size: 2rem; font-weight: 700; color: #0f3460; }
+    .kpi-card .kpi-label { font-size: 0.78rem; color: #888; text-transform: uppercase; letter-spacing: 0.4px; margin-top: 4px; }
+    .admin-section { display: none; }
+    .admin-section.active { display: block; }
 
-    .empty-state p {
-      font-size: 1rem;
-      margin-top: 8px;
-    }
-
+    /* ===== TOAST ===== */
     .toast {
-      position: fixed;
-      bottom: 24px;
-      right: 24px;
-      background: #0f3460;
-      color: #fff;
-      padding: 14px 24px;
-      border-radius: 10px;
-      font-size: 0.9rem;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.2);
-      transform: translateY(100px);
-      opacity: 0;
-      transition: all 0.3s ease;
-      z-index: 100;
+      position: fixed; bottom: 24px; right: 24px; color: #fff; padding: 13px 22px; border-radius: 10px;
+      font-size: 0.88rem; font-weight: 500; box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+      transform: translateY(100px); opacity: 0; transition: all 0.3s ease; z-index: 200;
     }
+    .toast.success { background: #27ae60; }
+    .toast.info { background: #0f3460; }
+    .toast.show { transform: translateY(0); opacity: 1; }
 
-    .toast.show {
-      transform: translateY(0);
-      opacity: 1;
-    }
-
+    /* ===== RESPONSIVE ===== */
     @media (max-width: 700px) {
       .form-grid { grid-template-columns: 1fr; }
-      header { padding: 18px 20px; }
-      .form-card, .table-card { padding: 20px; }
+      header { padding: 14px 16px; }
+      .card { padding: 20px; }
       .search-bar { width: 100%; }
-      .table-header { flex-direction: column; gap: 12px; align-items: flex-start; }
-      table { font-size: 0.82rem; }
-      .mode-cards { flex-direction: column; gap: 20px; }
-      .mode-card { padding: 32px 40px; }
+      .table-header { flex-direction: column; gap: 10px; align-items: flex-start; }
+      .mode-cards { flex-direction: column; gap: 16px; }
+      .mode-card { padding: 28px 36px; }
+      .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+      .login-card { padding: 28px 24px; }
     }
   </style>
 </head>
 <body>
 
-  <header>
-    <h1>Mail Record</h1>
-    <div class="header-right">
-      <button class="back-btn" id="backBtn" onclick="goBack()">Back</button>
-      <span id="currentDate"></span>
-    </div>
-  </header>
-
-  <div class="container">
-
-    <!-- Mode Selection Screen -->
-    <div class="mode-select" id="modeSelect">
-      <div class="mode-cards">
-        <div class="mode-card outward" onclick="selectMode('outward')">
-          <div class="icon">&#x2197;</div>
-          <h2>Outward</h2>
-          <p>Mail sent out</p>
-        </div>
-        <div class="mode-card inward" onclick="selectMode('inward')">
-          <div class="icon">&#x2199;</div>
-          <h2>Inward</h2>
-          <p>Mail received in</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Main Content (Form + Table) -->
-    <div class="main-content" id="mainContent">
-      <!-- Form -->
-      <div class="form-card">
-        <h2 id="formTitle">New Record <span class="mode-badge" id="modeBadge"></span></h2>
-        <form id="recordForm">
-          <input type="hidden" id="editIndex" value="-1">
-          <div class="form-grid">
-            <div class="form-group">
-              <label for="date">Date</label>
-              <input type="date" id="date" required>
-            </div>
-            <div class="form-group">
-              <label for="employeeId">Employee ID</label>
-              <input type="text" id="employeeId" placeholder="e.g. EMP-1024" required>
-            </div>
-            <div class="form-group">
-              <label for="name" id="nameLabel">To</label>
-              <input type="text" id="name" placeholder="Recipient name" required>
-            </div>
-            <div class="form-group">
-              <label for="dept">Department</label>
-              <input type="text" id="dept" placeholder="e.g. Finance, HR, IT" required>
-            </div>
-            <div class="form-group full-width">
-              <label for="address" id="docsLabel">List of Documents Sent</label>
-              <textarea id="address" placeholder="e.g. Invoice, PO Copy, Agreement..." required></textarea>
-            </div>
-            <div class="form-group">
-              <label for="particular">Particular</label>
-              <input type="text" id="particular" placeholder="Mail type / category" required>
-            </div>
-            <div class="form-group">
-              <label for="details">Details</label>
-              <textarea id="details" placeholder="Additional details (optional)"></textarea>
-            </div>
-          </div>
-          <div class="form-actions">
-            <button type="submit" class="btn btn-primary" id="submitBtn">Add Record</button>
-            <button type="button" class="btn btn-secondary" id="cancelBtn" style="display:none;" onclick="cancelEdit()">Cancel</button>
-            <button type="button" class="btn btn-secondary" onclick="clearForm()">Clear</button>
-          </div>
-        </form>
+  <!-- ===== LOGIN SCREEN ===== -->
+  <div class="login-screen" id="loginScreen">
+    <div class="login-card">
+      <!-- Step 1: Location -->
+      <div class="login-step active" id="loginStep1">
+        <h1>Mail Record</h1>
+        <p class="sub">Select your branch to continue</p>
+        <label>Branch / Location</label>
+        <select id="loginLocation"><option value="">Loading...</option></select>
+        <div class="login-error" id="loginError1"></div>
+        <button class="btn btn-primary" style="width:100%" onclick="loginSelectLocation()">Continue</button>
+        <div class="admin-link"><a onclick="loginAdminStart()">Login as Admin</a></div>
       </div>
 
-      <!-- Records Table -->
-      <div class="table-card">
-        <div class="table-header">
-          <div style="display:flex;align-items:center;gap:12px;">
-            <h2 id="tableTitle">Records</h2>
-            <span class="record-count" id="recordCount">0 records</span>
-          </div>
-          <input type="text" class="search-bar" id="searchInput" placeholder="Search records...">
+      <!-- Step 2: Profile -->
+      <div class="login-step" id="loginStep2">
+        <h1>Select Profile</h1>
+        <p class="sub" id="loginStep2Sub">Choose your profile</p>
+        <div class="login-profiles" id="loginProfiles"></div>
+        <div class="temp-user-section" id="tempUserSection" style="display:none">
+          <label>Your Name</label>
+          <input type="text" id="tempUserName" placeholder="Enter your full name">
         </div>
-        <div id="tableContainer">
-          <table>
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Date</th>
-                <th>Employee ID</th>
-                <th id="thName">To</th>
-                <th>Dept</th>
-                <th id="thDocs">Documents Sent</th>
-                <th>Particular</th>
-                <th>Details</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="tableBody"></tbody>
-          </table>
-          <div class="empty-state" id="emptyState">
-            <p>No records yet. Add your first record above.</p>
+        <div class="login-error" id="loginError2"></div>
+        <button class="btn btn-primary" style="width:100%" onclick="loginConfirm()">Start Session</button>
+        <button class="btn btn-secondary" style="width:100%;margin-top:10px" onclick="loginGoBack(1)">Back</button>
+      </div>
+
+      <!-- Step 3: Admin OTP -->
+      <div class="login-step" id="loginStep3">
+        <h1>Admin Login</h1>
+        <p class="sub">Enter 4-digit OTP to continue</p>
+        <div class="otp-inputs" id="otpInputs">
+          <input type="password" maxlength="1" data-idx="0">
+          <input type="password" maxlength="1" data-idx="1">
+          <input type="password" maxlength="1" data-idx="2">
+          <input type="password" maxlength="1" data-idx="3">
+        </div>
+        <div class="login-error" id="loginError3"></div>
+        <button class="btn btn-primary" style="width:100%" onclick="loginVerifyOTP()">Verify</button>
+        <button class="btn btn-secondary" style="width:100%;margin-top:10px" onclick="loginGoBack(1)">Back</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== APP ===== -->
+  <div id="appScreen" style="display:none">
+    <header>
+      <h1>Mail Record</h1>
+      <div class="header-right">
+        <span class="header-user" id="headerUser"></span>
+        <button class="header-btn" id="backBtn" style="display:none" onclick="goBack()">Back</button>
+        <button class="header-btn" onclick="logout()">Logout</button>
+      </div>
+    </header>
+
+    <div class="container">
+
+      <!-- ===== MODE SELECT (Regular User) ===== -->
+      <div class="mode-select" id="modeSelect">
+        <div class="mode-select-inner">
+          <h2 class="mode-select-title">What would you like to record?</h2>
+          <p class="mode-select-sub">Select a mail register type to begin</p>
+          <div class="mode-cards">
+            <div class="mode-card outward" onclick="selectMode('outward')">
+              <div class="icon-circle outward">&#x2197;</div>
+              <h2>Outward</h2>
+              <p>Mail sent out from the office</p>
+            </div>
+            <div class="mode-card inward" onclick="selectMode('inward')">
+              <div class="icon-circle inward">&#x2199;</div>
+              <h2>Inward</h2>
+              <p>Mail received into the office</p>
+            </div>
           </div>
         </div>
       </div>
-    </div>
 
+      <!-- ===== MAIN CONTENT (Form + Table) ===== -->
+      <div class="main-content" id="mainContent">
+        <div class="card">
+          <h2 id="formTitle">New Record <span class="mode-badge" id="modeBadge"></span></h2>
+          <form id="recordForm">
+            <input type="hidden" id="editId" value="">
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="date">Date</label>
+                <input type="date" id="date" required>
+              </div>
+              <div class="form-group">
+                <label for="employeeId">Employee ID</label>
+                <input type="text" id="employeeId" placeholder="e.g. EMP-1024" required>
+              </div>
+              <div class="form-group">
+                <label for="name" id="nameLabel">To</label>
+                <input type="text" id="name" placeholder="Recipient name" required>
+              </div>
+              <div class="form-group">
+                <label for="dept">Department</label>
+                <input type="text" id="dept" placeholder="e.g. Finance, HR, IT" required>
+              </div>
+              <div class="form-group full-width">
+                <label for="documents" id="docsLabel">List of Documents Sent</label>
+                <textarea id="documents" placeholder="e.g. Invoice, PO Copy, Agreement..." required></textarea>
+              </div>
+              <div class="form-group">
+                <label for="particular">Particular</label>
+                <input type="text" id="particular" placeholder="Mail type / category" required>
+              </div>
+              <div class="form-group">
+                <label for="details">Details</label>
+                <textarea id="details" placeholder="Additional details (optional)"></textarea>
+              </div>
+            </div>
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary" id="submitBtn">Add Record</button>
+              <button type="button" class="btn btn-secondary" id="cancelBtn" style="display:none" onclick="cancelEdit()">Cancel</button>
+              <button type="button" class="btn btn-secondary" onclick="clearForm()">Clear</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="card">
+          <div class="table-header">
+            <div style="display:flex;align-items:center;gap:10px">
+              <h2>Records</h2>
+              <span class="record-count" id="recordCount">0 records</span>
+            </div>
+            <input type="text" class="search-bar" id="searchInput" placeholder="Search records...">
+          </div>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th><th>Date</th><th>Emp ID</th><th id="thName">To</th>
+                  <th>Dept</th><th id="thDocs">Documents Sent</th><th>Particular</th><th>Details</th><th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="tableBody"></tbody>
+            </table>
+          </div>
+          <div class="empty-state" id="emptyState"><p>No records yet. Add your first record above.</p></div>
+        </div>
+      </div>
+
+      <!-- ===== ADMIN CONTENT ===== -->
+      <div class="admin-content" id="adminContent">
+        <div class="admin-nav">
+          <button class="admin-nav-btn active" onclick="adminNav('dashboard')">Dashboard</button>
+          <button class="admin-nav-btn" onclick="adminNav('records')">All Records</button>
+          <button class="admin-nav-btn" onclick="adminNav('editlog')">Edit Log</button>
+        </div>
+
+        <!-- Admin Dashboard -->
+        <div class="admin-section active" id="adminDashboard">
+          <div class="kpi-grid" id="adminKpis"></div>
+          <div class="card">
+            <h2>Recent Records</h2>
+            <div class="table-scroll">
+              <table>
+                <thead><tr><th>Date</th><th>Type</th><th>To/From</th><th>Dept</th><th>Documents</th><th>Location</th><th>By</th></tr></thead>
+                <tbody id="adminRecentBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Admin All Records -->
+        <div class="admin-section" id="adminRecords">
+          <div class="card">
+            <div class="table-header">
+              <div style="display:flex;align-items:center;gap:10px">
+                <h2>All Records</h2>
+                <span class="record-count" id="adminRecordCount">0</span>
+              </div>
+              <div style="display:flex;gap:10px">
+                <select id="adminTypeFilter" onchange="renderAdminRecords()" style="padding:8px 12px;border:1.5px solid #dde1e7;border-radius:8px;font-size:0.85rem">
+                  <option value="">All Types</option>
+                  <option value="inward">Inward</option>
+                  <option value="outward">Outward</option>
+                </select>
+                <input type="text" class="search-bar" id="adminSearchInput" placeholder="Search..." oninput="renderAdminRecords()">
+              </div>
+            </div>
+            <div class="table-scroll">
+              <table>
+                <thead><tr><th>#</th><th>Date</th><th>Type</th><th>Emp ID</th><th>To/From</th><th>Dept</th><th>Documents</th><th>Particular</th><th>Details</th><th>Location</th><th>By</th></tr></thead>
+                <tbody id="adminAllBody"></tbody>
+              </table>
+            </div>
+            <div class="empty-state" id="adminEmptyState" style="display:none"><p>No records found.</p></div>
+          </div>
+        </div>
+
+        <!-- Admin Edit Log -->
+        <div class="admin-section" id="adminEditlog">
+          <div class="card">
+            <h2>Edit Log</h2>
+            <div class="table-scroll">
+              <table>
+                <thead><tr><th>Date</th><th>Record</th><th>Type</th><th>Field</th><th>Old Value</th><th>New Value</th><th>Edited By</th></tr></thead>
+                <tbody id="adminEditBody"></tbody>
+              </table>
+            </div>
+            <div class="empty-state" id="editlogEmpty"><p>No edits yet.</p></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
   </div>
 
   <div class="toast" id="toast"></div>
 
   <script>
-    // State
-    let currentMode = null; // 'outward' or 'inward'
+    const API = 'http://52.66.163.52:3001/api';
+    let currentEmployee = null;
+    let selectedLocation = null;
+    let isAdmin = false;
+    let currentMode = null;
+    let records = [];
+    let adminRecords = [];
+    let selectedProfileIdx = -1;
+    let profilesList = [];
 
-    function getStorageKey() {
-      return currentMode === 'inward' ? 'mailRecordsInward' : 'mailRecordsOutward';
+    // ===== HELPERS =====
+    function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+    function showToast(msg, type = 'success') {
+      const t = document.getElementById('toast');
+      t.textContent = msg; t.className = 'toast ' + type + ' show';
+      setTimeout(() => t.classList.remove('show'), 2500);
+    }
+    async function api(path, opts) {
+      const r = await fetch(API + path, { headers: { 'Content-Type': 'application/json' }, ...opts });
+      return r.json();
     }
 
-    function getRecords() {
-      return JSON.parse(localStorage.getItem(getStorageKey()) || '[]');
+    // ===== LOGIN =====
+    async function initLogin() {
+      try {
+        const locs = await api('/locations');
+        const sel = document.getElementById('loginLocation');
+        sel.innerHTML = '<option value="">-- Select Branch --</option>' +
+          locs.map(l => `<option value="${esc(l)}">${esc(l)}</option>`).join('');
+      } catch (e) {
+        document.getElementById('loginError1').textContent = 'Failed to load locations';
+        document.getElementById('loginError1').style.display = 'block';
+      }
     }
 
-    function saveRecords(records) {
-      localStorage.setItem(getStorageKey(), JSON.stringify(records));
+    function showStep(n) {
+      document.querySelectorAll('.login-step').forEach(s => s.classList.remove('active'));
+      document.getElementById('loginStep' + n).classList.add('active');
     }
 
-    // Set today's date
-    const today = new Date();
-    document.getElementById('currentDate').textContent = today.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    function loginGoBack(step) { showStep(step); }
 
-    // Mode selection
-    function selectMode(mode) {
+    async function loginSelectLocation() {
+      const loc = document.getElementById('loginLocation').value;
+      if (!loc) { showLoginError(1, 'Please select a branch'); return; }
+      selectedLocation = loc;
+
+      // Head Office / Corporate Office shortcuts
+      if (loc === 'Head Office' || loc === 'Corporate Office') {
+        currentEmployee = { id: 0, emp_id: loc === 'Head Office' ? 'HO-USER' : 'CO-USER', name: loc === 'Head Office' ? 'Head Office' : 'Corporate Office', role: 'Admin Executive', location: loc };
+        startApp();
+        return;
+      }
+
+      try {
+        profilesList = await api('/employees?location=' + encodeURIComponent(loc));
+        const container = document.getElementById('loginProfiles');
+        document.getElementById('loginStep2Sub').textContent = `Branch: ${loc}`;
+
+        if (profilesList.length === 0) {
+          container.innerHTML = '';
+          document.getElementById('tempUserSection').style.display = 'block';
+          showStep(2);
+          return;
+        }
+
+        document.getElementById('tempUserSection').style.display = 'none';
+        selectedProfileIdx = profilesList.length === 1 ? 0 : -1;
+        container.innerHTML = profilesList.map((p, i) => `
+          <div class="profile-card ${profilesList.length === 1 ? 'selected' : ''}" onclick="selectProfile(${i})" id="prof-${i}">
+            <div class="avatar">${esc(p.name).substring(0, 2).toUpperCase()}</div>
+            <div class="info">
+              <div class="pname">${esc(p.name)}</div>
+              <div class="prole">${esc(p.emp_id)} &middot; ${esc(p.role || 'BOE')}</div>
+            </div>
+          </div>
+        `).join('');
+        showStep(2);
+      } catch (e) {
+        showLoginError(1, 'Failed to load profiles');
+      }
+    }
+
+    function selectProfile(i) {
+      selectedProfileIdx = i;
+      document.querySelectorAll('.profile-card').forEach((c, j) => c.classList.toggle('selected', j === i));
+    }
+
+    function loginConfirm() {
+      if (document.getElementById('tempUserSection').style.display !== 'none') {
+        const name = document.getElementById('tempUserName').value.trim();
+        if (!name) { showLoginError(2, 'Please enter your name'); return; }
+        currentEmployee = { id: 0, emp_id: 'TEMP-' + Date.now(), name, role: 'BOE', location: selectedLocation };
+      } else {
+        if (selectedProfileIdx < 0) { showLoginError(2, 'Please select a profile'); return; }
+        currentEmployee = profilesList[selectedProfileIdx];
+      }
+      startApp();
+    }
+
+    function loginAdminStart() {
+      showStep(3);
+      const inputs = document.querySelectorAll('.otp-inputs input');
+      inputs.forEach(inp => { inp.value = ''; });
+      inputs[0].focus();
+    }
+
+    // OTP auto-advance
+    document.querySelectorAll('.otp-inputs input').forEach((inp, i, all) => {
+      inp.addEventListener('input', () => {
+        if (inp.value && i < 3) all[i + 1].focus();
+      });
+      inp.addEventListener('keydown', (e) => {
+        if (e.key === 'Backspace' && !inp.value && i > 0) all[i - 1].focus();
+        if (e.key === 'Enter') loginVerifyOTP();
+      });
+    });
+
+    async function loginVerifyOTP() {
+      const otp = [...document.querySelectorAll('.otp-inputs input')].map(i => i.value).join('');
+      if (otp.length < 4) { showLoginError(3, 'Enter all 4 digits'); return; }
+      try {
+        const r = await api('/verify-otp', { method: 'POST', body: JSON.stringify({ otp }) });
+        if (r.success) {
+          isAdmin = true;
+          currentEmployee = { id: 0, emp_id: 'ADMIN', name: 'Admin', role: 'Administrator', location: 'Head Office' };
+          selectedLocation = 'Head Office';
+          startApp();
+        } else {
+          showLoginError(3, 'Invalid OTP');
+        }
+      } catch (e) {
+        showLoginError(3, 'Verification failed');
+      }
+    }
+
+    function showLoginError(step, msg) {
+      const el = document.getElementById('loginError' + step);
+      el.textContent = msg; el.style.display = 'block';
+      setTimeout(() => el.style.display = 'none', 3000);
+    }
+
+    // ===== SESSION =====
+    function startApp() {
+      sessionStorage.setItem('mr_employee', JSON.stringify(currentEmployee));
+      sessionStorage.setItem('mr_location', selectedLocation);
+      sessionStorage.setItem('mr_admin', isAdmin ? 'true' : 'false');
+      sessionStorage.setItem('mr_login_time', Date.now().toString());
+      showApp();
+    }
+
+    function checkSession() {
+      const emp = sessionStorage.getItem('mr_employee');
+      if (!emp) return false;
+      const loginTime = parseInt(sessionStorage.getItem('mr_login_time') || '0');
+      if (Date.now() - loginTime > 24 * 60 * 60 * 1000) { logout(); return false; }
+      currentEmployee = JSON.parse(emp);
+      selectedLocation = sessionStorage.getItem('mr_location');
+      isAdmin = sessionStorage.getItem('mr_admin') === 'true';
+      return true;
+    }
+
+    function showApp() {
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('appScreen').style.display = 'block';
+      document.getElementById('headerUser').textContent = `${currentEmployee.name} (${selectedLocation})`;
+
+      if (isAdmin) {
+        document.getElementById('modeSelect').style.display = 'none';
+        document.getElementById('adminContent').style.display = 'block';
+        loadAdminData();
+      } else {
+        document.getElementById('modeSelect').style.display = 'flex';
+        document.getElementById('adminContent').style.display = 'none';
+      }
+    }
+
+    function logout() {
+      sessionStorage.clear();
+      currentEmployee = null; selectedLocation = null; isAdmin = false; currentMode = null;
+      document.getElementById('appScreen').style.display = 'none';
+      document.getElementById('loginScreen').style.display = 'flex';
+      document.getElementById('mainContent').style.display = 'none';
+      document.getElementById('adminContent').style.display = 'none';
+      document.getElementById('modeSelect').style.display = 'flex';
+      document.getElementById('backBtn').style.display = 'none';
+      body.classList.remove('mode-inward', 'mode-outward');
+      showStep(1);
+    }
+
+    // ===== MODE SELECT =====
+    async function selectMode(mode) {
       currentMode = mode;
       document.getElementById('modeSelect').style.display = 'none';
       document.getElementById('mainContent').style.display = 'block';
       document.getElementById('backBtn').style.display = 'inline-block';
 
+      document.body.classList.remove('mode-inward', 'mode-outward');
+      document.body.classList.add('mode-' + mode);
+
       const badge = document.getElementById('modeBadge');
-      badge.textContent = mode;
-      badge.className = 'mode-badge ' + mode;
+      badge.textContent = mode; badge.className = 'mode-badge ' + mode;
 
       if (mode === 'outward') {
         document.getElementById('nameLabel').textContent = 'To';
@@ -538,106 +648,96 @@
         document.getElementById('thDocs').textContent = 'Documents Received';
       }
 
-      document.getElementById('date').valueAsDate = today;
-      render();
+      document.getElementById('date').valueAsDate = new Date();
+      document.getElementById('searchInput').value = '';
+      await loadRecords();
     }
 
     function goBack() {
       cancelEdit();
+      document.getElementById('searchInput').value = '';
       currentMode = null;
+      document.body.classList.remove('mode-inward', 'mode-outward');
       document.getElementById('modeSelect').style.display = 'flex';
       document.getElementById('mainContent').style.display = 'none';
       document.getElementById('backBtn').style.display = 'none';
     }
 
-    // Render
-    function render(filter = '') {
-      const records = getRecords();
+    // ===== RECORDS =====
+    async function loadRecords() {
+      try {
+        records = await api(`/records?mail_type=${currentMode}&location=${encodeURIComponent(selectedLocation)}`);
+        renderRecords();
+      } catch (e) { showToast('Failed to load records', 'info'); }
+    }
+
+    function renderRecords(filter = '') {
       const tbody = document.getElementById('tableBody');
       const empty = document.getElementById('emptyState');
-      const lowerFilter = filter.toLowerCase();
-
-      const filtered = records.filter(r =>
-        !filter || Object.values(r).some(v => v.toLowerCase().includes(lowerFilter))
-      );
+      const lf = filter.toLowerCase();
+      const filtered = records.filter(r => !filter || Object.values(r).some(v => String(v).toLowerCase().includes(lf)));
 
       document.getElementById('recordCount').textContent = `${filtered.length} record${filtered.length !== 1 ? 's' : ''}`;
 
-      if (filtered.length === 0) {
-        tbody.innerHTML = '';
-        empty.style.display = 'block';
-        return;
-      }
-
+      if (!filtered.length) { tbody.innerHTML = ''; empty.style.display = 'block'; return; }
       empty.style.display = 'none';
-      tbody.innerHTML = filtered.map((r, i) => {
-        const realIndex = records.indexOf(r);
-        return `<tr>
-          <td>${realIndex + 1}</td>
-          <td>${r.date}</td>
-          <td>${r.employeeId}</td>
-          <td>${r.name}</td>
-          <td>${r.dept}</td>
-          <td>${r.address}</td>
-          <td>${r.particular}</td>
-          <td>${r.details}</td>
-          <td class="actions-cell">
-            <button class="btn btn-edit" onclick="editRecord(${realIndex})">Edit</button>
-          </td>
-        </tr>`;
-      }).join('');
+      tbody.innerHTML = filtered.map((r, i) => `<tr>
+        <td>${i + 1}</td>
+        <td>${esc(r.date)}</td>
+        <td>${esc(r.employee_id)}</td>
+        <td>${esc(r.name)}</td>
+        <td>${esc(r.department)}</td>
+        <td>${esc(r.documents)}</td>
+        <td>${esc(r.particular)}</td>
+        <td>${esc(r.details || '')}</td>
+        <td class="actions-cell"><button class="btn btn-edit" onclick="editRecord(${r.id})">Edit</button></td>
+      </tr>`).join('');
     }
 
-    // Toast
-    function showToast(msg) {
-      const t = document.getElementById('toast');
-      t.textContent = msg;
-      t.classList.add('show');
-      setTimeout(() => t.classList.remove('show'), 2500);
-    }
+    document.getElementById('searchInput').addEventListener('input', function() { renderRecords(this.value); });
 
     // Form submit
-    document.getElementById('recordForm').addEventListener('submit', function(e) {
+    document.getElementById('recordForm').addEventListener('submit', async function(e) {
       e.preventDefault();
-      const records = getRecords();
       const data = {
+        mail_type: currentMode,
         date: document.getElementById('date').value,
-        employeeId: document.getElementById('employeeId').value.trim(),
+        employee_id: document.getElementById('employeeId').value.trim(),
         name: document.getElementById('name').value.trim(),
-        dept: document.getElementById('dept').value.trim(),
-        address: document.getElementById('address').value.trim(),
+        department: document.getElementById('dept').value.trim(),
+        documents: document.getElementById('documents').value.trim(),
         particular: document.getElementById('particular').value.trim(),
         details: document.getElementById('details').value.trim(),
+        location: selectedLocation,
+        created_by: currentEmployee.name,
       };
 
-      const editIndex = parseInt(document.getElementById('editIndex').value);
-
-      if (editIndex >= 0) {
-        records[editIndex] = data;
-        showToast('Record updated successfully');
-        cancelEdit();
-      } else {
-        records.push(data);
-        showToast('Record added successfully');
-      }
-
-      saveRecords(records);
-      render(document.getElementById('searchInput').value);
-      if (editIndex < 0) clearForm();
+      const editId = document.getElementById('editId').value;
+      try {
+        if (editId) {
+          await api(`/records/${editId}`, { method: 'PUT', body: JSON.stringify({ ...data, edited_by: currentEmployee.name }) });
+          showToast('Record updated');
+          cancelEdit();
+        } else {
+          await api('/records', { method: 'POST', body: JSON.stringify(data) });
+          showToast('Record added');
+        }
+        await loadRecords();
+        if (!editId) clearForm();
+      } catch (e) { showToast('Failed to save', 'info'); }
     });
 
-    // Edit
-    function editRecord(index) {
-      const records = getRecords();
-      const r = records[index];
+    function editRecord(id) {
+      const r = records.find(x => x.id === id);
+      if (!r) return;
       document.getElementById('date').value = r.date;
-      document.getElementById('employeeId').value = r.employeeId;
+      document.getElementById('employeeId').value = r.employee_id;
       document.getElementById('name').value = r.name;
-      document.getElementById('dept').value = r.dept;
-      document.getElementById('address').value = r.address;
+      document.getElementById('dept').value = r.department;
+      document.getElementById('documents').value = r.documents;
       document.getElementById('particular').value = r.particular;
-      document.getElementById('details').value = r.details;
-      document.getElementById('editIndex').value = index;
+      document.getElementById('details').value = r.details || '';
+      document.getElementById('editId').value = r.id;
       document.getElementById('formTitle').innerHTML = 'Edit Record <span class="mode-badge ' + currentMode + '">' + currentMode + '</span>';
       document.getElementById('submitBtn').textContent = 'Update Record';
       document.getElementById('cancelBtn').style.display = 'inline-block';
@@ -645,23 +745,117 @@
     }
 
     function cancelEdit() {
-      document.getElementById('editIndex').value = -1;
+      document.getElementById('editId').value = '';
       document.getElementById('formTitle').innerHTML = 'New Record <span class="mode-badge ' + currentMode + '">' + currentMode + '</span>';
       document.getElementById('submitBtn').textContent = 'Add Record';
       document.getElementById('cancelBtn').style.display = 'none';
       clearForm();
     }
 
-    // Clear
     function clearForm() {
       document.getElementById('recordForm').reset();
       document.getElementById('date').valueAsDate = new Date();
     }
 
-    // Search
-    document.getElementById('searchInput').addEventListener('input', function() {
-      render(this.value);
+    // ===== ADMIN =====
+    function adminNav(section) {
+      document.querySelectorAll('.admin-nav-btn').forEach((b, i) => b.classList.toggle('active', b.textContent.toLowerCase().includes(section.substring(0, 4))));
+      document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active'));
+      document.getElementById('admin' + section.charAt(0).toUpperCase() + section.slice(1)).classList.add('active');
+    }
+
+    async function loadAdminData() {
+      try {
+        const [stats, recs, logs] = await Promise.all([
+          api('/admin/stats'),
+          api('/admin/records'),
+          api('/admin/edit-logs'),
+        ]);
+        adminRecords = recs;
+
+        // KPIs
+        document.getElementById('adminKpis').innerHTML = [
+          { v: stats.total, l: 'Total Records' },
+          { v: stats.inward, l: 'Inward' },
+          { v: stats.outward, l: 'Outward' },
+          { v: stats.locations, l: 'Locations' },
+          { v: stats.today, l: 'Today' },
+        ].map(k => `<div class="kpi-card"><div class="kpi-value">${k.v}</div><div class="kpi-label">${k.l}</div></div>`).join('');
+
+        // Recent
+        document.getElementById('adminRecentBody').innerHTML = recs.slice(0, 15).map(r => `<tr>
+          <td>${esc(r.date)}</td>
+          <td><span class="mode-badge ${r.mail_type}">${r.mail_type}</span></td>
+          <td>${esc(r.name)}</td>
+          <td>${esc(r.department)}</td>
+          <td>${esc(r.documents)}</td>
+          <td>${esc(r.location)}</td>
+          <td>${esc(r.created_by)}</td>
+        </tr>`).join('') || '<tr><td colspan="7" style="text-align:center;color:#aaa;padding:24px">No records yet</td></tr>';
+
+        // Edit logs
+        const editBody = document.getElementById('adminEditBody');
+        const editEmpty = document.getElementById('editlogEmpty');
+        if (logs.length) {
+          editEmpty.style.display = 'none';
+          editBody.innerHTML = logs.map(l => `<tr>
+            <td>${new Date(l.edited_at).toLocaleString()}</td>
+            <td>${esc(l.record_name || '#' + l.record_id)}</td>
+            <td><span class="mode-badge ${l.mail_type}">${l.mail_type}</span></td>
+            <td>${esc(l.field_changed)}</td>
+            <td>${esc(l.old_value)}</td>
+            <td>${esc(l.new_value)}</td>
+            <td>${esc(l.edited_by)}</td>
+          </tr>`).join('');
+        } else {
+          editBody.innerHTML = '';
+          editEmpty.style.display = 'block';
+        }
+
+        renderAdminRecords();
+      } catch (e) { showToast('Failed to load admin data', 'info'); }
+    }
+
+    function renderAdminRecords() {
+      const typeFilter = document.getElementById('adminTypeFilter').value;
+      const search = (document.getElementById('adminSearchInput').value || '').toLowerCase();
+      let filtered = adminRecords;
+      if (typeFilter) filtered = filtered.filter(r => r.mail_type === typeFilter);
+      if (search) filtered = filtered.filter(r => Object.values(r).some(v => String(v).toLowerCase().includes(search)));
+
+      document.getElementById('adminRecordCount').textContent = filtered.length + ' records';
+      const body = document.getElementById('adminAllBody');
+      const empty = document.getElementById('adminEmptyState');
+
+      if (!filtered.length) { body.innerHTML = ''; empty.style.display = 'block'; return; }
+      empty.style.display = 'none';
+      body.innerHTML = filtered.map((r, i) => `<tr>
+        <td>${i + 1}</td>
+        <td>${esc(r.date)}</td>
+        <td><span class="mode-badge ${r.mail_type}">${r.mail_type}</span></td>
+        <td>${esc(r.employee_id)}</td>
+        <td>${esc(r.name)}</td>
+        <td>${esc(r.department)}</td>
+        <td>${esc(r.documents)}</td>
+        <td>${esc(r.particular)}</td>
+        <td>${esc(r.details || '')}</td>
+        <td>${esc(r.location)}</td>
+        <td>${esc(r.created_by)}</td>
+      </tr>`).join('');
+    }
+
+    // ===== KEYBOARD SHORTCUTS =====
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && currentMode) goBack();
     });
+
+    // ===== INIT =====
+    const body = document.body;
+    if (checkSession()) {
+      showApp();
+    } else {
+      initLogin();
+    }
   </script>
 </body>
 </html>
