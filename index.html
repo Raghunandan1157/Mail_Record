@@ -268,7 +268,7 @@
     <div class="floor"></div><div class="floor-shine"></div>
     <div class="grain"></div><div class="vignette"></div>
   </div>
-  <div class="instruction" id="instruction">Click the handle</div>
+  <div class="instruction" id="instruction"></div>
 </div>
 
 <!-- ===== MODULE SELECTION ===== -->
@@ -457,18 +457,16 @@
       const ct=opening?0:dur-0.1,co=c.createOscillator(),cg=c.createGain();co.type='square';co.frequency.value=2000;cg.gain.setValueAtTime(0,now+ct);cg.gain.linearRampToValueAtTime(0.04,now+ct+0.005);cg.gain.exponentialRampToValueAtTime(0.001,now+ct+0.06);co.connect(cg);cg.connect(c.destination);co.start(now+ct);co.stop(now+ct+0.1);
     }
 
-    // Door click
+    // Auto-open door after 1 second
     const scene = document.getElementById('sceneWrapper');
-    document.getElementById('doorPivot').addEventListener('click', function handler() {
+    setTimeout(() => {
       scene.classList.add('handle-down');
       playCreak(true);
       setTimeout(()=>scene.classList.add('open'), 350);
       setTimeout(()=>scene.classList.remove('handle-down'), 800);
       document.getElementById('doorScreen').classList.add('revealed');
-      // After door opens, transition to module screen
       setTimeout(()=>showModuleScreen(), 3500);
-      document.getElementById('doorPivot').removeEventListener('click', handler);
-    });
+    }, 1000);
   }
 
   // ===== MODULE SCREEN =====
