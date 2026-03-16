@@ -259,7 +259,19 @@
                 <button onclick="exportToExcel('all')" class="bg-green-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-green-700 transition flex items-center gap-1"><span class="material-symbols-outlined text-sm">download</span>Excel</button>
               </div>
             </div>
-            <div class="overflow-x-auto"><table class="w-full text-sm min-w-[900px]"><thead><tr class="text-xs text-slate-400 uppercase border-b"><th class="pb-2 text-left">ID</th><th class="pb-2 text-left">Date</th><th class="pb-2 text-left">Type</th><th class="pb-2 text-left">Emp ID</th><th class="pb-2 text-left">To/From</th><th class="pb-2 text-left">Dept</th><th class="pb-2 text-left">Documents</th><th class="pb-2 text-left">Particular</th><th class="pb-2 text-left">Details</th><th class="pb-2 text-left">Location</th><th class="pb-2 text-left">By</th></tr></thead><tbody id="adminAllBody"></tbody></table></div>
+            <div class="overflow-x-auto"><table class="w-full text-sm min-w-[900px]"><thead><tr class="text-xs text-slate-400 uppercase border-b">
+              <th class="pb-2 text-left">ID</th>
+              <th class="pb-2 text-left">Date</th>
+              <th class="pb-2 text-left cursor-pointer hover:text-primary" onclick="openColFilter('mail_type','Type')">Type <span class="material-symbols-outlined text-xs align-middle">filter_list</span></th>
+              <th class="pb-2 text-left cursor-pointer hover:text-primary" onclick="openColFilter('employee_id','Emp ID')">Emp ID <span class="material-symbols-outlined text-xs align-middle">filter_list</span></th>
+              <th class="pb-2 text-left cursor-pointer hover:text-primary" onclick="openColFilter('name','To/From')">To/From <span class="material-symbols-outlined text-xs align-middle">filter_list</span></th>
+              <th class="pb-2 text-left cursor-pointer hover:text-primary" onclick="openColFilter('department','Dept')">Dept <span class="material-symbols-outlined text-xs align-middle">filter_list</span></th>
+              <th class="pb-2 text-left">Documents</th>
+              <th class="pb-2 text-left cursor-pointer hover:text-primary" onclick="openColFilter('particular','Particular')">Particular <span class="material-symbols-outlined text-xs align-middle">filter_list</span></th>
+              <th class="pb-2 text-left">Details</th>
+              <th class="pb-2 text-left cursor-pointer hover:text-primary" onclick="openColFilter('location','Location')">Location <span class="material-symbols-outlined text-xs align-middle">filter_list</span></th>
+              <th class="pb-2 text-left cursor-pointer hover:text-primary" onclick="openColFilter('created_by','By')">By <span class="material-symbols-outlined text-xs align-middle">filter_list</span></th>
+            </tr></thead><tbody id="adminAllBody"></tbody></table></div>
             <div class="text-center py-8 text-slate-400 text-sm" id="adminEmptyState" style="display:none">No records found.</div>
           </div>
         </div>
@@ -290,6 +302,24 @@
 
       </div>
     </main>
+  </div>
+
+  <!-- Column Filter Modal -->
+  <div id="colFilterModal" class="fixed inset-0 bg-black/30 z-50 flex items-center justify-center hidden" onclick="if(event.target===this)closeColFilter()">
+    <div class="bg-white rounded-xl shadow-xl w-80 max-w-[90vw] max-h-[70vh] flex flex-col">
+      <div class="flex items-center justify-between px-5 pt-4 pb-2 border-b border-slate-100">
+        <h3 class="font-semibold text-sm text-slate-700" id="colFilterTitle">Filter</h3>
+        <button onclick="closeColFilter()" class="text-slate-400 hover:text-slate-600"><span class="material-symbols-outlined text-lg">close</span></button>
+      </div>
+      <div class="px-5 py-3 border-b border-slate-100">
+        <input type="text" id="colFilterSearch" placeholder="Search values..." oninput="filterColOptions()" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20">
+      </div>
+      <div class="flex-1 overflow-y-auto px-5 py-2 space-y-1" id="colFilterOptions"></div>
+      <div class="px-5 py-3 border-t border-slate-100 flex gap-2">
+        <button onclick="applyColFilter()" class="flex-1 bg-primary text-white py-2 rounded-lg text-sm font-semibold hover:bg-primary/90 transition">Apply</button>
+        <button onclick="clearColFilter()" class="flex-1 bg-slate-100 text-slate-600 py-2 rounded-lg text-sm font-semibold hover:bg-slate-200 transition">Clear</button>
+      </div>
+    </div>
   </div>
 
   <!-- Toast -->
@@ -615,12 +645,71 @@
       renderAdminRecords();
     }
 
+    // Column filters state: { column: Set of selected values }
+    let colFilters = {};
+    let colFilterField = '';
+    let colFilterAllValues = [];
+
     function renderAdminRecords() {
       const tf = document.getElementById('adminTypeFilter').value, s = (document.getElementById('adminSearchInput').value || '').toLowerCase();
-      let f = adminAllRecords; if (tf) f = f.filter(r => r.mail_type === tf); if (s) f = f.filter(r => Object.values(r).some(v => String(v).toLowerCase().includes(s)));
+      let f = adminAllRecords;
+      if (tf) f = f.filter(r => r.mail_type === tf);
+      if (s) f = f.filter(r => Object.values(r).some(v => String(v).toLowerCase().includes(s)));
+      // Apply column filters
+      for (const [col, vals] of Object.entries(colFilters)) {
+        if (vals.size > 0) f = f.filter(r => vals.has(String(r[col] || '')));
+      }
       document.getElementById('adminRecordCount').textContent = f.length + ' records';
       document.getElementById('adminEmptyState').style.display = f.length ? 'none' : 'block';
       document.getElementById('adminAllBody').innerHTML = [...f].reverse().map(r => `<tr class="border-b border-slate-100 hover:bg-slate-50"><td class="py-2 font-semibold">${r.seq}</td><td class="py-2">${esc(r.date)}</td><td class="py-2"><span class="inline-block px-2 py-0.5 rounded-full text-xs font-semibold badge-${r.mail_type}">${r.mail_type}</span></td><td class="py-2">${esc(r.employee_id)}</td><td class="py-2">${esc(r.name)}</td><td class="py-2">${esc(r.department)}</td><td class="py-2">${esc(r.documents)}</td><td class="py-2">${esc(r.particular)}</td><td class="py-2 text-slate-400">${esc(r.details||'')}</td><td class="py-2">${esc(r.location)}</td><td class="py-2 text-slate-400">${esc(r.created_by)}</td></tr>`).join('');
+    }
+
+    function openColFilter(field, title) {
+      colFilterField = field;
+      document.getElementById('colFilterTitle').textContent = 'Filter: ' + title;
+      document.getElementById('colFilterSearch').value = '';
+      // Get unique values for this column
+      colFilterAllValues = [...new Set(adminAllRecords.map(r => String(r[field] || '')))].sort();
+      const selected = colFilters[field] || new Set();
+      renderColOptions(colFilterAllValues, selected);
+      document.getElementById('colFilterModal').classList.remove('hidden');
+    }
+
+    function renderColOptions(values, selected) {
+      document.getElementById('colFilterOptions').innerHTML = values.map(v => `
+        <label class="flex items-center gap-2.5 py-1.5 px-1 rounded hover:bg-slate-50 cursor-pointer text-sm">
+          <input type="checkbox" value="${esc(v)}" ${selected.has(v) ? 'checked' : ''} class="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary/20">
+          <span>${esc(v) || '<em class="text-slate-300">empty</em>'}</span>
+        </label>
+      `).join('');
+    }
+
+    function filterColOptions() {
+      const q = document.getElementById('colFilterSearch').value.toLowerCase();
+      const filtered = colFilterAllValues.filter(v => v.toLowerCase().includes(q));
+      const selected = colFilters[colFilterField] || new Set();
+      renderColOptions(filtered, selected);
+    }
+
+    function applyColFilter() {
+      const checked = [...document.querySelectorAll('#colFilterOptions input:checked')].map(i => i.value);
+      if (checked.length === 0 || checked.length === colFilterAllValues.length) {
+        delete colFilters[colFilterField];
+      } else {
+        colFilters[colFilterField] = new Set(checked);
+      }
+      closeColFilter();
+      renderAdminRecords();
+    }
+
+    function clearColFilter() {
+      delete colFilters[colFilterField];
+      closeColFilter();
+      renderAdminRecords();
+    }
+
+    function closeColFilter() {
+      document.getElementById('colFilterModal').classList.add('hidden');
     }
 
     async function loadAdminEditLogs() {
