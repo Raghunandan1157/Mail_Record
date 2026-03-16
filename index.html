@@ -5,349 +5,346 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Mail Record</title>
   <link rel="icon" href="data:,">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL@20..48,100..700,0..1" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+  <script>
+    tailwindcss = undefined;
+    tailwind.config = { theme: { extend: { colors: { primary: '#0f3460', accent: '#27ae60' }, fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] } } } };
+  </script>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: #f0f2f5; color: #1a1a2e; min-height: 100vh; }
+    .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+    .nav-link.active { background: rgba(15,52,96,0.1); color: #0f3460; font-weight: 600; }
+    .nav-link:hover:not(.active) { background: #f1f5f9; }
+    #sidebar.open { display: flex !important; position: fixed; top: 0; left: 0; z-index: 40; height: 100vh; box-shadow: 4px 0 24px rgba(0,0,0,0.15); }
+    .kpi-card:hover { transform: scale(1.02); box-shadow: 0 4px 16px rgba(0,0,0,0.1); }
+    .badge-inward { background: rgba(39,174,96,0.12); color: #27ae60; }
+    .badge-outward { background: rgba(15,52,96,0.12); color: #0f3460; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    .fade-in { animation: fadeIn 0.3s ease; }
+    .scrollbar-hide::-webkit-scrollbar { display: none; }
+    .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+    @media print { #sidebar, header, .no-print { display: none !important; } #page-content { padding: 0 !important; } }
 
-    /* LOGIN */
-    .login-screen {
-      min-height: 100vh; display: flex; align-items: center; justify-content: center;
-      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-    }
-    .login-card {
-      background: #fff; border-radius: 16px; padding: 40px 44px; width: 420px; max-width: 95vw;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
-    }
+    /* Login */
+    .login-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); }
+    .login-card { background: #fff; border-radius: 16px; padding: 40px 44px; width: 420px; max-width: 95vw; box-shadow: 0 8px 32px rgba(0,0,0,0.2); }
     .login-card h1 { font-size: 1.5rem; color: #0f3460; margin-bottom: 6px; }
     .login-card p.sub { font-size: 0.88rem; color: #888; margin-bottom: 28px; }
-    .login-card label { display: block; font-size: 0.8rem; font-weight: 600; color: #555; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 6px; }
-    .login-card select, .login-card input[type="text"], .login-card input[type="password"] {
-      width: 100%; padding: 11px 14px; border: 1.5px solid #dde1e7; border-radius: 8px;
-      font-size: 0.95rem; font-family: inherit; background: #fafbfc; margin-bottom: 18px;
-    }
-    .login-card select:focus, .login-card input:focus { outline: none; border-color: #0f3460; box-shadow: 0 0 0 3px rgba(15,52,96,0.1); }
-    .login-error { color: #e74c3c; font-size: 0.85rem; margin-bottom: 12px; display: none; }
-    .login-profiles { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; max-height: 240px; overflow-y: auto; }
-    .profile-card {
-      display: flex; align-items: center; gap: 14px; padding: 12px 16px;
-      border: 2px solid #e8ecf1; border-radius: 10px; cursor: pointer; transition: all 0.2s;
-    }
-    .profile-card:hover, .profile-card.selected { border-color: #0f3460; background: rgba(15,52,96,0.04); }
-    .profile-card .avatar {
-      width: 42px; height: 42px; border-radius: 50%; background: linear-gradient(135deg, #0f3460, #16213e);
-      color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; flex-shrink: 0;
-    }
-    .profile-card .info { flex: 1; }
-    .profile-card .info .pname { font-weight: 600; font-size: 0.95rem; }
-    .profile-card .info .prole { font-size: 0.78rem; color: #888; }
     .login-step { display: none; }
     .login-step.active { display: block; }
-    .admin-link { text-align: center; margin-top: 18px; }
-    .admin-link a { color: #0f3460; font-size: 0.82rem; cursor: pointer; text-decoration: underline; }
+    .login-error { color: #e74c3c; font-size: 0.85rem; margin-bottom: 12px; display: none; }
+    .profile-card { display: flex; align-items: center; gap: 14px; padding: 12px 16px; border: 2px solid #e8ecf1; border-radius: 10px; cursor: pointer; transition: all 0.2s; }
+    .profile-card:hover, .profile-card.selected { border-color: #0f3460; background: rgba(15,52,96,0.04); }
     .otp-inputs { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; }
-    .otp-inputs input {
-      width: 52px; height: 56px; text-align: center; font-size: 1.5rem; font-weight: 700;
-      border: 2px solid #dde1e7; border-radius: 10px; background: #fafbfc;
-    }
-    .otp-inputs input:focus { border-color: #0f3460; outline: none; box-shadow: 0 0 0 3px rgba(15,52,96,0.1); }
-    .name-input-section { margin-bottom: 18px; }
-
-    /* HEADER */
-    header {
-      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-      color: #fff; padding: 18px 32px; display: flex; align-items: center; justify-content: space-between;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.15);
-    }
-    body.mode-inward header { background: linear-gradient(135deg, #1a5632 0%, #1e7a45 50%, #27ae60 100%); }
-    header h1 { font-size: 1.4rem; font-weight: 700; }
-    .header-right { display: flex; align-items: center; gap: 14px; }
-    .header-user { font-size: 0.82rem; opacity: 0.85; }
-    .header-btn {
-      background: rgba(255,255,255,0.15); color: #fff; border: 1px solid rgba(255,255,255,0.25);
-      padding: 6px 16px; border-radius: 8px; font-size: 0.82rem; font-weight: 600; cursor: pointer; transition: all 0.2s;
-    }
-    .header-btn:hover { background: rgba(255,255,255,0.25); }
-    .container { max-width: 1100px; margin: 28px auto; padding: 0 20px; }
-
-    /* MODE SELECT */
-    .mode-select { display: flex; justify-content: center; align-items: center; min-height: 55vh; }
-    .mode-select-inner { text-align: center; }
-    .mode-select-title { font-size: 1.5rem; color: #1a1a2e; margin-bottom: 6px; }
-    .mode-select-sub { font-size: 0.92rem; color: #888; margin-bottom: 32px; }
-    .mode-cards { display: flex; gap: 28px; }
-    .mode-card {
-      background: #fff; border-radius: 16px; padding: 44px 52px; text-align: center;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.08); cursor: pointer; transition: all 0.25s; border: 3px solid transparent;
-    }
-    .mode-card:hover { transform: translateY(-4px); box-shadow: 0 8px 28px rgba(0,0,0,0.12); }
-    .mode-card.outward:hover { border-color: #0f3460; }
-    .mode-card.inward:hover { border-color: #27ae60; }
-    .icon-circle {
-      width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center;
-      justify-content: center; font-size: 1.6rem; margin: 0 auto 14px;
-    }
-    .icon-circle.outward { background: rgba(15,52,96,0.1); color: #0f3460; }
-    .icon-circle.inward { background: rgba(39,174,96,0.1); color: #27ae60; }
-    .mode-card h2 { font-size: 1.3rem; margin-bottom: 6px; }
-    .mode-card p { font-size: 0.85rem; color: #888; }
-    .mode-card.outward h2 { color: #0f3460; }
-    .mode-card.inward h2 { color: #27ae60; }
-
-    /* MAIN CONTENT */
-    .main-content { display: none; animation: fadeIn 0.3s ease; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-    .mode-badge {
-      display: inline-block; padding: 4px 14px; border-radius: 20px; font-size: 0.72rem;
-      font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-left: 10px; vertical-align: middle;
-    }
-    .mode-badge.outward { background: rgba(15,52,96,0.12); color: #0f3460; }
-    .mode-badge.inward { background: rgba(39,174,96,0.12); color: #27ae60; }
-
-    /* CARDS */
-    .card { background: #fff; border-radius: 12px; padding: 28px 32px; box-shadow: 0 1px 6px rgba(0,0,0,0.08); margin-bottom: 28px; }
-    .card h2 { font-size: 1.1rem; margin-bottom: 20px; color: #0f3460; border-bottom: 2px solid #e8ecf1; padding-bottom: 10px; }
-    body.mode-inward .card h2 { color: #1e7a45; }
-    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
-    .form-group { display: flex; flex-direction: column; }
-    .form-group.full-width { grid-column: 1 / -1; }
-    .form-group label { font-size: 0.8rem; font-weight: 600; color: #555; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.4px; }
-    .form-group input, .form-group textarea {
-      padding: 10px 14px; border: 1.5px solid #dde1e7; border-radius: 8px;
-      font-size: 0.95rem; font-family: inherit; background: #fafbfc; transition: border-color 0.2s, box-shadow 0.2s;
-    }
-    .form-group input:focus, .form-group textarea:focus { outline: none; border-color: #0f3460; box-shadow: 0 0 0 3px rgba(15,52,96,0.1); background: #fff; }
-    body.mode-inward .form-group input:focus, body.mode-inward .form-group textarea:focus { border-color: #27ae60; box-shadow: 0 0 0 3px rgba(39,174,96,0.1); }
-    .form-group textarea { resize: vertical; min-height: 72px; }
-    .form-actions { display: flex; gap: 10px; margin-top: 22px; }
-    .btn { padding: 10px 26px; border: none; border-radius: 8px; font-size: 0.88rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
-    .btn-primary { background: linear-gradient(135deg, #0f3460, #16213e); color: #fff; }
-    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(15,52,96,0.3); }
-    body.mode-inward .btn-primary { background: linear-gradient(135deg, #27ae60, #1e7a45); }
-    .btn-secondary { background: #e8ecf1; color: #555; }
-    .btn-secondary:hover { background: #dde1e7; }
-    .btn-edit { background: #3498db; color: #fff; padding: 5px 12px; font-size: 0.78rem; }
-    .btn-edit:hover { background: #2980b9; }
-
-    /* TABLE */
-    .table-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 2px solid #e8ecf1; padding-bottom: 10px; }
-    .table-header h2 { border: none; padding: 0; margin: 0; }
-    .record-count { font-size: 0.82rem; color: #888; background: #f0f2f5; padding: 3px 12px; border-radius: 20px; }
-    .search-bar { padding: 8px 14px; border: 1.5px solid #dde1e7; border-radius: 8px; font-size: 0.88rem; width: 240px; font-family: inherit; background: #fafbfc; }
-    .search-bar:focus { outline: none; border-color: #0f3460; box-shadow: 0 0 0 3px rgba(15,52,96,0.1); }
-    .table-scroll { overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; min-width: 700px; }
-    thead th { text-align: left; padding: 10px 12px; font-size: 0.76rem; text-transform: uppercase; letter-spacing: 0.5px; color: #888; background: #f8f9fb; border-bottom: 2px solid #e8ecf1; white-space: nowrap; }
-    tbody tr { border-bottom: 1px solid #f0f2f5; transition: background 0.15s; }
-    tbody tr:hover { background: #f8f9fb; }
-    tbody td { padding: 10px 12px; font-size: 0.88rem; color: #333; }
-    .actions-cell { display: flex; gap: 6px; }
-    .empty-state { text-align: center; padding: 40px 20px; color: #aaa; }
-
-    /* ADMIN */
-    .admin-content { display: none; animation: fadeIn 0.3s ease; }
-    .admin-nav { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
-    .admin-nav-btn { padding: 9px 20px; border: 2px solid #e8ecf1; border-radius: 8px; background: #fff; font-size: 0.85rem; font-weight: 600; cursor: pointer; color: #555; transition: all 0.2s; }
-    .admin-nav-btn:hover { border-color: #0f3460; color: #0f3460; }
-    .admin-nav-btn.active { background: #0f3460; color: #fff; border-color: #0f3460; }
-    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 28px; }
-    .kpi-card { background: #fff; border-radius: 12px; padding: 20px 24px; box-shadow: 0 1px 6px rgba(0,0,0,0.06); text-align: center; }
-    .kpi-card .kpi-value { font-size: 2rem; font-weight: 700; color: #0f3460; }
-    .kpi-card .kpi-label { font-size: 0.78rem; color: #888; text-transform: uppercase; letter-spacing: 0.4px; margin-top: 4px; }
-    .admin-section { display: none; }
-    .admin-section.active { display: block; }
-
-    /* TOAST */
-    .toast { position: fixed; bottom: 24px; right: 24px; color: #fff; padding: 13px 22px; border-radius: 10px; font-size: 0.88rem; font-weight: 500; box-shadow: 0 4px 16px rgba(0,0,0,0.2); transform: translateY(100px); opacity: 0; transition: all 0.3s ease; z-index: 200; }
-    .toast.success { background: #27ae60; }
-    .toast.info { background: #0f3460; }
-    .toast.show { transform: translateY(0); opacity: 1; }
-
-    @media (max-width: 700px) {
-      .form-grid { grid-template-columns: 1fr; }
-      header { padding: 14px 16px; }
-      .card { padding: 20px; }
-      .search-bar { width: 100%; }
-      .table-header { flex-direction: column; gap: 10px; align-items: flex-start; }
-      .mode-cards { flex-direction: column; gap: 16px; }
-      .mode-card { padding: 28px 36px; }
-      .kpi-grid { grid-template-columns: repeat(2, 1fr); }
-      .login-card { padding: 28px 24px; }
-    }
+    .otp-inputs input { width: 52px; height: 56px; text-align: center; font-size: 1.5rem; font-weight: 700; border: 2px solid #dde1e7; border-radius: 10px; background: #fafbfc; outline: none; }
+    .otp-inputs input:focus { border-color: #0f3460; box-shadow: 0 0 0 3px rgba(15,52,96,0.1); }
   </style>
 </head>
-<body>
+<body class="font-sans bg-slate-50 text-slate-800">
 
-  <!-- LOGIN -->
+  <!-- ===== LOGIN ===== -->
   <div class="login-screen" id="loginScreen">
     <div class="login-card">
       <div class="login-step active" id="loginStep1">
-        <h1>Mail Record</h1>
+        <h1 class="font-bold">Mail Record</h1>
         <p class="sub">Select your branch to continue</p>
-        <label>Branch / Location</label>
-        <select id="loginLocation"><option value="">Loading locations...</option></select>
+        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Branch / Location</label>
+        <select id="loginLocation" class="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"><option value="">Loading locations...</option></select>
         <div class="login-error" id="loginError1"></div>
-        <button class="btn btn-primary" style="width:100%" onclick="loginSelectLocation()">Continue</button>
-        <div class="admin-link"><a onclick="loginAdminStart()">Login as Admin</a></div>
+        <button onclick="loginSelectLocation()" class="w-full bg-primary text-white py-2.5 rounded-lg font-semibold text-sm hover:bg-primary/90 transition">Continue</button>
+        <div class="text-center mt-4"><a onclick="loginAdminStart()" class="text-primary text-xs cursor-pointer underline">Login as Admin</a></div>
       </div>
       <div class="login-step" id="loginStep2">
-        <h1>Select Profile</h1>
+        <h1 class="font-bold">Select Profile</h1>
         <p class="sub" id="loginStep2Sub">Choose your profile</p>
-        <div class="login-profiles" id="loginProfiles"></div>
-        <div class="name-input-section" id="nameInputSection" style="display:none"></div>
+        <div class="flex flex-col gap-2.5 mb-4 max-h-56 overflow-y-auto" id="loginProfiles"></div>
+        <div id="nameInputSection" style="display:none"></div>
         <div class="login-error" id="loginError2"></div>
-        <button class="btn btn-primary" style="width:100%" id="loginConfirmBtn" onclick="loginConfirm()">Start Session</button>
-        <button class="btn btn-secondary" style="width:100%;margin-top:10px" onclick="showStep(1)">Back</button>
+        <button id="loginConfirmBtn" onclick="loginConfirm()" class="w-full bg-primary text-white py-2.5 rounded-lg font-semibold text-sm hover:bg-primary/90 transition">Start Session</button>
+        <button onclick="showStep(1)" class="w-full bg-slate-100 text-slate-600 py-2.5 rounded-lg font-semibold text-sm mt-2 hover:bg-slate-200 transition">Back</button>
       </div>
       <div class="login-step" id="loginStep3">
-        <h1>Admin Login</h1>
+        <h1 class="font-bold">Admin Login</h1>
         <p class="sub">Enter 4-digit OTP to continue</p>
-        <div class="otp-inputs">
-          <input type="password" maxlength="1" data-idx="0">
-          <input type="password" maxlength="1" data-idx="1">
-          <input type="password" maxlength="1" data-idx="2">
-          <input type="password" maxlength="1" data-idx="3">
-        </div>
+        <div class="otp-inputs"><input type="password" maxlength="1"><input type="password" maxlength="1"><input type="password" maxlength="1"><input type="password" maxlength="1"></div>
         <div class="login-error" id="loginError3"></div>
-        <button class="btn btn-primary" style="width:100%" onclick="loginVerifyOTP()">Verify</button>
-        <button class="btn btn-secondary" style="width:100%;margin-top:10px" onclick="showStep(1)">Back</button>
+        <button onclick="loginVerifyOTP()" class="w-full bg-primary text-white py-2.5 rounded-lg font-semibold text-sm hover:bg-primary/90 transition">Verify</button>
+        <button onclick="showStep(1)" class="w-full bg-slate-100 text-slate-600 py-2.5 rounded-lg font-semibold text-sm mt-2 hover:bg-slate-200 transition">Back</button>
       </div>
     </div>
   </div>
 
-  <!-- APP -->
-  <div id="appScreen" style="display:none">
-    <header>
-      <h1>Mail Record</h1>
-      <div class="header-right">
-        <span class="header-user" id="headerUser"></span>
-        <button class="header-btn" id="backBtn" style="display:none" onclick="goBack()">Back</button>
-        <button class="header-btn" onclick="logout()">Logout</button>
-      </div>
-    </header>
-    <div class="container">
-      <div class="mode-select" id="modeSelect">
-        <div class="mode-select-inner">
-          <h2 class="mode-select-title">What would you like to record?</h2>
-          <p class="mode-select-sub">Select a mail register type to begin</p>
-          <div class="mode-cards">
-            <div class="mode-card outward" onclick="selectMode('outward')">
-              <div class="icon-circle outward">&#x2197;</div><h2>Outward</h2><p>Mail sent out from the office</p>
-            </div>
-            <div class="mode-card inward" onclick="selectMode('inward')">
-              <div class="icon-circle inward">&#x2199;</div><h2>Inward</h2><p>Mail received into the office</p>
-            </div>
-          </div>
-        </div>
+  <!-- ===== APP ===== -->
+  <div id="appScreen" class="flex h-screen overflow-hidden" style="display:none">
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="w-64 flex-shrink-0 bg-white border-r border-slate-200 hidden md:flex flex-col">
+      <div class="p-5 flex items-center gap-3 border-b border-slate-100">
+        <div class="w-9 h-9 bg-primary rounded-lg flex items-center justify-center"><span class="material-symbols-outlined text-white text-lg">mail</span></div>
+        <span class="font-bold text-primary text-base">MailRecord</span>
       </div>
 
-      <div class="main-content" id="mainContent">
-        <div class="card">
-          <h2 id="formTitle"><span id="formTitleText">New Record</span> <span class="mode-badge" id="modeBadge"></span></h2>
-          <form id="recordForm">
-            <input type="hidden" id="editId" value="">
-            <div class="form-grid">
-              <div class="form-group"><label for="date">Date</label><input type="date" id="date" required></div>
-              <div class="form-group"><label for="employeeId">Employee ID</label><input type="text" id="employeeId" placeholder="e.g. EMP-1024" required></div>
-              <div class="form-group"><label for="recName" id="nameLabel">To</label><input type="text" id="recName" placeholder="Recipient name" required></div>
-              <div class="form-group"><label for="dept">Department</label><input type="text" id="dept" placeholder="e.g. Finance, HR, IT" required></div>
-              <div class="form-group full-width"><label for="documents" id="docsLabel">List of Documents Sent</label><textarea id="documents" placeholder="e.g. Invoice, PO Copy, Agreement..." required></textarea></div>
-              <div class="form-group"><label for="particular">Particular</label><input type="text" id="particular" placeholder="Mail type / category" required></div>
-              <div class="form-group"><label for="details">Details</label><textarea id="details" placeholder="Additional details (optional)"></textarea></div>
-            </div>
-            <div class="form-actions">
-              <button type="submit" class="btn btn-primary" id="submitBtn">Add Record</button>
-              <button type="button" class="btn btn-secondary" id="cancelBtn" style="display:none" onclick="cancelEdit()">Cancel</button>
-              <button type="button" class="btn btn-secondary" onclick="clearForm()">Clear</button>
-            </div>
-          </form>
-        </div>
-        <div class="card">
-          <div class="table-header">
-            <div style="display:flex;align-items:center;gap:10px"><h2>Records</h2><span class="record-count" id="recordCount">0</span></div>
-            <input type="text" class="search-bar" id="searchInput" placeholder="Search records...">
+      <!-- Regular Nav -->
+      <nav id="navRegular" class="flex-1 p-3 space-y-1">
+        <a class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm cursor-pointer active" data-page="dashboard" onclick="navigateTo('dashboard')">
+          <span class="material-symbols-outlined text-xl">dashboard</span>Dashboard</a>
+        <a class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm cursor-pointer" data-page="outward" onclick="navigateTo('outward')">
+          <span class="material-symbols-outlined text-xl">call_made</span>Outward</a>
+        <a class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm cursor-pointer" data-page="inward" onclick="navigateTo('inward')">
+          <span class="material-symbols-outlined text-xl">call_received</span>Inward</a>
+        <a class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm cursor-pointer" data-page="reports" onclick="navigateTo('reports')">
+          <span class="material-symbols-outlined text-xl">bar_chart</span>Reports</a>
+      </nav>
+
+      <!-- Admin Nav -->
+      <nav id="navAdmin" class="flex-1 p-3 space-y-1 hidden">
+        <a class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm cursor-pointer active" data-page="admin-dashboard" onclick="navigateTo('admin-dashboard')">
+          <span class="material-symbols-outlined text-xl">admin_panel_settings</span>Dashboard</a>
+        <a class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm cursor-pointer" data-page="admin-records" onclick="navigateTo('admin-records')">
+          <span class="material-symbols-outlined text-xl">folder_open</span>All Records</a>
+        <a class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm cursor-pointer" data-page="admin-editlog" onclick="navigateTo('admin-editlog')">
+          <span class="material-symbols-outlined text-xl">edit_note</span>Edit Log</a>
+        <a class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm cursor-pointer" data-page="admin-reports" onclick="navigateTo('admin-reports')">
+          <span class="material-symbols-outlined text-xl">bar_chart</span>Reports</a>
+      </nav>
+
+      <!-- User Footer -->
+      <div class="p-4 border-t border-slate-100">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-blue-400 flex items-center justify-center text-white text-xs font-bold" id="sidebarAvatar">?</div>
+          <div class="flex-1 min-w-0">
+            <div class="text-sm font-semibold truncate" id="sidebarName">User</div>
+            <div class="text-xs text-slate-400 truncate" id="sidebarRole">BOE</div>
           </div>
-          <div class="table-scroll">
-            <table><thead><tr><th>#</th><th>Date</th><th>Emp ID</th><th id="thName">To</th><th>Dept</th><th id="thDocs">Documents Sent</th><th>Particular</th><th>Details</th><th>Actions</th></tr></thead>
-            <tbody id="tableBody"></tbody></table>
-          </div>
-          <div class="empty-state" id="emptyState"><p>No records yet. Add your first record above.</p></div>
         </div>
       </div>
+    </aside>
 
-      <div class="admin-content" id="adminContent">
-        <div class="admin-nav">
-          <button class="admin-nav-btn active" data-section="dashboard" onclick="adminNav('dashboard')">Dashboard</button>
-          <button class="admin-nav-btn" data-section="records" onclick="adminNav('records')">All Records</button>
-          <button class="admin-nav-btn" data-section="editlog" onclick="adminNav('editlog')">Edit Log</button>
+    <!-- Main -->
+    <main class="flex-1 flex flex-col min-w-0 overflow-hidden">
+      <!-- Header -->
+      <header class="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-4 md:px-6 flex-shrink-0">
+        <button id="menuBtn" onclick="toggleSidebar()" class="md:hidden p-1.5 rounded-lg hover:bg-slate-100"><span class="material-symbols-outlined">menu</span></button>
+        <div class="flex items-center gap-2 ml-2 md:ml-0">
+          <span class="text-sm font-semibold text-slate-700" id="headerTitle">Dashboard</span>
         </div>
-        <div class="admin-section active" id="adminDashboard">
-          <div class="kpi-grid" id="adminKpis"></div>
-          <div class="card"><h2>Recent Records</h2><div class="table-scroll"><table>
-            <thead><tr><th>Date</th><th>Type</th><th>To/From</th><th>Dept</th><th>Documents</th><th>Location</th><th>By</th></tr></thead>
-            <tbody id="adminRecentBody"></tbody></table></div></div>
+        <div class="flex items-center gap-3">
+          <span class="text-xs text-slate-400 hidden sm:block" id="headerDate"></span>
+          <button onclick="logout()" class="flex items-center gap-1.5 text-red-500 hover:bg-red-50 px-3 py-1.5 rounded-lg text-sm font-medium transition">
+            <span class="material-symbols-outlined text-lg">logout</span><span class="hidden sm:inline">Logout</span></button>
         </div>
-        <div class="admin-section" id="adminRecords">
-          <div class="card">
-            <div class="table-header">
-              <div style="display:flex;align-items:center;gap:10px"><h2>All Records</h2><span class="record-count" id="adminRecordCount">0</span></div>
-              <div style="display:flex;gap:10px">
-                <select id="adminTypeFilter" onchange="renderAdminRecords()" style="padding:8px 12px;border:1.5px solid #dde1e7;border-radius:8px;font-size:0.85rem"><option value="">All Types</option><option value="inward">Inward</option><option value="outward">Outward</option></select>
-                <input type="text" class="search-bar" id="adminSearchInput" placeholder="Search..." oninput="renderAdminRecords()">
+      </header>
+
+      <!-- Content -->
+      <div id="pageContent" class="flex-1 overflow-y-auto p-4 md:p-6 space-y-6">
+
+        <!-- ===== DASHBOARD ===== -->
+        <div id="page-dashboard" class="page fade-in">
+          <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6" id="dashKpis"></div>
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="bg-white rounded-xl border border-slate-200 p-5">
+              <h3 class="font-semibold text-sm mb-4 text-slate-700">Recent Outward</h3>
+              <div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr class="text-xs text-slate-400 uppercase border-b"><th class="pb-2 text-left">ID</th><th class="pb-2 text-left">Date</th><th class="pb-2 text-left">To</th><th class="pb-2 text-left">Documents</th></tr></thead><tbody id="dashOutward"></tbody></table></div>
+            </div>
+            <div class="bg-white rounded-xl border border-slate-200 p-5">
+              <h3 class="font-semibold text-sm mb-4 text-slate-700">Recent Inward</h3>
+              <div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr class="text-xs text-slate-400 uppercase border-b"><th class="pb-2 text-left">ID</th><th class="pb-2 text-left">Date</th><th class="pb-2 text-left">From</th><th class="pb-2 text-left">Documents</th></tr></thead><tbody id="dashInward"></tbody></table></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== OUTWARD ===== -->
+        <div id="page-outward" class="page fade-in hidden">
+          <div class="bg-white rounded-xl border border-slate-200 p-5 mb-6">
+            <h3 class="font-semibold text-sm mb-4 text-primary flex items-center gap-2"><span class="material-symbols-outlined text-lg">call_made</span>New Outward Record</h3>
+            <form id="outwardForm" onsubmit="return submitRecord(event,'outward')">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div><label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Date</label><input type="date" id="outDate" required class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"></div>
+                <div><label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Employee ID</label><input type="text" id="outEmpId" required placeholder="e.g. NL12345" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"></div>
+                <div><label class="block text-xs font-semibold text-slate-500 uppercase mb-1">To</label><input type="text" id="outName" required placeholder="Recipient name" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"></div>
+                <div><label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Department</label><input type="text" id="outDept" required placeholder="e.g. Finance, HR" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"></div>
+                <div class="md:col-span-2"><label class="block text-xs font-semibold text-slate-500 uppercase mb-1">List of Documents Sent</label><textarea id="outDocs" required placeholder="e.g. Invoice, PO Copy..." rows="2" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none"></textarea></div>
+                <div><label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Particular</label><input type="text" id="outParticular" required placeholder="Mail type / category" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"></div>
+                <div><label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Details (optional)</label><input type="text" id="outDetails" placeholder="Additional details" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"></div>
+              </div>
+              <div class="flex gap-3 mt-5">
+                <button type="submit" id="outSubmitBtn" class="bg-primary text-white px-6 py-2 rounded-lg text-sm font-semibold hover:bg-primary/90 transition">Add Record</button>
+                <button type="button" id="outCancelBtn" onclick="cancelOutEdit()" class="bg-slate-100 text-slate-600 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-slate-200 transition hidden">Cancel</button>
+                <button type="button" onclick="document.getElementById('outwardForm').reset();setToday('outDate')" class="bg-slate-100 text-slate-600 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-slate-200 transition">Clear</button>
+              </div>
+            </form>
+          </div>
+          <div class="bg-white rounded-xl border border-slate-200 p-5">
+            <div class="flex items-center justify-between mb-4 flex-wrap gap-3">
+              <div class="flex items-center gap-3"><h3 class="font-semibold text-sm text-slate-700">Outward Records</h3><span class="text-xs bg-slate-100 text-slate-500 px-2.5 py-0.5 rounded-full" id="outCount">0</span></div>
+              <div class="flex gap-2">
+                <input type="text" id="outSearch" placeholder="Search..." oninput="renderOutward()" class="px-3 py-1.5 border border-slate-300 rounded-lg text-sm w-44 focus:outline-none focus:ring-2 focus:ring-primary/20">
+                <button onclick="exportToExcel('outward')" class="bg-green-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-green-700 transition flex items-center gap-1"><span class="material-symbols-outlined text-sm">download</span>Excel</button>
               </div>
             </div>
-            <div class="table-scroll"><table>
-              <thead><tr><th>#</th><th>Date</th><th>Type</th><th>Emp ID</th><th>To/From</th><th>Dept</th><th>Documents</th><th>Particular</th><th>Details</th><th>Location</th><th>By</th></tr></thead>
-              <tbody id="adminAllBody"></tbody></table></div>
-            <div class="empty-state" id="adminEmptyState" style="display:none"><p>No records found.</p></div>
+            <div class="overflow-x-auto"><table class="w-full text-sm min-w-[700px]"><thead><tr class="text-xs text-slate-400 uppercase border-b"><th class="pb-2 text-left">ID</th><th class="pb-2 text-left">Date</th><th class="pb-2 text-left">Emp ID</th><th class="pb-2 text-left">To</th><th class="pb-2 text-left">Dept</th><th class="pb-2 text-left">Documents Sent</th><th class="pb-2 text-left">Particular</th><th class="pb-2 text-left">Details</th><th class="pb-2 text-left">Actions</th></tr></thead><tbody id="outBody"></tbody></table></div>
+            <div class="text-center py-8 text-slate-400 text-sm" id="outEmpty">No outward records yet.</div>
           </div>
         </div>
-        <div class="admin-section" id="adminEditlog">
-          <div class="card"><h2>Edit Log</h2><div class="table-scroll"><table>
-            <thead><tr><th>Date</th><th>Record</th><th>Type</th><th>Field</th><th>Old Value</th><th>New Value</th><th>Edited By</th></tr></thead>
-            <tbody id="adminEditBody"></tbody></table></div>
-            <div class="empty-state" id="editlogEmpty"><p>No edits yet.</p></div>
+
+        <!-- ===== INWARD ===== -->
+        <div id="page-inward" class="page fade-in hidden">
+          <div class="bg-white rounded-xl border border-slate-200 p-5 mb-6">
+            <h3 class="font-semibold text-sm mb-4 text-accent flex items-center gap-2"><span class="material-symbols-outlined text-lg">call_received</span>New Inward Record</h3>
+            <form id="inwardForm" onsubmit="return submitRecord(event,'inward')">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div><label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Date</label><input type="date" id="inDate" required class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"></div>
+                <div><label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Employee ID</label><input type="text" id="inEmpId" required placeholder="e.g. NL12345" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"></div>
+                <div><label class="block text-xs font-semibold text-slate-500 uppercase mb-1">From</label><input type="text" id="inName" required placeholder="Sender name" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"></div>
+                <div><label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Department</label><input type="text" id="inDept" required placeholder="e.g. Finance, HR" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"></div>
+                <div class="md:col-span-2"><label class="block text-xs font-semibold text-slate-500 uppercase mb-1">List of Documents Received</label><textarea id="inDocs" required placeholder="e.g. Invoice, PO Copy..." rows="2" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent resize-none"></textarea></div>
+                <div><label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Particular</label><input type="text" id="inParticular" required placeholder="Mail type / category" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"></div>
+                <div><label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Details (optional)</label><input type="text" id="inDetails" placeholder="Additional details" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"></div>
+              </div>
+              <div class="flex gap-3 mt-5">
+                <button type="submit" id="inSubmitBtn" class="bg-accent text-white px-6 py-2 rounded-lg text-sm font-semibold hover:bg-accent/90 transition">Add Record</button>
+                <button type="button" id="inCancelBtn" onclick="cancelInEdit()" class="bg-slate-100 text-slate-600 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-slate-200 transition hidden">Cancel</button>
+                <button type="button" onclick="document.getElementById('inwardForm').reset();setToday('inDate')" class="bg-slate-100 text-slate-600 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-slate-200 transition">Clear</button>
+              </div>
+            </form>
+          </div>
+          <div class="bg-white rounded-xl border border-slate-200 p-5">
+            <div class="flex items-center justify-between mb-4 flex-wrap gap-3">
+              <div class="flex items-center gap-3"><h3 class="font-semibold text-sm text-slate-700">Inward Records</h3><span class="text-xs bg-slate-100 text-slate-500 px-2.5 py-0.5 rounded-full" id="inCount">0</span></div>
+              <div class="flex gap-2">
+                <input type="text" id="inSearch" placeholder="Search..." oninput="renderInward()" class="px-3 py-1.5 border border-slate-300 rounded-lg text-sm w-44 focus:outline-none focus:ring-2 focus:ring-accent/20">
+                <button onclick="exportToExcel('inward')" class="bg-green-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-green-700 transition flex items-center gap-1"><span class="material-symbols-outlined text-sm">download</span>Excel</button>
+              </div>
+            </div>
+            <div class="overflow-x-auto"><table class="w-full text-sm min-w-[700px]"><thead><tr class="text-xs text-slate-400 uppercase border-b"><th class="pb-2 text-left">ID</th><th class="pb-2 text-left">Date</th><th class="pb-2 text-left">Emp ID</th><th class="pb-2 text-left">From</th><th class="pb-2 text-left">Dept</th><th class="pb-2 text-left">Documents Received</th><th class="pb-2 text-left">Particular</th><th class="pb-2 text-left">Details</th><th class="pb-2 text-left">Actions</th></tr></thead><tbody id="inBody"></tbody></table></div>
+            <div class="text-center py-8 text-slate-400 text-sm" id="inEmpty">No inward records yet.</div>
           </div>
         </div>
+
+        <!-- ===== REPORTS ===== -->
+        <div id="page-reports" class="page fade-in hidden">
+          <div class="flex items-center justify-between mb-4 flex-wrap gap-3">
+            <h3 class="font-semibold text-lg text-slate-700">Daily Report</h3>
+            <div class="flex gap-3 items-center">
+              <div class="bg-white border border-slate-200 rounded-xl px-4 py-2 flex items-center gap-2">
+                <span class="material-symbols-outlined text-amber-500 text-lg">today</span>
+                <input type="date" id="reportDate" onchange="renderDailyReport()" class="text-sm border-none outline-none bg-transparent">
+              </div>
+              <button onclick="exportDailyReport()" class="bg-green-600 text-white px-4 py-2 rounded-lg text-xs font-semibold hover:bg-green-700 transition flex items-center gap-1.5"><span class="material-symbols-outlined text-sm">download</span>Export Excel</button>
+              <button onclick="printReport()" class="bg-slate-700 text-white px-4 py-2 rounded-lg text-xs font-semibold hover:bg-slate-800 transition flex items-center gap-1.5 no-print"><span class="material-symbols-outlined text-sm">print</span>Print</button>
+            </div>
+          </div>
+          <div id="dailyReportContent"></div>
+        </div>
+
+        <!-- ===== ADMIN DASHBOARD ===== -->
+        <div id="page-admin-dashboard" class="page fade-in hidden">
+          <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6" id="adminKpis"></div>
+          <div class="bg-white rounded-xl border border-slate-200 p-5">
+            <h3 class="font-semibold text-sm mb-4 text-slate-700">Recent Records (All Branches)</h3>
+            <div class="overflow-x-auto"><table class="w-full text-sm min-w-[800px]"><thead><tr class="text-xs text-slate-400 uppercase border-b"><th class="pb-2 text-left">ID</th><th class="pb-2 text-left">Date</th><th class="pb-2 text-left">Type</th><th class="pb-2 text-left">To/From</th><th class="pb-2 text-left">Dept</th><th class="pb-2 text-left">Documents</th><th class="pb-2 text-left">Location</th><th class="pb-2 text-left">By</th></tr></thead><tbody id="adminRecentBody"></tbody></table></div>
+          </div>
+        </div>
+
+        <!-- ===== ADMIN ALL RECORDS ===== -->
+        <div id="page-admin-records" class="page fade-in hidden">
+          <div class="bg-white rounded-xl border border-slate-200 p-5">
+            <div class="flex items-center justify-between mb-4 flex-wrap gap-3">
+              <div class="flex items-center gap-3"><h3 class="font-semibold text-sm text-slate-700">All Records</h3><span class="text-xs bg-slate-100 text-slate-500 px-2.5 py-0.5 rounded-full" id="adminRecordCount">0</span></div>
+              <div class="flex gap-2">
+                <select id="adminTypeFilter" onchange="renderAdminRecords()" class="px-3 py-1.5 border border-slate-300 rounded-lg text-sm"><option value="">All Types</option><option value="inward">Inward</option><option value="outward">Outward</option></select>
+                <input type="text" id="adminSearchInput" placeholder="Search..." oninput="renderAdminRecords()" class="px-3 py-1.5 border border-slate-300 rounded-lg text-sm w-44 focus:outline-none focus:ring-2 focus:ring-primary/20">
+                <button onclick="exportToExcel('all')" class="bg-green-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-green-700 transition flex items-center gap-1"><span class="material-symbols-outlined text-sm">download</span>Excel</button>
+              </div>
+            </div>
+            <div class="overflow-x-auto"><table class="w-full text-sm min-w-[900px]"><thead><tr class="text-xs text-slate-400 uppercase border-b"><th class="pb-2 text-left">ID</th><th class="pb-2 text-left">Date</th><th class="pb-2 text-left">Type</th><th class="pb-2 text-left">Emp ID</th><th class="pb-2 text-left">To/From</th><th class="pb-2 text-left">Dept</th><th class="pb-2 text-left">Documents</th><th class="pb-2 text-left">Particular</th><th class="pb-2 text-left">Details</th><th class="pb-2 text-left">Location</th><th class="pb-2 text-left">By</th></tr></thead><tbody id="adminAllBody"></tbody></table></div>
+            <div class="text-center py-8 text-slate-400 text-sm" id="adminEmptyState" style="display:none">No records found.</div>
+          </div>
+        </div>
+
+        <!-- ===== ADMIN EDIT LOG ===== -->
+        <div id="page-admin-editlog" class="page fade-in hidden">
+          <div class="bg-white rounded-xl border border-slate-200 p-5">
+            <h3 class="font-semibold text-sm mb-4 text-slate-700">Edit Log</h3>
+            <div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr class="text-xs text-slate-400 uppercase border-b"><th class="pb-2 text-left">Date</th><th class="pb-2 text-left">Record</th><th class="pb-2 text-left">Type</th><th class="pb-2 text-left">Field</th><th class="pb-2 text-left">Old</th><th class="pb-2 text-left">New</th><th class="pb-2 text-left">By</th></tr></thead><tbody id="adminEditBody"></tbody></table></div>
+            <div class="text-center py-8 text-slate-400 text-sm" id="editlogEmpty">No edits yet.</div>
+          </div>
+        </div>
+
+        <!-- ===== ADMIN REPORTS ===== -->
+        <div id="page-admin-reports" class="page fade-in hidden">
+          <div class="flex items-center justify-between mb-4 flex-wrap gap-3">
+            <h3 class="font-semibold text-lg text-slate-700">Daily Report (All Branches)</h3>
+            <div class="flex gap-3 items-center">
+              <div class="bg-white border border-slate-200 rounded-xl px-4 py-2 flex items-center gap-2">
+                <span class="material-symbols-outlined text-amber-500 text-lg">today</span>
+                <input type="date" id="adminReportDate" onchange="renderAdminDailyReport()" class="text-sm border-none outline-none bg-transparent">
+              </div>
+              <button onclick="exportDailyReport(true)" class="bg-green-600 text-white px-4 py-2 rounded-lg text-xs font-semibold hover:bg-green-700 transition flex items-center gap-1.5"><span class="material-symbols-outlined text-sm">download</span>Export</button>
+            </div>
+          </div>
+          <div id="adminDailyReportContent"></div>
+        </div>
+
       </div>
-    </div>
+    </main>
   </div>
 
-  <div class="toast" id="toast"></div>
+  <!-- Toast -->
+  <div id="toast" class="fixed bottom-6 right-6 bg-accent text-white px-5 py-3 rounded-xl shadow-lg text-sm font-medium flex items-center gap-2 transform translate-y-24 opacity-0 transition-all duration-300 z-50">
+    <span class="material-symbols-outlined text-lg">check_circle</span><span id="toastMsg"></span>
+  </div>
 
   <script>
-    // ===== SUPABASE CONFIG =====
-    const SB_URL = 'https://zovnmmdfthpbubrorsgh.supabase.co';
-    const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpvdm5tbWRmdGhwYnVicm9yc2doIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE1NzE3ODgsImV4cCI6MjA3NzE0Nzc4OH0.92BH2sjUOgkw6iSRj1_4gt0p3eThg3QT4VK-Q4EdmBE';
-    const SB_HEADERS = { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=representation' };
-
-    async function sbFetch(table, params = '') {
-      const r = await fetch(`${SB_URL}/rest/v1/${table}?${params}`, { headers: SB_HEADERS });
-      return r.json();
-    }
-    async function sbInsert(table, data) {
-      const r = await fetch(`${SB_URL}/rest/v1/${table}`, { method: 'POST', headers: SB_HEADERS, body: JSON.stringify(data) });
-      return r.json();
-    }
-    async function sbUpdate(table, id, data) {
-      const r = await fetch(`${SB_URL}/rest/v1/${table}?id=eq.${id}`, { method: 'PATCH', headers: SB_HEADERS, body: JSON.stringify(data) });
-      return r.json();
-    }
+    // ===== SUPABASE =====
+    const SB = 'https://zovnmmdfthpbubrorsgh.supabase.co';
+    const SK = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpvdm5tbWRmdGhwYnVicm9yc2doIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE1NzE3ODgsImV4cCI6MjA3NzE0Nzc4OH0.92BH2sjUOgkw6iSRj1_4gt0p3eThg3QT4VK-Q4EdmBE';
+    const H = { 'apikey': SK, 'Authorization': 'Bearer ' + SK, 'Content-Type': 'application/json', 'Prefer': 'return=representation' };
+    async function sbGet(t, p = '') { return (await fetch(`${SB}/rest/v1/${t}?${p}`, { headers: H })).json(); }
+    async function sbPost(t, d) { return (await fetch(`${SB}/rest/v1/${t}`, { method: 'POST', headers: H, body: JSON.stringify(d) })).json(); }
+    async function sbPatch(t, id, d) { return (await fetch(`${SB}/rest/v1/${t}?id=eq.${id}`, { method: 'PATCH', headers: H, body: JSON.stringify(d) })).json(); }
 
     // ===== STATE =====
-    let currentEmployee = null, selectedLocation = null, isAdmin = false, currentMode = null;
-    let records = [], adminRecords = [], selectedProfileIdx = -1, profilesList = [];
+    let currentEmployee = null, selectedLocation = null, isAdmin = false;
+    let outRecords = [], inRecords = [], adminAllRecords = [];
+    let editingOutId = null, editingInId = null;
+    let selectedProfileIdx = -1, profilesList = [];
 
     // ===== HELPERS =====
     function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
-    function showToast(msg, type = 'success') { const t = document.getElementById('toast'); t.textContent = msg; t.className = 'toast ' + type + ' show'; setTimeout(() => t.classList.remove('show'), 2500); }
     function getInitials(n) { return n ? n.split(/\s+/).map(w => w[0]).join('').substring(0, 2).toUpperCase() : '?'; }
+    function setToday(id) { document.getElementById(id).valueAsDate = new Date(); }
+    function showToast(msg) { const t = document.getElementById('toast'); document.getElementById('toastMsg').textContent = msg; t.classList.remove('translate-y-24', 'opacity-0'); t.classList.add('translate-y-0', 'opacity-100'); setTimeout(() => { t.classList.add('translate-y-24', 'opacity-0'); t.classList.remove('translate-y-0', 'opacity-100'); }, 2500); }
     function showStep(n) { document.querySelectorAll('.login-step').forEach(s => s.classList.remove('active')); document.getElementById('loginStep' + n).classList.add('active'); }
     function showLoginError(step, msg) { const el = document.getElementById('loginError' + step); el.textContent = msg; el.style.display = 'block'; setTimeout(() => el.style.display = 'none', 3000); }
+    function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
+    function seqId(records, idx) { return records.length - idx; }
+
+    // ===== NAVIGATION =====
+    function navigateTo(page) {
+      document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
+      const el = document.getElementById('page-' + page);
+      if (el) el.classList.remove('hidden');
+      document.querySelectorAll('.nav-link').forEach(l => l.classList.toggle('active', l.dataset.page === page));
+      const titles = { dashboard: 'Dashboard', outward: 'Outward Mail', inward: 'Inward Mail', reports: 'Reports', 'admin-dashboard': 'Admin Dashboard', 'admin-records': 'All Records', 'admin-editlog': 'Edit Log', 'admin-reports': 'Reports' };
+      document.getElementById('headerTitle').textContent = titles[page] || page;
+      document.getElementById('sidebar').classList.remove('open');
+      if (page === 'outward') { loadRecords('outward'); setToday('outDate'); }
+      if (page === 'inward') { loadRecords('inward'); setToday('inDate'); }
+      if (page === 'reports') { setToday('reportDate'); renderDailyReport(); }
+      if (page === 'admin-dashboard') loadAdminData();
+      if (page === 'admin-records') loadAdminData();
+      if (page === 'admin-editlog') loadAdminEditLogs();
+      if (page === 'admin-reports') { setToday('adminReportDate'); renderAdminDailyReport(); }
+      if (page === 'dashboard') loadDashboard();
+    }
 
     // ===== LOGIN =====
     async function initLogin() {
       try {
-        const emps = await sbFetch('employees', 'select=location&location=not.is.null');
+        const emps = await sbGet('employees', 'select=location&location=not.is.null');
         const locs = [...new Set(emps.map(e => e.location))].sort();
         if (!locs.includes('Head Office')) locs.push('Head Office');
         locs.sort();
@@ -359,284 +356,305 @@
       const loc = document.getElementById('loginLocation').value;
       if (!loc) { showLoginError(1, 'Please select a branch'); return; }
       selectedLocation = loc;
-
       if (loc === 'Head Office' || loc === 'Corporate Office') {
         currentEmployee = { id: 0, emp_id: loc === 'Head Office' ? 'HO-USER' : 'CO-USER', name: loc === 'Head Office' ? 'Santosh' : 'Chetan', role: 'Admin Executive', location: loc };
-        startSession();
-        return;
+        startSession(); return;
       }
-
       try {
-        const data = await sbFetch('employees', `select=*&location=eq.${encodeURIComponent(loc)}&role=eq.BOE`);
+        const data = await sbGet('employees', `select=*&location=eq.${encodeURIComponent(loc)}&role=eq.BOE`);
         profilesList = data;
-
         if (data.length === 0) {
           const saved = localStorage.getItem('mr_temp_user_' + loc);
           if (saved) { currentEmployee = JSON.parse(saved); startSession(); return; }
-          showNameInput(loc);
-          return;
+          document.getElementById('loginStep2Sub').textContent = `Branch: ${loc}`;
+          document.getElementById('loginProfiles').innerHTML = '';
+          document.getElementById('loginConfirmBtn').textContent = 'Continue';
+          const s = document.getElementById('nameInputSection'); s.style.display = 'block';
+          s.innerHTML = `<p class="text-sm text-slate-400 mb-3">No profiles found. Enter your name.</p><label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Your Name</label><input type="text" id="newUserName" placeholder="Full name" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm mb-1">`;
+          showStep(2); setTimeout(() => document.getElementById('newUserName').focus(), 100); return;
         }
         if (data.length === 1) { currentEmployee = data[0]; startSession(); return; }
-        showProfileCards(loc, data);
+        document.getElementById('loginStep2Sub').textContent = `Branch: ${loc}`;
+        document.getElementById('nameInputSection').style.display = 'none';
+        document.getElementById('loginConfirmBtn').textContent = 'Start Session';
+        selectedProfileIdx = -1;
+        document.getElementById('loginProfiles').innerHTML = data.map((p, i) => `<div class="profile-card" onclick="selectProfile(${i})" id="prof-${i}"><div class="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-blue-400 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">${getInitials(p.name)}</div><div class="flex-1 min-w-0"><div class="font-semibold text-sm">${esc(p.name)}</div><div class="text-xs text-slate-400">${esc(p.emp_id)} · ${esc(p.role||'BOE')}</div></div></div>`).join('');
+        showStep(2);
       } catch (e) { showLoginError(1, 'Failed to load profiles'); }
-    }
-
-    function showNameInput(loc) {
-      document.getElementById('loginStep2Sub').textContent = `Branch: ${loc}`;
-      document.getElementById('loginProfiles').innerHTML = '';
-      document.getElementById('loginConfirmBtn').textContent = 'Continue';
-      const section = document.getElementById('nameInputSection');
-      section.style.display = 'block';
-      section.innerHTML = `<p style="font-size:0.88rem;color:#888;margin-bottom:14px">No profiles found for this branch. Enter your name to continue.</p>
-        <label style="display:block;font-size:0.8rem;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:6px">Your Name</label>
-        <input type="text" id="newUserName" placeholder="Enter your full name" style="width:100%;padding:11px 14px;border:1.5px solid #dde1e7;border-radius:8px;font-size:0.95rem;font-family:inherit;background:#fafbfc;margin-bottom:4px">`;
-      showStep(2);
-      setTimeout(() => document.getElementById('newUserName').focus(), 100);
-    }
-
-    function showProfileCards(loc, profiles) {
-      document.getElementById('loginStep2Sub').textContent = `Branch: ${loc}`;
-      document.getElementById('nameInputSection').style.display = 'none';
-      document.getElementById('loginConfirmBtn').textContent = 'Start Session';
-      selectedProfileIdx = -1;
-      document.getElementById('loginProfiles').innerHTML = profiles.map((p, i) => `
-        <div class="profile-card" onclick="selectProfile(${i})" id="prof-${i}">
-          <div class="avatar">${getInitials(p.name)}</div>
-          <div class="info"><div class="pname">${esc(p.name)}</div><div class="prole">${esc(p.emp_id)} &middot; ${esc(p.role || 'BOE')}</div></div>
-        </div>`).join('');
-      showStep(2);
     }
 
     function selectProfile(i) { selectedProfileIdx = i; document.querySelectorAll('.profile-card').forEach((c, j) => c.classList.toggle('selected', j === i)); }
 
     function loginConfirm() {
-      const nameSection = document.getElementById('nameInputSection');
-      if (nameSection.style.display !== 'none') {
+      const ns = document.getElementById('nameInputSection');
+      if (ns.style.display !== 'none') {
         const name = (document.getElementById('newUserName') || {}).value?.trim();
         if (!name) { showLoginError(2, 'Please enter your name'); return; }
         currentEmployee = { id: 'temp-' + Date.now(), emp_id: 'TEMP-' + Math.floor(Math.random() * 10000), name, role: 'BOE', location: selectedLocation };
-        localStorage.setItem('mr_temp_user_' + selectedLocation, JSON.stringify(currentEmployee));
-        startSession(); return;
+        localStorage.setItem('mr_temp_user_' + selectedLocation, JSON.stringify(currentEmployee)); startSession(); return;
       }
-      if (selectedProfileIdx < 0) { showLoginError(2, 'Please select a profile'); return; }
-      currentEmployee = profilesList[selectedProfileIdx];
-      startSession();
+      if (selectedProfileIdx < 0) { showLoginError(2, 'Select a profile'); return; }
+      currentEmployee = profilesList[selectedProfileIdx]; startSession();
     }
 
-    function loginAdminStart() {
-      showStep(3);
-      document.querySelectorAll('.otp-inputs input').forEach(i => { i.value = ''; });
-      setTimeout(() => document.querySelector('.otp-inputs input').focus(), 100);
-    }
-
+    function loginAdminStart() { showStep(3); document.querySelectorAll('.otp-inputs input').forEach(i => { i.value = ''; }); setTimeout(() => document.querySelector('.otp-inputs input').focus(), 100); }
     document.querySelectorAll('.otp-inputs input').forEach((inp, i, all) => {
       inp.addEventListener('input', () => { if (inp.value && i < 3) all[i + 1].focus(); });
-      inp.addEventListener('keydown', (e) => { if (e.key === 'Backspace' && !inp.value && i > 0) all[i - 1].focus(); if (e.key === 'Enter') loginVerifyOTP(); });
+      inp.addEventListener('keydown', e => { if (e.key === 'Backspace' && !inp.value && i > 0) all[i - 1].focus(); if (e.key === 'Enter') loginVerifyOTP(); });
     });
-
     async function loginVerifyOTP() {
       const otp = [...document.querySelectorAll('.otp-inputs input')].map(i => i.value).join('');
       if (otp.length < 4) { showLoginError(3, 'Enter all 4 digits'); return; }
       try {
-        const configs = await sbFetch('app_config', 'select=value&key=eq.admin_otp');
-        if (configs.length && configs[0].value === otp) {
-          isAdmin = true;
-          currentEmployee = { id: 0, emp_id: 'HO-ADMIN', name: 'Santosh', role: 'Administrator', location: 'Head Office' };
-          selectedLocation = 'Head Office';
-          startSession();
-        } else { showLoginError(3, 'Invalid OTP'); }
+        const c = await sbGet('app_config', 'select=value&key=eq.admin_otp');
+        if (c.length && c[0].value === otp) { isAdmin = true; currentEmployee = { id: 0, emp_id: 'HO-ADMIN', name: 'Santosh', role: 'Administrator', location: 'Head Office' }; selectedLocation = 'Head Office'; startSession(); }
+        else showLoginError(3, 'Invalid OTP');
       } catch (e) { showLoginError(3, 'Verification failed'); }
     }
 
     // ===== SESSION =====
     function startSession() {
       const s = { employee: currentEmployee, location: selectedLocation, admin: isAdmin, time: Date.now() };
-      sessionStorage.setItem('mr_session', JSON.stringify(s));
-      localStorage.setItem('mr_session', JSON.stringify(s));
-      showApp();
+      sessionStorage.setItem('mr_session', JSON.stringify(s)); localStorage.setItem('mr_session', JSON.stringify(s)); showApp();
     }
-
     function checkSession() {
       const raw = sessionStorage.getItem('mr_session') || localStorage.getItem('mr_session');
-      if (!raw) return false;
-      const s = JSON.parse(raw);
-      if (Date.now() - s.time > 24 * 60 * 60 * 1000) { logout(); return false; }
-      currentEmployee = s.employee; selectedLocation = s.location; isAdmin = s.admin;
-      return true;
+      if (!raw) return false; const s = JSON.parse(raw);
+      if (Date.now() - s.time > 86400000) { logout(); return false; }
+      currentEmployee = s.employee; selectedLocation = s.location; isAdmin = s.admin; return true;
     }
-
     function showApp() {
       document.getElementById('loginScreen').style.display = 'none';
-      document.getElementById('appScreen').style.display = 'block';
-      document.getElementById('headerUser').textContent = `${currentEmployee.name} (${selectedLocation})`;
-      if (isAdmin) { document.getElementById('modeSelect').style.display = 'none'; document.getElementById('adminContent').style.display = 'block'; loadAdminData(); }
-      else { document.getElementById('modeSelect').style.display = 'flex'; document.getElementById('adminContent').style.display = 'none'; }
+      document.getElementById('appScreen').style.display = 'flex';
+      document.getElementById('sidebarAvatar').textContent = getInitials(currentEmployee.name);
+      document.getElementById('sidebarName').textContent = currentEmployee.name;
+      document.getElementById('sidebarRole').textContent = `${currentEmployee.role} · ${selectedLocation}`;
+      document.getElementById('headerDate').textContent = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+      if (isAdmin) { document.getElementById('navRegular').classList.add('hidden'); document.getElementById('navAdmin').classList.remove('hidden'); navigateTo('admin-dashboard'); }
+      else { document.getElementById('navRegular').classList.remove('hidden'); document.getElementById('navAdmin').classList.add('hidden'); navigateTo('dashboard'); }
     }
-
     function logout() {
       sessionStorage.removeItem('mr_session'); localStorage.removeItem('mr_session');
-      currentEmployee = null; selectedLocation = null; isAdmin = false; currentMode = null;
-      document.getElementById('appScreen').style.display = 'none';
-      document.getElementById('loginScreen').style.display = 'flex';
-      document.getElementById('mainContent').style.display = 'none';
-      document.getElementById('adminContent').style.display = 'none';
-      document.getElementById('modeSelect').style.display = 'flex';
-      document.getElementById('backBtn').style.display = 'none';
-      document.body.classList.remove('mode-inward', 'mode-outward');
+      currentEmployee = null; selectedLocation = null; isAdmin = false;
+      document.getElementById('appScreen').style.display = 'none'; document.getElementById('loginScreen').style.display = 'flex';
       showStep(1); initLogin();
     }
 
-    // ===== MODE =====
-    async function selectMode(mode) {
-      currentMode = mode;
-      document.getElementById('modeSelect').style.display = 'none';
-      document.getElementById('mainContent').style.display = 'block';
-      document.getElementById('backBtn').style.display = 'inline-block';
-      document.body.classList.remove('mode-inward', 'mode-outward');
-      document.body.classList.add('mode-' + mode);
-      document.getElementById('modeBadge').textContent = mode;
-      document.getElementById('modeBadge').className = 'mode-badge ' + mode;
-      if (mode === 'outward') {
-        document.getElementById('nameLabel').textContent = 'To'; document.getElementById('recName').placeholder = 'Recipient name';
-        document.getElementById('docsLabel').textContent = 'List of Documents Sent'; document.getElementById('thName').textContent = 'To'; document.getElementById('thDocs').textContent = 'Documents Sent';
-      } else {
-        document.getElementById('nameLabel').textContent = 'From'; document.getElementById('recName').placeholder = 'Sender name';
-        document.getElementById('docsLabel').textContent = 'List of Documents Received'; document.getElementById('thName').textContent = 'From'; document.getElementById('thDocs').textContent = 'Documents Received';
-      }
-      document.getElementById('date').valueAsDate = new Date();
-      document.getElementById('searchInput').value = '';
-      await loadRecords();
+    // ===== RECORDS CRUD =====
+    async function loadRecords(type) {
+      const recs = await sbGet('mail_records', `select=*&mail_type=eq.${type}&location=eq.${encodeURIComponent(selectedLocation)}&order=created_at.asc`);
+      // Assign sequential IDs
+      recs.forEach((r, i) => r.seq = i + 1);
+      if (type === 'outward') { outRecords = recs; renderOutward(); }
+      else { inRecords = recs; renderInward(); }
     }
 
-    function goBack() {
-      cancelEdit(); document.getElementById('searchInput').value = ''; currentMode = null;
-      document.body.classList.remove('mode-inward', 'mode-outward');
-      document.getElementById('modeSelect').style.display = 'flex';
-      document.getElementById('mainContent').style.display = 'none';
-      document.getElementById('backBtn').style.display = 'none';
+    function renderOutward() {
+      const f = (document.getElementById('outSearch').value || '').toLowerCase();
+      const filtered = outRecords.filter(r => !f || Object.values(r).some(v => String(v).toLowerCase().includes(f)));
+      document.getElementById('outCount').textContent = filtered.length + ' records';
+      document.getElementById('outEmpty').style.display = filtered.length ? 'none' : 'block';
+      document.getElementById('outBody').innerHTML = [...filtered].reverse().map(r => `<tr class="border-b border-slate-100 hover:bg-slate-50"><td class="py-2.5 font-semibold text-primary">${r.seq}</td><td class="py-2.5">${esc(r.date)}</td><td class="py-2.5">${esc(r.employee_id)}</td><td class="py-2.5 font-medium">${esc(r.name)}</td><td class="py-2.5">${esc(r.department)}</td><td class="py-2.5">${esc(r.documents)}</td><td class="py-2.5">${esc(r.particular)}</td><td class="py-2.5 text-slate-400">${esc(r.details||'')}</td><td class="py-2.5"><button onclick="editOutRecord(${r.id})" class="text-blue-500 hover:text-blue-700 text-xs font-semibold">Edit</button></td></tr>`).join('');
     }
 
-    // ===== RECORDS =====
-    async function loadRecords() {
-      try {
-        records = await sbFetch('mail_records', `select=*&mail_type=eq.${currentMode}&location=eq.${encodeURIComponent(selectedLocation)}&order=date.desc,created_at.desc`);
-        renderRecords();
-      } catch (e) { showToast('Failed to load records', 'info'); }
+    function renderInward() {
+      const f = (document.getElementById('inSearch').value || '').toLowerCase();
+      const filtered = inRecords.filter(r => !f || Object.values(r).some(v => String(v).toLowerCase().includes(f)));
+      document.getElementById('inCount').textContent = filtered.length + ' records';
+      document.getElementById('inEmpty').style.display = filtered.length ? 'none' : 'block';
+      document.getElementById('inBody').innerHTML = [...filtered].reverse().map(r => `<tr class="border-b border-slate-100 hover:bg-slate-50"><td class="py-2.5 font-semibold text-accent">${r.seq}</td><td class="py-2.5">${esc(r.date)}</td><td class="py-2.5">${esc(r.employee_id)}</td><td class="py-2.5 font-medium">${esc(r.name)}</td><td class="py-2.5">${esc(r.department)}</td><td class="py-2.5">${esc(r.documents)}</td><td class="py-2.5">${esc(r.particular)}</td><td class="py-2.5 text-slate-400">${esc(r.details||'')}</td><td class="py-2.5"><button onclick="editInRecord(${r.id})" class="text-blue-500 hover:text-blue-700 text-xs font-semibold">Edit</button></td></tr>`).join('');
     }
 
-    function renderRecords(filter) {
-      filter = filter || '';
-      const tbody = document.getElementById('tableBody'), empty = document.getElementById('emptyState');
-      const lf = filter.toLowerCase();
-      const filtered = records.filter(r => !filter || Object.values(r).some(v => String(v).toLowerCase().includes(lf)));
-      document.getElementById('recordCount').textContent = `${filtered.length} record${filtered.length !== 1 ? 's' : ''}`;
-      if (!filtered.length) { tbody.innerHTML = ''; empty.style.display = 'block'; return; }
-      empty.style.display = 'none';
-      tbody.innerHTML = filtered.map((r, i) => `<tr><td>${i + 1}</td><td>${esc(r.date)}</td><td>${esc(r.employee_id)}</td><td>${esc(r.name)}</td><td>${esc(r.department)}</td><td>${esc(r.documents)}</td><td>${esc(r.particular)}</td><td>${esc(r.details || '')}</td><td class="actions-cell"><button class="btn btn-edit" onclick="editRecord(${r.id})">Edit</button></td></tr>`).join('');
-    }
-
-    document.getElementById('searchInput').addEventListener('input', function() { renderRecords(this.value); });
-
-    document.getElementById('recordForm').addEventListener('submit', async function(e) {
+    async function submitRecord(e, type) {
       e.preventDefault();
+      const pre = type === 'outward' ? 'out' : 'in';
       const data = {
-        mail_type: currentMode, date: document.getElementById('date').value,
-        employee_id: document.getElementById('employeeId').value.trim(), name: document.getElementById('recName').value.trim(),
-        department: document.getElementById('dept').value.trim(), documents: document.getElementById('documents').value.trim(),
-        particular: document.getElementById('particular').value.trim(), details: document.getElementById('details').value.trim(),
+        mail_type: type, date: document.getElementById(pre + 'Date').value,
+        employee_id: document.getElementById(pre + 'EmpId').value.trim(), name: document.getElementById(pre + 'Name').value.trim(),
+        department: document.getElementById(pre + 'Dept').value.trim(), documents: document.getElementById(pre + 'Docs').value.trim(),
+        particular: document.getElementById(pre + 'Particular').value.trim(), details: document.getElementById(pre + 'Details').value.trim(),
         location: selectedLocation, created_by: currentEmployee.name,
       };
-      const editId = document.getElementById('editId').value;
+      const editId = type === 'outward' ? editingOutId : editingInId;
       try {
         if (editId) {
-          const oldRec = records.find(r => r.id === parseInt(editId));
-          await sbUpdate('mail_records', editId, { ...data, updated_at: new Date().toISOString() });
-          if (oldRec) {
-            for (const [k, v] of Object.entries(data)) {
-              if (['mail_type', 'location', 'created_by'].includes(k)) continue;
-              if (String(oldRec[k] || '') !== String(v || '')) {
-                await sbInsert('mail_edit_log', { record_id: parseInt(editId), mail_type: currentMode, field_changed: k, old_value: String(oldRec[k] || ''), new_value: String(v || ''), edited_by: currentEmployee.name });
-              }
-            }
-          }
-          showToast('Record updated'); cancelEdit();
+          const oldRec = (type === 'outward' ? outRecords : inRecords).find(r => r.id === editId);
+          await sbPatch('mail_records', editId, { ...data, updated_at: new Date().toISOString() });
+          if (oldRec) { for (const [k, v] of Object.entries(data)) { if (['mail_type','location','created_by'].includes(k)) continue; if (String(oldRec[k]||'') !== String(v||'')) await sbPost('mail_edit_log', { record_id: editId, mail_type: type, field_changed: k, old_value: String(oldRec[k]||''), new_value: String(v||''), edited_by: currentEmployee.name }); } }
+          showToast('Record updated');
+          if (type === 'outward') cancelOutEdit(); else cancelInEdit();
         } else {
-          await sbInsert('mail_records', data);
+          await sbPost('mail_records', data);
           showToast('Record added');
+          document.getElementById(pre === 'out' ? 'outwardForm' : 'inwardForm').reset();
+          setToday(pre + 'Date');
         }
-        await loadRecords();
-        if (!editId) clearForm();
-      } catch (e) { showToast('Failed to save', 'info'); }
-    });
+        await loadRecords(type);
+      } catch (err) { showToast('Failed to save'); }
+      return false;
+    }
 
-    function editRecord(id) {
-      const r = records.find(x => x.id === id); if (!r) return;
-      document.getElementById('date').value = r.date; document.getElementById('employeeId').value = r.employee_id;
-      document.getElementById('recName').value = r.name; document.getElementById('dept').value = r.department;
-      document.getElementById('documents').value = r.documents; document.getElementById('particular').value = r.particular;
-      document.getElementById('details').value = r.details || ''; document.getElementById('editId').value = r.id;
-      document.getElementById('formTitleText').textContent = 'Edit Record';
-      document.getElementById('submitBtn').textContent = 'Update Record';
-      document.getElementById('cancelBtn').style.display = 'inline-block';
+    function editOutRecord(id) {
+      const r = outRecords.find(x => x.id === id); if (!r) return;
+      editingOutId = id;
+      document.getElementById('outDate').value = r.date; document.getElementById('outEmpId').value = r.employee_id;
+      document.getElementById('outName').value = r.name; document.getElementById('outDept').value = r.department;
+      document.getElementById('outDocs').value = r.documents; document.getElementById('outParticular').value = r.particular;
+      document.getElementById('outDetails').value = r.details || '';
+      document.getElementById('outSubmitBtn').textContent = 'Update Record';
+      document.getElementById('outCancelBtn').classList.remove('hidden');
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
+    function cancelOutEdit() { editingOutId = null; document.getElementById('outwardForm').reset(); setToday('outDate'); document.getElementById('outSubmitBtn').textContent = 'Add Record'; document.getElementById('outCancelBtn').classList.add('hidden'); }
 
-    function cancelEdit() {
-      document.getElementById('editId').value = '';
-      document.getElementById('formTitleText').textContent = 'New Record';
-      document.getElementById('submitBtn').textContent = 'Add Record';
-      document.getElementById('cancelBtn').style.display = 'none'; clearForm();
+    function editInRecord(id) {
+      const r = inRecords.find(x => x.id === id); if (!r) return;
+      editingInId = id;
+      document.getElementById('inDate').value = r.date; document.getElementById('inEmpId').value = r.employee_id;
+      document.getElementById('inName').value = r.name; document.getElementById('inDept').value = r.department;
+      document.getElementById('inDocs').value = r.documents; document.getElementById('inParticular').value = r.particular;
+      document.getElementById('inDetails').value = r.details || '';
+      document.getElementById('inSubmitBtn').textContent = 'Update Record';
+      document.getElementById('inCancelBtn').classList.remove('hidden');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    function cancelInEdit() { editingInId = null; document.getElementById('inwardForm').reset(); setToday('inDate'); document.getElementById('inSubmitBtn').textContent = 'Add Record'; document.getElementById('inCancelBtn').classList.add('hidden'); }
+
+    // ===== DASHBOARD =====
+    async function loadDashboard() {
+      const [out, inn] = await Promise.all([
+        sbGet('mail_records', `select=*&mail_type=eq.outward&location=eq.${encodeURIComponent(selectedLocation)}&order=created_at.asc`),
+        sbGet('mail_records', `select=*&mail_type=eq.inward&location=eq.${encodeURIComponent(selectedLocation)}&order=created_at.asc`),
+      ]);
+      out.forEach((r, i) => r.seq = i + 1);
+      inn.forEach((r, i) => r.seq = i + 1);
+      const today = new Date().toISOString().split('T')[0];
+      const todayOut = out.filter(r => r.date === today).length;
+      const todayIn = inn.filter(r => r.date === today).length;
+
+      document.getElementById('dashKpis').innerHTML = [
+        { v: out.length, l: 'Total Outward', icon: 'call_made', bg: 'bg-blue-100', tc: 'text-blue-600' },
+        { v: inn.length, l: 'Total Inward', icon: 'call_received', bg: 'bg-green-100', tc: 'text-green-600' },
+        { v: todayOut, l: 'Today Outward', icon: 'today', bg: 'bg-amber-100', tc: 'text-amber-600' },
+        { v: todayIn, l: 'Today Inward', icon: 'event', bg: 'bg-violet-100', tc: 'text-violet-600' },
+      ].map(k => `<div class="kpi-card bg-white rounded-xl border border-slate-200 p-5 transition-all duration-200 cursor-default"><div class="flex items-center gap-3 mb-2"><div class="${k.bg} w-10 h-10 rounded-lg flex items-center justify-center"><span class="material-symbols-outlined ${k.tc}">${k.icon}</span></div></div><div class="text-2xl font-bold text-slate-800">${k.v}</div><div class="text-xs text-slate-400 uppercase tracking-wide mt-1">${k.l}</div></div>`).join('');
+
+      document.getElementById('dashOutward').innerHTML = out.slice(-5).reverse().map(r => `<tr class="border-b border-slate-50"><td class="py-2 font-semibold text-primary">${r.seq}</td><td class="py-2">${esc(r.date)}</td><td class="py-2">${esc(r.name)}</td><td class="py-2 text-slate-500">${esc(r.documents)}</td></tr>`).join('') || '<tr><td colspan="4" class="py-6 text-center text-slate-300">No records</td></tr>';
+      document.getElementById('dashInward').innerHTML = inn.slice(-5).reverse().map(r => `<tr class="border-b border-slate-50"><td class="py-2 font-semibold text-accent">${r.seq}</td><td class="py-2">${esc(r.date)}</td><td class="py-2">${esc(r.name)}</td><td class="py-2 text-slate-500">${esc(r.documents)}</td></tr>`).join('') || '<tr><td colspan="4" class="py-6 text-center text-slate-300">No records</td></tr>';
     }
 
-    function clearForm() { document.getElementById('recordForm').reset(); document.getElementById('date').valueAsDate = new Date(); }
+    // ===== DAILY REPORT =====
+    async function renderDailyReport() {
+      const date = document.getElementById('reportDate').value;
+      if (!date) return;
+      const [out, inn] = await Promise.all([
+        sbGet('mail_records', `select=*&mail_type=eq.outward&location=eq.${encodeURIComponent(selectedLocation)}&date=eq.${date}&order=created_at.asc`),
+        sbGet('mail_records', `select=*&mail_type=eq.inward&location=eq.${encodeURIComponent(selectedLocation)}&date=eq.${date}&order=created_at.asc`),
+      ]);
+      // Get sequential IDs from all records
+      const [allOut, allIn] = await Promise.all([
+        sbGet('mail_records', `select=id&mail_type=eq.outward&location=eq.${encodeURIComponent(selectedLocation)}&order=created_at.asc`),
+        sbGet('mail_records', `select=id&mail_type=eq.inward&location=eq.${encodeURIComponent(selectedLocation)}&order=created_at.asc`),
+      ]);
+      const outIdMap = {}; allOut.forEach((r, i) => outIdMap[r.id] = i + 1);
+      const inIdMap = {}; allIn.forEach((r, i) => inIdMap[r.id] = i + 1);
+
+      const dateStr = new Date(date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+      let html = `<div class="mb-2 text-sm text-slate-500">${dateStr} · ${selectedLocation}</div>`;
+
+      html += `<div class="bg-white rounded-xl border border-slate-200 p-5 mb-6"><h3 class="font-semibold text-sm text-primary mb-3 flex items-center gap-2"><span class="material-symbols-outlined text-lg">call_made</span>Outward (${out.length})</h3>`;
+      if (out.length) {
+        html += `<div class="overflow-x-auto"><table class="w-full text-sm" id="reportOutTable"><thead><tr class="text-xs text-slate-400 uppercase border-b"><th class="pb-2 text-left">ID</th><th class="pb-2 text-left">Emp ID</th><th class="pb-2 text-left">To</th><th class="pb-2 text-left">Dept</th><th class="pb-2 text-left">Documents Sent</th><th class="pb-2 text-left">Particular</th><th class="pb-2 text-left">Details</th></tr></thead><tbody>`;
+        html += out.map(r => `<tr class="border-b border-slate-50"><td class="py-2 font-semibold text-primary">${outIdMap[r.id]||'-'}</td><td class="py-2">${esc(r.employee_id)}</td><td class="py-2">${esc(r.name)}</td><td class="py-2">${esc(r.department)}</td><td class="py-2">${esc(r.documents)}</td><td class="py-2">${esc(r.particular)}</td><td class="py-2 text-slate-400">${esc(r.details||'')}</td></tr>`).join('');
+        html += `</tbody></table></div>`;
+      } else html += `<p class="text-sm text-slate-300">No outward records for this date.</p>`;
+      html += `</div>`;
+
+      html += `<div class="bg-white rounded-xl border border-slate-200 p-5"><h3 class="font-semibold text-sm text-accent mb-3 flex items-center gap-2"><span class="material-symbols-outlined text-lg">call_received</span>Inward (${inn.length})</h3>`;
+      if (inn.length) {
+        html += `<div class="overflow-x-auto"><table class="w-full text-sm" id="reportInTable"><thead><tr class="text-xs text-slate-400 uppercase border-b"><th class="pb-2 text-left">ID</th><th class="pb-2 text-left">Emp ID</th><th class="pb-2 text-left">From</th><th class="pb-2 text-left">Dept</th><th class="pb-2 text-left">Documents Received</th><th class="pb-2 text-left">Particular</th><th class="pb-2 text-left">Details</th></tr></thead><tbody>`;
+        html += inn.map(r => `<tr class="border-b border-slate-50"><td class="py-2 font-semibold text-accent">${inIdMap[r.id]||'-'}</td><td class="py-2">${esc(r.employee_id)}</td><td class="py-2">${esc(r.name)}</td><td class="py-2">${esc(r.department)}</td><td class="py-2">${esc(r.documents)}</td><td class="py-2">${esc(r.particular)}</td><td class="py-2 text-slate-400">${esc(r.details||'')}</td></tr>`).join('');
+        html += `</tbody></table></div>`;
+      } else html += `<p class="text-sm text-slate-300">No inward records for this date.</p>`;
+      html += `</div>`;
+
+      document.getElementById('dailyReportContent').innerHTML = html;
+    }
 
     // ===== ADMIN =====
-    function adminNav(section) {
-      document.querySelectorAll('.admin-nav-btn').forEach(b => b.classList.toggle('active', b.dataset.section === section));
-      document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active'));
-      document.getElementById(section === 'dashboard' ? 'adminDashboard' : section === 'records' ? 'adminRecords' : 'adminEditlog').classList.add('active');
-    }
-
     async function loadAdminData() {
-      try {
-        const [recs, logs] = await Promise.all([
-          sbFetch('mail_records', 'select=*&order=date.desc,created_at.desc'),
-          sbFetch('mail_edit_log', 'select=*&order=edited_at.desc'),
-        ]);
-        adminRecords = recs;
-        const inward = recs.filter(r => r.mail_type === 'inward').length;
-        const outward = recs.filter(r => r.mail_type === 'outward').length;
-        const locs = new Set(recs.map(r => r.location)).size;
-        const today = recs.filter(r => r.date === new Date().toISOString().split('T')[0]).length;
+      adminAllRecords = await sbGet('mail_records', 'select=*&order=created_at.asc');
+      adminAllRecords.forEach((r, i) => r.seq = i + 1);
+      const inward = adminAllRecords.filter(r => r.mail_type === 'inward').length;
+      const outward = adminAllRecords.filter(r => r.mail_type === 'outward').length;
+      const locs = new Set(adminAllRecords.map(r => r.location)).size;
+      const today = adminAllRecords.filter(r => r.date === new Date().toISOString().split('T')[0]).length;
 
-        document.getElementById('adminKpis').innerHTML = [
-          { v: recs.length, l: 'Total Records' }, { v: inward, l: 'Inward' }, { v: outward, l: 'Outward' }, { v: locs, l: 'Locations' }, { v: today, l: 'Today' },
-        ].map(k => `<div class="kpi-card"><div class="kpi-value">${k.v}</div><div class="kpi-label">${k.l}</div></div>`).join('');
+      document.getElementById('adminKpis').innerHTML = [
+        { v: adminAllRecords.length, l: 'Total', icon: 'inbox', bg: 'bg-blue-100', tc: 'text-blue-600' },
+        { v: outward, l: 'Outward', icon: 'call_made', bg: 'bg-indigo-100', tc: 'text-indigo-600' },
+        { v: inward, l: 'Inward', icon: 'call_received', bg: 'bg-green-100', tc: 'text-green-600' },
+        { v: locs, l: 'Branches', icon: 'apartment', bg: 'bg-amber-100', tc: 'text-amber-600' },
+        { v: today, l: 'Today', icon: 'today', bg: 'bg-violet-100', tc: 'text-violet-600' },
+      ].map(k => `<div class="kpi-card bg-white rounded-xl border border-slate-200 p-5 transition-all duration-200"><div class="flex items-center gap-3 mb-2"><div class="${k.bg} w-10 h-10 rounded-lg flex items-center justify-center"><span class="material-symbols-outlined ${k.tc}">${k.icon}</span></div></div><div class="text-2xl font-bold text-slate-800">${k.v}</div><div class="text-xs text-slate-400 uppercase tracking-wide mt-1">${k.l}</div></div>`).join('');
 
-        document.getElementById('adminRecentBody').innerHTML = recs.slice(0, 15).map(r => `<tr><td>${esc(r.date)}</td><td><span class="mode-badge ${r.mail_type}">${r.mail_type}</span></td><td>${esc(r.name)}</td><td>${esc(r.department)}</td><td>${esc(r.documents)}</td><td>${esc(r.location)}</td><td>${esc(r.created_by)}</td></tr>`).join('') || '<tr><td colspan="7" style="text-align:center;color:#aaa;padding:24px">No records yet</td></tr>';
-
-        const editBody = document.getElementById('adminEditBody'), editEmpty = document.getElementById('editlogEmpty');
-        if (logs.length) {
-          editEmpty.style.display = 'none';
-          editBody.innerHTML = logs.map(l => `<tr><td>${new Date(l.edited_at).toLocaleString()}</td><td>#${l.record_id}</td><td><span class="mode-badge ${l.mail_type}">${l.mail_type}</span></td><td>${esc(l.field_changed)}</td><td>${esc(l.old_value)}</td><td>${esc(l.new_value)}</td><td>${esc(l.edited_by)}</td></tr>`).join('');
-        } else { editBody.innerHTML = ''; editEmpty.style.display = 'block'; }
-        renderAdminRecords();
-      } catch (e) { showToast('Failed to load admin data', 'info'); }
+      document.getElementById('adminRecentBody').innerHTML = [...adminAllRecords].reverse().slice(0, 20).map(r => `<tr class="border-b border-slate-100"><td class="py-2 font-semibold">${r.seq}</td><td class="py-2">${esc(r.date)}</td><td class="py-2"><span class="inline-block px-2 py-0.5 rounded-full text-xs font-semibold badge-${r.mail_type}">${r.mail_type}</span></td><td class="py-2">${esc(r.name)}</td><td class="py-2">${esc(r.department)}</td><td class="py-2">${esc(r.documents)}</td><td class="py-2">${esc(r.location)}</td><td class="py-2 text-slate-400">${esc(r.created_by)}</td></tr>`).join('') || '<tr><td colspan="8" class="py-8 text-center text-slate-300">No records yet</td></tr>';
+      renderAdminRecords();
     }
 
     function renderAdminRecords() {
-      const tf = document.getElementById('adminTypeFilter').value, search = (document.getElementById('adminSearchInput').value || '').toLowerCase();
-      let filtered = adminRecords;
-      if (tf) filtered = filtered.filter(r => r.mail_type === tf);
-      if (search) filtered = filtered.filter(r => Object.values(r).some(v => String(v).toLowerCase().includes(search)));
-      document.getElementById('adminRecordCount').textContent = filtered.length + ' records';
-      const body = document.getElementById('adminAllBody'), empty = document.getElementById('adminEmptyState');
-      if (!filtered.length) { body.innerHTML = ''; empty.style.display = 'block'; return; }
-      empty.style.display = 'none';
-      body.innerHTML = filtered.map((r, i) => `<tr><td>${i + 1}</td><td>${esc(r.date)}</td><td><span class="mode-badge ${r.mail_type}">${r.mail_type}</span></td><td>${esc(r.employee_id)}</td><td>${esc(r.name)}</td><td>${esc(r.department)}</td><td>${esc(r.documents)}</td><td>${esc(r.particular)}</td><td>${esc(r.details || '')}</td><td>${esc(r.location)}</td><td>${esc(r.created_by)}</td></tr>`).join('');
+      const tf = document.getElementById('adminTypeFilter').value, s = (document.getElementById('adminSearchInput').value || '').toLowerCase();
+      let f = adminAllRecords; if (tf) f = f.filter(r => r.mail_type === tf); if (s) f = f.filter(r => Object.values(r).some(v => String(v).toLowerCase().includes(s)));
+      document.getElementById('adminRecordCount').textContent = f.length + ' records';
+      document.getElementById('adminEmptyState').style.display = f.length ? 'none' : 'block';
+      document.getElementById('adminAllBody').innerHTML = [...f].reverse().map(r => `<tr class="border-b border-slate-100 hover:bg-slate-50"><td class="py-2 font-semibold">${r.seq}</td><td class="py-2">${esc(r.date)}</td><td class="py-2"><span class="inline-block px-2 py-0.5 rounded-full text-xs font-semibold badge-${r.mail_type}">${r.mail_type}</span></td><td class="py-2">${esc(r.employee_id)}</td><td class="py-2">${esc(r.name)}</td><td class="py-2">${esc(r.department)}</td><td class="py-2">${esc(r.documents)}</td><td class="py-2">${esc(r.particular)}</td><td class="py-2 text-slate-400">${esc(r.details||'')}</td><td class="py-2">${esc(r.location)}</td><td class="py-2 text-slate-400">${esc(r.created_by)}</td></tr>`).join('');
     }
 
-    document.addEventListener('keydown', e => { if (e.key === 'Escape' && currentMode) goBack(); });
+    async function loadAdminEditLogs() {
+      const logs = await sbGet('mail_edit_log', 'select=*&order=edited_at.desc');
+      document.getElementById('editlogEmpty').style.display = logs.length ? 'none' : 'block';
+      document.getElementById('adminEditBody').innerHTML = logs.map(l => `<tr class="border-b border-slate-100"><td class="py-2">${new Date(l.edited_at).toLocaleString()}</td><td class="py-2">#${l.record_id}</td><td class="py-2"><span class="inline-block px-2 py-0.5 rounded-full text-xs font-semibold badge-${l.mail_type}">${l.mail_type}</span></td><td class="py-2">${esc(l.field_changed)}</td><td class="py-2 text-red-400">${esc(l.old_value)}</td><td class="py-2 text-green-500">${esc(l.new_value)}</td><td class="py-2">${esc(l.edited_by)}</td></tr>`).join('');
+    }
+
+    async function renderAdminDailyReport() {
+      const date = document.getElementById('adminReportDate').value; if (!date) return;
+      const recs = await sbGet('mail_records', `select=*&date=eq.${date}&order=location,mail_type,created_at.asc`);
+      const allRecs = await sbGet('mail_records', 'select=id,mail_type,location&order=created_at.asc');
+      const seqMap = {}; const counters = {};
+      allRecs.forEach(r => { const k = r.mail_type + '|' + r.location; counters[k] = (counters[k] || 0) + 1; seqMap[r.id] = counters[k]; });
+
+      const byLoc = {}; recs.forEach(r => { (byLoc[r.location] = byLoc[r.location] || []).push(r); });
+      const dateStr = new Date(date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+      let html = `<div class="mb-2 text-sm text-slate-500">${dateStr}</div>`;
+      for (const [loc, lrecs] of Object.entries(byLoc)) {
+        html += `<div class="bg-white rounded-xl border border-slate-200 p-5 mb-4"><h3 class="font-semibold text-sm mb-3">${esc(loc)} <span class="text-slate-400 font-normal">(${lrecs.length} records)</span></h3>`;
+        html += `<div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr class="text-xs text-slate-400 uppercase border-b"><th class="pb-2 text-left">ID</th><th class="pb-2 text-left">Type</th><th class="pb-2 text-left">To/From</th><th class="pb-2 text-left">Dept</th><th class="pb-2 text-left">Documents</th><th class="pb-2 text-left">By</th></tr></thead><tbody>`;
+        html += lrecs.map(r => `<tr class="border-b border-slate-50"><td class="py-2 font-semibold">${seqMap[r.id]||'-'}</td><td class="py-2"><span class="inline-block px-2 py-0.5 rounded-full text-xs font-semibold badge-${r.mail_type}">${r.mail_type}</span></td><td class="py-2">${esc(r.name)}</td><td class="py-2">${esc(r.department)}</td><td class="py-2">${esc(r.documents)}</td><td class="py-2 text-slate-400">${esc(r.created_by)}</td></tr>`).join('');
+        html += `</tbody></table></div></div>`;
+      }
+      if (!Object.keys(byLoc).length) html += `<div class="bg-white rounded-xl border p-8 text-center text-slate-300">No records for this date.</div>`;
+      document.getElementById('adminDailyReportContent').innerHTML = html;
+    }
+
+    // ===== EXPORT =====
+    function exportToExcel(type) {
+      let data, filename;
+      if (type === 'outward') { data = outRecords.map(r => ({ ID: r.seq, Date: r.date, 'Emp ID': r.employee_id, To: r.name, Dept: r.department, 'Documents Sent': r.documents, Particular: r.particular, Details: r.details || '' })); filename = `Outward_${selectedLocation}.xlsx`; }
+      else if (type === 'inward') { data = inRecords.map(r => ({ ID: r.seq, Date: r.date, 'Emp ID': r.employee_id, From: r.name, Dept: r.department, 'Documents Received': r.documents, Particular: r.particular, Details: r.details || '' })); filename = `Inward_${selectedLocation}.xlsx`; }
+      else { data = adminAllRecords.map(r => ({ ID: r.seq, Date: r.date, Type: r.mail_type, 'Emp ID': r.employee_id, 'To/From': r.name, Dept: r.department, Documents: r.documents, Particular: r.particular, Details: r.details || '', Location: r.location, By: r.created_by })); filename = 'All_Records.xlsx'; }
+      const ws = XLSX.utils.json_to_sheet(data); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Records'); XLSX.writeFile(wb, filename);
+    }
+
+    function exportDailyReport(admin) {
+      const date = document.getElementById(admin ? 'adminReportDate' : 'reportDate').value;
+      const tables = document.querySelectorAll(`#${admin ? 'adminDailyReportContent' : 'dailyReportContent'} table`);
+      if (!tables.length) { showToast('No data to export'); return; }
+      const wb = XLSX.utils.book_new();
+      tables.forEach((t, i) => { const ws = XLSX.utils.table_to_sheet(t); XLSX.utils.book_append_sheet(wb, ws, `Report_${i + 1}`); });
+      XLSX.writeFile(wb, `Daily_Report_${date}.xlsx`);
+    }
+
+    function printReport() { window.print(); }
 
     // ===== INIT =====
     if (checkSession()) showApp(); else initLogin();
