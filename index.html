@@ -598,24 +598,25 @@
         sbGet('mail_records', `select=id,date&mail_type=eq.outward&location=eq.${encodeURIComponent(selectedLocation)}&date=gte.${fy.start}&date=lte.${fy.end}&order=created_at.asc`),
         sbGet('mail_records', `select=id,date&mail_type=eq.inward&location=eq.${encodeURIComponent(selectedLocation)}&date=gte.${fy.start}&date=lte.${fy.end}&order=created_at.asc`),
       ]);
-      const outIdMap = {}; allOut.forEach((r, i) => outIdMap[r.id] = i + 1);
-      const inIdMap = {}; allIn.forEach((r, i) => inIdMap[r.id] = i + 1);
+      const outSeqMap = {}; allOut.forEach((r, i) => outSeqMap[r.id] = i + 1);
+      const inSeqMap = {}; allIn.forEach((r, i) => inSeqMap[r.id] = i + 1);
+      const eId = currentEmployee.id || 0;
 
       const dateStr = new Date(date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-      let html = `<div class="mb-2 text-sm text-slate-500">${dateStr} · ${selectedLocation}</div>`;
+      let html = `<div class="mb-2 text-sm text-slate-500">${dateStr} · ${selectedLocation} · ${fy.label}</div>`;
 
       html += `<div class="bg-white rounded-xl border border-slate-200 p-5 mb-6"><h3 class="font-semibold text-sm text-primary mb-3 flex items-center gap-2"><span class="material-symbols-outlined text-lg">call_made</span>Outward (${out.length})</h3>`;
       if (out.length) {
-        html += `<div class="overflow-x-auto"><table class="w-full text-sm" id="reportOutTable"><thead><tr class="text-xs text-slate-400 uppercase border-b"><th class="pb-2 text-left">ID</th><th class="pb-2 text-left">Emp ID</th><th class="pb-2 text-left">To</th><th class="pb-2 text-left">Dept</th><th class="pb-2 text-left">Documents Sent</th><th class="pb-2 text-left">Particular</th><th class="pb-2 text-left">Details</th></tr></thead><tbody>`;
-        html += out.map(r => `<tr class="border-b border-slate-50"><td class="py-2 font-semibold text-primary">${outIdMap[r.id]||'-'}</td><td class="py-2">${esc(r.employee_id)}</td><td class="py-2">${esc(r.name)}</td><td class="py-2">${esc(r.department)}</td><td class="py-2">${esc(r.documents)}</td><td class="py-2">${esc(r.particular)}</td><td class="py-2 text-slate-400">${esc(r.details||'')}</td></tr>`).join('');
+        html += `<div class="overflow-x-auto"><table class="w-full text-sm" id="reportOutTable"><thead><tr class="text-xs text-slate-400 uppercase border-b"><th class="pb-2 text-left">ID</th><th class="pb-2 text-left">Sl No</th><th class="pb-2 text-left">Emp ID</th><th class="pb-2 text-left">To</th><th class="pb-2 text-left">Dept</th><th class="pb-2 text-left">Documents Sent</th><th class="pb-2 text-left">Particular</th><th class="pb-2 text-left">Details</th></tr></thead><tbody>`;
+        html += out.map(r => { const seq = outSeqMap[r.id]||'-'; return `<tr class="border-b border-slate-50"><td class="py-2 font-semibold text-primary text-xs">OUT/${eId}/${seq}</td><td class="py-2">${seq}</td><td class="py-2">${esc(r.employee_id)}</td><td class="py-2">${esc(r.name)}</td><td class="py-2">${esc(r.department)}</td><td class="py-2">${esc(r.documents)}</td><td class="py-2">${esc(r.particular)}</td><td class="py-2 text-slate-400">${esc(r.details||'')}</td></tr>`; }).join('');
         html += `</tbody></table></div>`;
       } else html += `<p class="text-sm text-slate-300">No outward records for this date.</p>`;
       html += `</div>`;
 
       html += `<div class="bg-white rounded-xl border border-slate-200 p-5"><h3 class="font-semibold text-sm text-accent mb-3 flex items-center gap-2"><span class="material-symbols-outlined text-lg">call_received</span>Inward (${inn.length})</h3>`;
       if (inn.length) {
-        html += `<div class="overflow-x-auto"><table class="w-full text-sm" id="reportInTable"><thead><tr class="text-xs text-slate-400 uppercase border-b"><th class="pb-2 text-left">ID</th><th class="pb-2 text-left">Emp ID</th><th class="pb-2 text-left">From</th><th class="pb-2 text-left">Dept</th><th class="pb-2 text-left">Documents Received</th><th class="pb-2 text-left">Particular</th><th class="pb-2 text-left">Details</th></tr></thead><tbody>`;
-        html += inn.map(r => `<tr class="border-b border-slate-50"><td class="py-2 font-semibold text-accent">${inIdMap[r.id]||'-'}</td><td class="py-2">${esc(r.employee_id)}</td><td class="py-2">${esc(r.name)}</td><td class="py-2">${esc(r.department)}</td><td class="py-2">${esc(r.documents)}</td><td class="py-2">${esc(r.particular)}</td><td class="py-2 text-slate-400">${esc(r.details||'')}</td></tr>`).join('');
+        html += `<div class="overflow-x-auto"><table class="w-full text-sm" id="reportInTable"><thead><tr class="text-xs text-slate-400 uppercase border-b"><th class="pb-2 text-left">ID</th><th class="pb-2 text-left">Sl No</th><th class="pb-2 text-left">Emp ID</th><th class="pb-2 text-left">From</th><th class="pb-2 text-left">Dept</th><th class="pb-2 text-left">Documents Received</th><th class="pb-2 text-left">Particular</th><th class="pb-2 text-left">Details</th></tr></thead><tbody>`;
+        html += inn.map(r => { const seq = inSeqMap[r.id]||'-'; return `<tr class="border-b border-slate-50"><td class="py-2 font-semibold text-accent text-xs">IN/${eId}/${seq}</td><td class="py-2">${seq}</td><td class="py-2">${esc(r.employee_id)}</td><td class="py-2">${esc(r.name)}</td><td class="py-2">${esc(r.department)}</td><td class="py-2">${esc(r.documents)}</td><td class="py-2">${esc(r.particular)}</td><td class="py-2 text-slate-400">${esc(r.details||'')}</td></tr>`; }).join('');
         html += `</tbody></table></div>`;
       } else html += `<p class="text-sm text-slate-300">No inward records for this date.</p>`;
       html += `</div>`;
@@ -758,10 +759,11 @@
       const fy = getCurrentFY();
       let data, filename, sheetName, title;
 
-      // ID format: {OUT/IN}/{employee_id}/{seq}
+      // ID format: {OUT/IN}/{employee_table_id}/{seq}
+      const empId = currentEmployee.id || 0;
       function makeRecordId(r) {
         const prefix = r.mail_type === 'outward' ? 'OUT' : 'IN';
-        return `${prefix}/${r.employee_id}/${r.seq}`;
+        return `${prefix}/${empId}/${r.seq}`;
       }
 
       if (type === 'outward') {
