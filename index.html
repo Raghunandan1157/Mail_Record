@@ -320,7 +320,16 @@
     function showStep(n) { document.querySelectorAll('.login-step').forEach(s => s.classList.remove('active')); document.getElementById('loginStep' + n).classList.add('active'); }
     function showLoginError(step, msg) { const el = document.getElementById('loginError' + step); el.textContent = msg; el.style.display = 'block'; setTimeout(() => el.style.display = 'none', 3000); }
     function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
-    function seqId(records, idx) { return records.length - idx; }
+
+    // FY: April 1 → March 31. Returns { start: 'YYYY-04-01', end: 'YYYY-03-31' }
+    function getFY(dateStr) {
+      const d = new Date(dateStr + 'T00:00:00');
+      const m = d.getMonth(), y = d.getFullYear();
+      const fyStart = m >= 3 ? y : y - 1; // month 3 = April (0-indexed)
+      return { start: `${fyStart}-04-01`, end: `${fyStart + 1}-03-31`, label: `FY ${fyStart}-${String(fyStart + 1).slice(2)}` };
+    }
+    function getCurrentFY() { return getFY(new Date().toISOString().split('T')[0]); }
+
 
     // ===== NAVIGATION =====
     function navigateTo(page) {
@@ -442,9 +451,10 @@
 
     // ===== RECORDS CRUD =====
     async function loadRecords(type) {
-      const recs = await sbGet('mail_records', `select=*&mail_type=eq.${type}&location=eq.${encodeURIComponent(selectedLocation)}&order=created_at.asc`);
-      // Assign sequential IDs
-      recs.forEach((r, i) => r.seq = i + 1);
+      const fy = getCurrentFY();
+      const allRecs = await sbGet('mail_records', `select=*&mail_type=eq.${type}&location=eq.${encodeURIComponent(selectedLocation)}&date=gte.${fy.start}&date=lte.${fy.end}&order=created_at.asc`);
+      allRecs.forEach((r, i) => r.seq = i + 1);
+      const recs = allRecs;
       if (type === 'outward') { outRecords = recs; renderOutward(); }
       else { inRecords = recs; renderInward(); }
     }
@@ -522,25 +532,27 @@
 
     // ===== DASHBOARD =====
     async function loadDashboard() {
-      const [out, inn] = await Promise.all([
-        sbGet('mail_records', `select=*&mail_type=eq.outward&location=eq.${encodeURIComponent(selectedLocation)}&order=created_at.asc`),
-        sbGet('mail_records', `select=*&mail_type=eq.inward&location=eq.${encodeURIComponent(selectedLocation)}&order=created_at.asc`),
+      const fy = getCurrentFY();
+      const [outFY, inFY] = await Promise.all([
+        sbGet('mail_records', `select=*&mail_type=eq.outward&location=eq.${encodeURIComponent(selectedLocation)}&date=gte.${fy.start}&date=lte.${fy.end}&order=created_at.asc`),
+        sbGet('mail_records', `select=*&mail_type=eq.inward&location=eq.${encodeURIComponent(selectedLocation)}&date=gte.${fy.start}&date=lte.${fy.end}&order=created_at.asc`),
       ]);
-      out.forEach((r, i) => r.seq = i + 1);
-      inn.forEach((r, i) => r.seq = i + 1);
+      outFY.forEach((r, i) => r.seq = i + 1);
+      inFY.forEach((r, i) => r.seq = i + 1);
       const today = new Date().toISOString().split('T')[0];
-      const todayOut = out.filter(r => r.date === today).length;
-      const todayIn = inn.filter(r => r.date === today).length;
+      const todayOut = outFY.filter(r => r.date === today).length;
+      const todayIn = inFY.filter(r => r.date === today).length;
+      const fy = getCurrentFY();
 
       document.getElementById('dashKpis').innerHTML = [
-        { v: out.length, l: 'Total Outward', icon: 'call_made', bg: 'bg-blue-100', tc: 'text-blue-600' },
-        { v: inn.length, l: 'Total Inward', icon: 'call_received', bg: 'bg-green-100', tc: 'text-green-600' },
+        { v: outFY.length, l: `Outward (${fy.label})`, icon: 'call_made', bg: 'bg-blue-100', tc: 'text-blue-600' },
+        { v: inFY.length, l: `Inward (${fy.label})`, icon: 'call_received', bg: 'bg-green-100', tc: 'text-green-600' },
         { v: todayOut, l: 'Today Outward', icon: 'today', bg: 'bg-amber-100', tc: 'text-amber-600' },
         { v: todayIn, l: 'Today Inward', icon: 'event', bg: 'bg-violet-100', tc: 'text-violet-600' },
       ].map(k => `<div class="kpi-card bg-white rounded-xl border border-slate-200 p-5 transition-all duration-200 cursor-default"><div class="flex items-center gap-3 mb-2"><div class="${k.bg} w-10 h-10 rounded-lg flex items-center justify-center"><span class="material-symbols-outlined ${k.tc}">${k.icon}</span></div></div><div class="text-2xl font-bold text-slate-800">${k.v}</div><div class="text-xs text-slate-400 uppercase tracking-wide mt-1">${k.l}</div></div>`).join('');
 
-      document.getElementById('dashOutward').innerHTML = out.slice(-5).reverse().map(r => `<tr class="border-b border-slate-50"><td class="py-2 font-semibold text-primary">${r.seq}</td><td class="py-2">${esc(r.date)}</td><td class="py-2">${esc(r.name)}</td><td class="py-2 text-slate-500">${esc(r.documents)}</td></tr>`).join('') || '<tr><td colspan="4" class="py-6 text-center text-slate-300">No records</td></tr>';
-      document.getElementById('dashInward').innerHTML = inn.slice(-5).reverse().map(r => `<tr class="border-b border-slate-50"><td class="py-2 font-semibold text-accent">${r.seq}</td><td class="py-2">${esc(r.date)}</td><td class="py-2">${esc(r.name)}</td><td class="py-2 text-slate-500">${esc(r.documents)}</td></tr>`).join('') || '<tr><td colspan="4" class="py-6 text-center text-slate-300">No records</td></tr>';
+      document.getElementById('dashOutward').innerHTML = outFY.slice(-5).reverse().map(r => `<tr class="border-b border-slate-50"><td class="py-2 font-semibold text-primary">${r.seq}</td><td class="py-2">${esc(r.date)}</td><td class="py-2">${esc(r.name)}</td><td class="py-2 text-slate-500">${esc(r.documents)}</td></tr>`).join('') || '<tr><td colspan="4" class="py-6 text-center text-slate-300">No records</td></tr>';
+      document.getElementById('dashInward').innerHTML = inFY.slice(-5).reverse().map(r => `<tr class="border-b border-slate-50"><td class="py-2 font-semibold text-accent">${r.seq}</td><td class="py-2">${esc(r.date)}</td><td class="py-2">${esc(r.name)}</td><td class="py-2 text-slate-500">${esc(r.documents)}</td></tr>`).join('') || '<tr><td colspan="4" class="py-6 text-center text-slate-300">No records</td></tr>';
     }
 
     // ===== DAILY REPORT =====
@@ -551,10 +563,11 @@
         sbGet('mail_records', `select=*&mail_type=eq.outward&location=eq.${encodeURIComponent(selectedLocation)}&date=eq.${date}&order=created_at.asc`),
         sbGet('mail_records', `select=*&mail_type=eq.inward&location=eq.${encodeURIComponent(selectedLocation)}&date=eq.${date}&order=created_at.asc`),
       ]);
-      // Get sequential IDs from all records
+      // Get FY-based sequential IDs
+      const fy = getFY(date);
       const [allOut, allIn] = await Promise.all([
-        sbGet('mail_records', `select=id&mail_type=eq.outward&location=eq.${encodeURIComponent(selectedLocation)}&order=created_at.asc`),
-        sbGet('mail_records', `select=id&mail_type=eq.inward&location=eq.${encodeURIComponent(selectedLocation)}&order=created_at.asc`),
+        sbGet('mail_records', `select=id,date&mail_type=eq.outward&location=eq.${encodeURIComponent(selectedLocation)}&date=gte.${fy.start}&date=lte.${fy.end}&order=created_at.asc`),
+        sbGet('mail_records', `select=id,date&mail_type=eq.inward&location=eq.${encodeURIComponent(selectedLocation)}&date=gte.${fy.start}&date=lte.${fy.end}&order=created_at.asc`),
       ]);
       const outIdMap = {}; allOut.forEach((r, i) => outIdMap[r.id] = i + 1);
       const inIdMap = {}; allIn.forEach((r, i) => inIdMap[r.id] = i + 1);
@@ -583,7 +596,8 @@
 
     // ===== ADMIN =====
     async function loadAdminData() {
-      adminAllRecords = await sbGet('mail_records', 'select=*&order=created_at.asc');
+      const fy = getCurrentFY();
+      adminAllRecords = await sbGet('mail_records', `select=*&date=gte.${fy.start}&date=lte.${fy.end}&order=created_at.asc`);
       adminAllRecords.forEach((r, i) => r.seq = i + 1);
       const inward = adminAllRecords.filter(r => r.mail_type === 'inward').length;
       const outward = adminAllRecords.filter(r => r.mail_type === 'outward').length;
@@ -619,7 +633,8 @@
     async function renderAdminDailyReport() {
       const date = document.getElementById('adminReportDate').value; if (!date) return;
       const recs = await sbGet('mail_records', `select=*&date=eq.${date}&order=location,mail_type,created_at.asc`);
-      const allRecs = await sbGet('mail_records', 'select=id,mail_type,location&order=created_at.asc');
+      const fy = getFY(date);
+      const allRecs = await sbGet('mail_records', `select=id,date,mail_type,location&date=gte.${fy.start}&date=lte.${fy.end}&order=created_at.asc`);
       const seqMap = {}; const counters = {};
       allRecs.forEach(r => { const k = r.mail_type + '|' + r.location; counters[k] = (counters[k] || 0) + 1; seqMap[r.id] = counters[k]; });
 
