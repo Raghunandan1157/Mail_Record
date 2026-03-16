@@ -1,0 +1,1370 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Stationary Management - StockRegister</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+  <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#137fec",
+            "background-light": "#fefce8",
+            "background-dark": "#101922",
+          },
+          fontFamily: {
+            "display": ["Inter", "sans-serif"]
+          },
+          borderRadius: {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+        },
+      },
+    }
+  </script>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display">
+
+<!-- ===== LOGIN SCREEN ===== -->
+<div id="login-screen" class="fixed inset-0 z-[100] bg-background-light dark:bg-background-dark flex items-center justify-center p-4">
+  <div class="w-full max-w-md">
+    <!-- Logo -->
+    <div class="text-center mb-8">
+      <div class="size-16 bg-primary rounded-2xl flex items-center justify-center text-white mx-auto mb-4 shadow-lg shadow-primary/30">
+        <span class="material-symbols-outlined text-3xl">inventory_2</span>
+      </div>
+      <h1 class="text-2xl font-bold text-slate-800 dark:text-white">StockRegister</h1>
+      <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Stationary Management System</p>
+    </div>
+
+    <!-- Step 1: Select Branch/Location -->
+    <div id="login-step1" class="bg-white dark:bg-[#1c2631] rounded-xl border border-slate-200 dark:border-slate-800 shadow-lg p-6">
+      <h3 class="text-lg font-bold text-slate-800 dark:text-white mb-1">Select Your Branch</h3>
+      <p class="text-sm text-slate-500 dark:text-slate-400 mb-6">Choose your work location</p>
+
+      <div class="mb-4">
+        <select id="login-location-select" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-transparent">
+          <option value="" disabled selected>Choose a location...</option>
+          <!-- Options populated by JS -->
+        </select>
+      </div>
+
+      <div id="login-error" class="hidden mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-sm text-red-600 dark:text-red-400"></div>
+
+      <div class="flex gap-3">
+        <button onclick="loginSelectLocation()" class="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary/90 transition-colors">
+          <span class="material-symbols-outlined text-base">arrow_forward</span>
+          Continue
+        </button>
+        <button onclick="loginAdminStart()" class="flex items-center justify-center gap-2 px-4 py-3 bg-slate-800 dark:bg-slate-700 text-white rounded-lg text-sm font-semibold hover:bg-slate-700 dark:hover:bg-slate-600 transition-colors">
+          <span class="material-symbols-outlined text-base">admin_panel_settings</span>
+          Admin
+        </button>
+      </div>
+    </div>
+
+    <!-- Step 2: Select Profile (BOE) -->
+    <div id="login-step2" class="hidden bg-white dark:bg-[#1c2631] rounded-xl border border-slate-200 dark:border-slate-800 shadow-lg p-6">
+      <div class="flex items-center gap-3 mb-4">
+        <!-- FIX #16 --><button onclick="loginBack()" class="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200" aria-label="Go back">
+          <span class="material-symbols-outlined">arrow_back</span>
+        </button>
+        <div>
+          <h3 class="text-lg font-bold text-slate-800 dark:text-white">Select Your Profile</h3>
+          <p id="login-welcome" class="text-sm text-slate-500 dark:text-slate-400"></p>
+        </div>
+      </div>
+
+      <div id="login-profiles" class="space-y-2 mb-6 max-h-64 overflow-y-auto">
+        <!-- Rendered by JS -->
+      </div>
+
+      <div id="login-loc-error" class="hidden mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-sm text-red-600 dark:text-red-400"></div>
+
+      <button onclick="loginConfirm()" id="login-confirm-btn" class="w-full flex items-center justify-center gap-2 px-4 py-3 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary/90 transition-colors">
+        <span class="material-symbols-outlined text-base">check_circle</span>
+        Start Session
+      </button>
+    </div>
+
+    <!-- Step 3: Head Office OTP -->
+    <div id="login-step3" class="hidden bg-white dark:bg-[#1c2631] rounded-xl border border-slate-200 dark:border-slate-800 shadow-lg p-6">
+      <div class="flex items-center gap-3 mb-4">
+        <!-- FIX #16 --><button onclick="loginBackFromOTP()" class="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200" aria-label="Go back">
+          <span class="material-symbols-outlined">arrow_back</span>
+        </button>
+        <div>
+          <h3 class="text-lg font-bold text-slate-800 dark:text-white">Admin Login</h3>
+          <p class="text-sm text-slate-500 dark:text-slate-400">Verify admin access</p>
+        </div>
+      </div>
+
+      <div class="mb-4">
+        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Username</label>
+        <input id="login-ho-username" type="text" value="Admin" readonly class="w-full px-4 py-3 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-500 dark:text-slate-400 cursor-not-allowed"/>
+      </div>
+
+      <div class="mb-4">
+        <!-- FIX #15 --><label for="login-ho-otp" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Enter OTP</label>
+        <input id="login-ho-otp" type="password" placeholder="Enter 4-digit OTP" maxlength="4" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-transparent"/>
+      </div>
+
+      <div id="login-otp-error" class="hidden mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-sm text-red-600 dark:text-red-400"></div>
+
+      <button onclick="loginHeadOfficeOTP()" class="w-full flex items-center justify-center gap-2 px-4 py-3 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary/90 transition-colors">
+        <span class="material-symbols-outlined text-base">verified_user</span>
+        Verify &amp; Login
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="flex h-screen overflow-hidden">
+
+  <!-- Sidebar Navigation -->
+  <aside id="sidebar" class="w-64 flex-shrink-0 bg-white dark:bg-[#161e27] border-r border-slate-200 dark:border-slate-800 hidden md:flex flex-col">
+    <div class="p-6 flex items-center gap-3">
+      <div class="size-8 bg-primary rounded-lg flex items-center justify-center text-white">
+        <span class="material-symbols-outlined">inventory_2</span>
+      </div>
+      <h1 class="text-xl font-bold tracking-tight text-slate-800 dark:text-white">StockRegister</h1>
+    </div>
+
+    <!-- Regular Branch Nav -->
+    <!-- FIX #19 -->
+    <nav id="nav-regular" class="flex-1 px-4 space-y-1 mt-4">
+      <a class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg bg-primary/10 text-primary font-semibold" href="javascript:void(0)" data-page="dashboard">
+        <span class="material-symbols-outlined">dashboard</span>
+        Dashboard
+      </a>
+      <a class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" href="javascript:void(0)" data-page="inventory">
+        <span class="material-symbols-outlined">package_2</span>
+        Inventory
+      </a>
+      <a class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" href="javascript:void(0)" data-page="transactions">
+        <span class="material-symbols-outlined">swap_horiz</span>
+        Transactions
+      </a>
+      <a class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" href="javascript:void(0)" data-page="reports">
+        <span class="material-symbols-outlined">bar_chart</span>
+        Reports
+      </a>
+      <a class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" href="javascript:void(0)" data-page="receiveddate">
+        <span class="material-symbols-outlined">event_available</span>
+        Stock Received
+      </a>
+      <button onclick="logout()" class="flex items-center gap-3 px-4 py-3 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors w-full mt-2">
+        <span class="material-symbols-outlined">logout</span>
+        Logout
+      </button>
+    </nav>
+
+    <!-- Admin Nav (Head Office) -->
+    <!-- FIX #19 -->
+    <nav id="nav-admin" class="hidden flex-1 px-4 space-y-1 mt-4">
+      <a class="nav-link-admin flex items-center gap-3 px-4 py-3 rounded-lg bg-primary/10 text-primary font-semibold" href="javascript:void(0)" data-page="admin">
+        <span class="material-symbols-outlined">admin_panel_settings</span>
+        Admin Dashboard
+      </a>
+      <a class="nav-link-admin flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" href="javascript:void(0)" data-page="editlog">
+        <span class="material-symbols-outlined">edit_note</span>
+        Edit Log
+      </a>
+      <a class="nav-link-admin flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" href="javascript:void(0)" data-page="deletelog">
+        <span class="material-symbols-outlined">delete_sweep</span>
+        Deleted Log
+      </a>
+      <a class="nav-link-admin flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" href="javascript:void(0)" data-page="branches">
+        <span class="material-symbols-outlined">apartment</span>
+        Branches
+      </a>
+      <a class="nav-link-admin flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" href="javascript:void(0)" data-page="reports">
+        <span class="material-symbols-outlined">bar_chart</span>
+        Reports
+      </a>
+      <button onclick="logout()" class="flex items-center gap-3 px-4 py-3 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors w-full mt-2">
+        <span class="material-symbols-outlined">logout</span>
+        Logout
+      </button>
+    </nav>
+
+    <!-- Team Section -->
+    <div class="px-4 pb-3">
+      <div class="flex items-center justify-between mb-3 px-2">
+        <span id="team-count-label" class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Team</span>
+      </div>
+      <div class="flex items-center -space-x-2 px-2" id="team-avatars">
+        <!-- Team avatars rendered by JS -->
+      </div>
+    </div>
+
+    <div class="p-4 border-t border-slate-200 dark:border-slate-800">
+      <div class="flex items-center gap-3 p-2">
+        <div class="size-10 rounded-full bg-gradient-to-br from-primary to-blue-400 flex items-center justify-center text-white font-bold text-sm user-initials">AJ</div>
+        <div class="flex flex-col min-w-0">
+          <span class="text-sm font-semibold truncate text-slate-800 dark:text-white user-name">Alex Johnson</span>
+          <span class="text-xs text-slate-500 dark:text-slate-400 truncate user-role">Inventory Manager</span>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Mobile Sidebar Toggle -->
+  <!-- FIX #16 --><button id="mobile-menu-btn" class="fixed top-4 left-4 z-50 md:hidden p-2 bg-white dark:bg-[#1c2631] rounded-lg shadow-lg border border-slate-200 dark:border-slate-700" aria-label="Open menu">
+    <span class="material-symbols-outlined">menu</span>
+  </button>
+
+  <!-- Main Content Area -->
+  <main class="flex-1 flex flex-col min-w-0 overflow-hidden bg-background-light dark:bg-background-dark">
+
+    <!-- Global Header -->
+    <header class="h-16 flex items-center justify-between px-4 md:px-8 bg-white dark:bg-[#161e27] border-b border-slate-200 dark:border-slate-800">
+      <div class="flex items-center flex-1 max-w-md ml-10 md:ml-0">
+        <div class="relative w-full">
+          <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
+          <input id="search-input" class="w-full pl-10 pr-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-lg focus:ring-2 focus:ring-primary text-sm text-slate-700 dark:text-slate-200 placeholder-slate-500" placeholder="Search inventory, SKU, or orders..." type="text"/>
+        </div>
+      </div>
+      <div class="flex items-center gap-2 md:gap-4 ml-4">
+        <button id="new-entry-btn" class="flex items-center gap-2 px-3 md:px-4 py-2 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary/90 transition-colors">
+          <span class="material-symbols-outlined text-base">add</span>
+          <span class="hidden sm:inline">New Entry</span>
+        </button>
+        <div class="h-6 w-px bg-slate-200 dark:bg-slate-700 mx-1 md:mx-2 hidden sm:block"></div>
+        <!-- FIX #16 --><button id="notif-btn" class="relative p-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors" aria-label="Notifications">
+          <span class="material-symbols-outlined">notifications</span>
+          <span id="notif-badge" class="absolute top-2 right-2.5 size-2 bg-red-500 rounded-full border-2 border-white dark:border-[#161e27]"></span>
+        </button>
+        <button onclick="toggleTheme()" class="p-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors" title="Toggle dark/light mode">
+          <span class="material-symbols-outlined" id="header-theme-icon">light_mode</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Page Content Container -->
+    <div class="flex-1 overflow-y-auto p-4 md:p-8 space-y-8" id="page-content">
+
+      <!-- ===== DASHBOARD PAGE ===== -->
+      <div id="page-dashboard">
+
+        <!-- KPI Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <!-- KPI 1 - Closing Stock -->
+          <!-- FIX #18 --><div onclick="kpiClickClosingStock()" tabindex="0" role="button" onkeydown="if(event.key==='Enter')this.click()" class="bg-white dark:bg-[#1c2631] p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm cursor-pointer hover:scale-[1.02] hover:shadow-md transition-all duration-200">
+            <div class="flex items-center justify-between mb-4">
+              <span class="p-2 bg-blue-100 dark:bg-blue-900/30 text-primary rounded-lg">
+                <span class="material-symbols-outlined">inventory</span>
+              </span>
+              <span id="kpi-badge-stock" class="text-xs font-semibold px-2 py-1 rounded hidden"></span>
+            </div>
+            <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Closing Stock</p>
+            <h3 class="text-2xl font-bold text-slate-800 dark:text-white mt-1" id="kpi-closing-stock">3,450 Units</h3>
+          </div>
+
+          <!-- KPI 2 - Low Stock Alert -->
+          <!-- FIX #18 --><div onclick="kpiClickLowStock()" tabindex="0" role="button" onkeydown="if(event.key==='Enter')this.click()" class="bg-white dark:bg-[#1c2631] p-6 rounded-xl border-2 border-red-500/20 dark:border-red-500/30 shadow-sm cursor-pointer hover:scale-[1.02] hover:shadow-md transition-all duration-200">
+            <div class="flex items-center justify-between mb-4">
+              <span class="p-2 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg">
+                <span class="material-symbols-outlined">warning</span>
+              </span>
+              <span id="kpi-badge-low" class="text-xs font-semibold px-2 py-1 rounded hidden"></span>
+            </div>
+            <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Low Stock Items</p>
+            <h3 class="text-2xl font-bold text-slate-800 dark:text-white mt-1" id="kpi-low-stock">12 Items</h3>
+          </div>
+
+          <!-- KPI 3 - Monthly Stock In -->
+          <!-- FIX #18 --><div onclick="kpiClickStockIn()" tabindex="0" role="button" onkeydown="if(event.key==='Enter')this.click()" class="bg-white dark:bg-[#1c2631] p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm cursor-pointer hover:scale-[1.02] hover:shadow-md transition-all duration-200">
+            <div class="flex items-center justify-between mb-4">
+              <span class="p-2 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-lg">
+                <span class="material-symbols-outlined">login</span>
+              </span>
+              <span id="kpi-badge-in" class="text-xs font-semibold px-2 py-1 rounded hidden"></span>
+            </div>
+            <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Monthly Stock In</p>
+            <h3 class="text-2xl font-bold text-slate-800 dark:text-white mt-1" id="kpi-stock-in">1,240 Units</h3>
+          </div>
+
+          <!-- KPI 4 - Monthly Stock Out -->
+          <!-- FIX #18 --><div onclick="kpiClickStockOut()" tabindex="0" role="button" onkeydown="if(event.key==='Enter')this.click()" class="bg-white dark:bg-[#1c2631] p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm cursor-pointer hover:scale-[1.02] hover:shadow-md transition-all duration-200">
+            <div class="flex items-center justify-between mb-4">
+              <span class="p-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-lg">
+                <span class="material-symbols-outlined">logout</span>
+              </span>
+              <span id="kpi-badge-out" class="text-xs font-semibold px-2 py-1 rounded hidden"></span>
+            </div>
+            <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Monthly Stock Out</p>
+            <h3 class="text-2xl font-bold text-slate-800 dark:text-white mt-1" id="kpi-stock-out">850 Units</h3>
+          </div>
+        </div>
+
+        <!-- Main Data Visuals -->
+        <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
+
+          <!-- Branch Profile Card -->
+          <div class="xl:col-span-1 bg-white dark:bg-[#1c2631] rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col">
+            <!-- Header with gradient accent -->
+            <div class="relative bg-gradient-to-r from-primary to-blue-500 px-6 pt-6 pb-16">
+              <h4 class="text-sm font-semibold text-white/80 uppercase tracking-wider">Branch Profile</h4>
+            </div>
+
+            <!-- Avatar overlapping header -->
+            <div class="relative z-10 flex flex-col items-center -mt-10 mb-4">
+              <div id="profile-avatar" class="size-20 rounded-2xl bg-gradient-to-br from-primary to-blue-400 flex items-center justify-center text-white text-2xl font-bold ring-4 ring-white dark:ring-[#1c2631] shadow-lg">
+                ??
+              </div>
+              <h3 id="profile-name" class="text-lg font-bold text-slate-800 dark:text-white mt-3">--</h3>
+              <span id="profile-role" class="inline-flex items-center gap-1 mt-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-primary/10 text-primary">Staff</span>
+            </div>
+
+            <!-- Info Grid -->
+            <div class="grid grid-cols-2 gap-px bg-slate-100 dark:bg-slate-800 flex-1">
+              <div class="bg-white dark:bg-[#1c2631] p-4 flex flex-col gap-1">
+                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Branch</span>
+                <p class="text-sm font-semibold text-slate-800 dark:text-white leading-snug" id="profile-branch">--</p>
+              </div>
+              <div class="bg-white dark:bg-[#1c2631] p-4 flex flex-col gap-1">
+                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Company</span>
+                <p class="text-sm font-semibold text-slate-800 dark:text-white leading-snug" id="profile-boe">Navachetana Livelihoods Pvt Ltd</p>
+              </div>
+              <div class="bg-white dark:bg-[#1c2631] p-4 flex flex-col gap-1">
+                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Team Size</span>
+                <p id="profile-team-size" class="text-sm font-semibold text-slate-800 dark:text-white">--</p>
+              </div>
+              <div class="bg-white dark:bg-[#1c2631] p-4 flex flex-col gap-1">
+                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Employee ID</span>
+                <p id="profile-empid" class="text-sm font-semibold text-slate-800 dark:text-white font-mono">--</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recent Activity Table -->
+          <div class="xl:col-span-2 bg-white dark:bg-[#1c2631] rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+            <div class="p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+              <h4 class="text-lg font-bold text-slate-800 dark:text-white">Recent Stock Movements</h4>
+              <button class="text-sm font-semibold text-primary hover:underline" onclick="navigateTo('transactions')">View All</button>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left">
+                <thead class="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider">
+                  <tr>
+                    <th class="px-6 py-4 font-semibold">Item & SKU</th>
+                    <th class="px-6 py-4 font-semibold">Change Type</th>
+                    <th class="px-6 py-4 font-semibold">Quantity</th>
+                    <th class="px-6 py-4 font-semibold">Date & Time</th>
+                    <th class="px-6 py-4 font-semibold">User</th>
+                    <th class="px-6 py-4 font-semibold">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="movements-table" class="divide-y divide-slate-100 dark:divide-slate-800 text-sm">
+                  <!-- Rendered by JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Team Members Section -->
+        <div class="mt-8 bg-white dark:bg-[#1c2631] rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+          <div class="p-6 border-b border-slate-200 dark:border-slate-800">
+            <h4 class="text-lg font-bold text-slate-800 dark:text-white">Team Members</h4>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">All staff at your branch location</p>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-px bg-slate-100 dark:bg-slate-800" id="team-grid">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== INVENTORY PAGE ===== -->
+      <div id="page-inventory" class="hidden">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h2 class="text-2xl font-bold text-slate-800 dark:text-white">Inventory</h2>
+            <p class="text-sm text-slate-500 dark:text-slate-400">Manage all stationery items</p>
+          </div>
+          <div class="flex items-center gap-3">
+            <button onclick="exportInventoryToExcel()" class="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-semibold hover:bg-green-700 transition-colors">
+              <span class="material-symbols-outlined text-base">download</span>
+              Export Excel
+            </button>
+            <button onclick="openModal('add')" class="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary/90 transition-colors">
+              <span class="material-symbols-outlined text-base">add</span>
+              Add Item
+            </button>
+          </div>
+        </div>
+        <div class="bg-white dark:bg-[#1c2631] rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left">
+              <thead class="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider">
+                <tr>
+                  <th class="px-6 py-4 font-semibold">Item Name</th>
+                  <th class="px-6 py-4 font-semibold">SKU</th>
+                  <th class="px-6 py-4 font-semibold">Category</th>
+                  <th class="px-6 py-4 font-semibold">Quantity</th>
+                  <th class="px-6 py-4 font-semibold">Status</th>
+                  <th class="px-6 py-4 font-semibold">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="inventory-table" class="divide-y divide-slate-100 dark:divide-slate-800 text-sm">
+                <!-- Rendered by JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== TRANSACTIONS PAGE ===== -->
+      <div id="page-transactions" class="hidden">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h2 class="text-2xl font-bold text-slate-800 dark:text-white">Transactions</h2>
+            <p class="text-sm text-slate-500 dark:text-slate-400">All stock in/out movements</p>
+          </div>
+          <button onclick="exportTransactionsToExcel()" class="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-semibold hover:bg-green-700 transition-colors">
+            <span class="material-symbols-outlined text-base">download</span>
+            Export Excel
+          </button>
+        </div>
+        <div class="bg-white dark:bg-[#1c2631] rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left">
+              <thead class="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider">
+                <tr>
+                  <th class="px-6 py-4 font-semibold">Item & SKU</th>
+                  <th class="px-6 py-4 font-semibold">Change Type</th>
+                  <th class="px-6 py-4 font-semibold">Quantity</th>
+                  <th class="px-6 py-4 font-semibold">Date & Time</th>
+                  <th class="px-6 py-4 font-semibold">User</th>
+                  <th class="px-6 py-4 font-semibold">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="transactions-table" class="divide-y divide-slate-100 dark:divide-slate-800 text-sm">
+                <!-- Rendered by JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== SUPPLIERS PAGE ===== -->
+      <div id="page-suppliers" class="hidden">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h2 class="text-2xl font-bold text-slate-800 dark:text-white">Suppliers</h2>
+            <p class="text-sm text-slate-500 dark:text-slate-400">Vendor and supplier directory</p>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="suppliers-grid">
+          <!-- Rendered by JS -->
+        </div>
+      </div>
+
+      <!-- ===== REPORTS PAGE ===== -->
+      <div id="page-reports" class="hidden">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+          <div>
+            <h2 class="text-2xl font-bold text-slate-800 dark:text-white">Reports</h2>
+            <p class="text-sm text-slate-500 dark:text-slate-400">Inventory analytics and summaries</p>
+          </div>
+          <div class="flex items-center gap-3">
+            <button onclick="copyReportImages()" class="btn-bounce flex items-center gap-2 px-4 py-2 bg-slate-700 text-white rounded-lg text-sm font-semibold hover:bg-slate-800 transition-colors">
+              <span class="material-symbols-outlined text-base">laptop_mac</span>
+              Laptop / Desktop
+            </button>
+            <button onclick="shareReports()" class="btn-bounce flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary/90 transition-colors">
+              <span class="material-symbols-outlined text-base">smartphone</span>
+              Phone
+            </button>
+            <button onclick="exportReportsToExcel()" class="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-semibold hover:bg-green-700 transition-colors">
+              <span class="material-symbols-outlined text-base">download</span>
+              Export Excel
+            </button>
+          </div>
+        </div>
+
+        <!-- Filters: Location (admin only) + Date & Month Pickers -->
+        <div class="flex flex-col sm:flex-row gap-4 mb-6">
+          <!-- Branch Filter (admin only) -->
+          <div id="report-branch-filter" class="hidden flex items-center gap-3 bg-white dark:bg-[#1c2631] border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 flex-1">
+            <span class="material-symbols-outlined text-violet-500">location_on</span>
+            <div class="flex flex-col gap-0.5 flex-1">
+              <label for="report-branch-picker" class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Select Branch</label>
+              <select id="report-branch-picker" onchange="renderReports()" class="bg-transparent border-none p-0 text-sm font-semibold text-slate-800 dark:text-white focus:ring-0 w-full">
+                <option value="all">All Branches</option>
+              </select>
+            </div>
+          </div>
+          <div class="flex items-center gap-3 bg-white dark:bg-[#1c2631] border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 flex-1">
+            <span class="material-symbols-outlined text-amber-500">today</span>
+            <div class="flex flex-col gap-0.5 flex-1">
+              <label for="report-date-picker" class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Select Date</label>
+              <input id="report-date-picker" type="date" onchange="renderReports()" class="bg-transparent border-none p-0 text-sm font-semibold text-slate-800 dark:text-white focus:ring-0 w-full"/>
+            </div>
+          </div>
+          <div class="flex items-center gap-3 bg-white dark:bg-[#1c2631] border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 flex-1">
+            <span class="material-symbols-outlined text-primary">date_range</span>
+            <div class="flex flex-col gap-0.5 flex-1">
+              <label for="report-month-picker" class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Select Month</label>
+              <input id="report-month-picker" type="month" onchange="renderReports()" class="bg-transparent border-none p-0 text-sm font-semibold text-slate-800 dark:text-white focus:ring-0 w-full"/>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6" id="reports-content">
+          <!-- Rendered by JS -->
+        </div>
+      </div>
+
+      <!-- ===== ADMIN DASHBOARD PAGE ===== -->
+      <div id="page-admin" class="hidden">
+
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-8">
+          <div>
+            <h2 class="text-2xl font-bold text-slate-800 dark:text-white">Admin Dashboard</h2>
+            <p class="text-sm text-slate-500 dark:text-slate-400">All branches overview — Head Office</p>
+          </div>
+          <div class="flex items-center gap-2 px-3 py-1.5 bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-400 rounded-full text-xs font-bold uppercase tracking-wider">
+            <span class="material-symbols-outlined text-sm">shield</span>
+            Admin
+          </div>
+        </div>
+
+        <!-- Aggregate KPIs -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <!-- FIX #18 --><div onclick="navigateTo('closingstock')" tabindex="0" role="button" onkeydown="if(event.key==='Enter')this.click()" class="bg-white dark:bg-[#1c2631] p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm cursor-pointer hover:scale-[1.02] hover:shadow-md transition-all duration-200">
+            <div class="flex items-center justify-between mb-4">
+              <span class="p-2 bg-blue-100 dark:bg-blue-900/30 text-primary rounded-lg">
+                <span class="material-symbols-outlined">inventory</span>
+              </span>
+              <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">All Branches</span>
+            </div>
+            <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Closing Stock</p>
+            <h3 class="text-2xl font-bold text-slate-800 dark:text-white mt-1" id="admin-kpi-closing-stock">--</h3>
+          </div>
+
+          <div class="bg-white dark:bg-[#1c2631] p-6 rounded-xl border-2 border-red-500/20 dark:border-red-500/30 shadow-sm">
+            <div class="flex items-center justify-between mb-4">
+              <span class="p-2 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg">
+                <span class="material-symbols-outlined">warning</span>
+              </span>
+            </div>
+            <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Total Branches</p>
+            <h3 class="text-2xl font-bold text-slate-800 dark:text-white mt-1" id="admin-kpi-branches">--</h3>
+          </div>
+
+          <div class="bg-white dark:bg-[#1c2631] p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+            <div class="flex items-center justify-between mb-4">
+              <span class="p-2 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-lg">
+                <span class="material-symbols-outlined">login</span>
+              </span>
+            </div>
+            <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Total Stock In</p>
+            <h3 class="text-2xl font-bold text-slate-800 dark:text-white mt-1" id="admin-kpi-stock-in">--</h3>
+          </div>
+
+          <div class="bg-white dark:bg-[#1c2631] p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+            <div class="flex items-center justify-between mb-4">
+              <span class="p-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-lg">
+                <span class="material-symbols-outlined">logout</span>
+              </span>
+            </div>
+            <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Total Stock Out</p>
+            <h3 class="text-2xl font-bold text-slate-800 dark:text-white mt-1" id="admin-kpi-stock-out">--</h3>
+          </div>
+        </div>
+
+        <!-- Branch-wise Breakdown Table -->
+        <div class="bg-white dark:bg-[#1c2631] rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden mb-8">
+          <div class="p-6 border-b border-slate-200 dark:border-slate-800">
+            <h4 class="text-lg font-bold text-slate-800 dark:text-white">Branch-wise Breakdown</h4>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Stock summary per branch location</p>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left">
+              <thead class="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider">
+                <tr>
+                  <th class="px-6 py-4 font-semibold">Branch</th>
+                  <th class="px-6 py-4 font-semibold">Total Entries</th>
+                  <th class="px-6 py-4 font-semibold">Stock In Qty</th>
+                  <th class="px-6 py-4 font-semibold">Stock Out Qty</th>
+                  <th class="px-6 py-4 font-semibold">Employees</th>
+                  <th class="px-6 py-4 font-semibold w-10"></th>
+                </tr>
+              </thead>
+              <tbody id="admin-branch-table" class="divide-y divide-slate-100 dark:divide-slate-800 text-sm">
+                <tr><td class="px-6 py-4 text-slate-400 text-center" colspan="6">Loading...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Two columns: Recent Activity + All Employees -->
+        <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
+
+          <!-- Recent Activity from All Branches -->
+          <div class="bg-white dark:bg-[#1c2631] rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+            <div class="p-6 border-b border-slate-200 dark:border-slate-800">
+              <h4 class="text-lg font-bold text-slate-800 dark:text-white">Recent Activity</h4>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Last 10 transactions across all branches</p>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left">
+                <thead class="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider">
+                  <tr>
+                    <th class="px-6 py-3 font-semibold">Item</th>
+                    <th class="px-6 py-3 font-semibold">Type</th>
+                    <th class="px-6 py-3 font-semibold">Qty</th>
+                    <th class="px-6 py-3 font-semibold">Branch</th>
+                    <th class="px-6 py-3 font-semibold">User</th>
+                  </tr>
+                </thead>
+                <tbody id="admin-recent-table" class="divide-y divide-slate-100 dark:divide-slate-800 text-sm">
+                  <tr><td class="px-6 py-4 text-slate-400 text-center" colspan="5">Loading...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- All Employees Grid -->
+          <div class="bg-white dark:bg-[#1c2631] rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+            <div class="p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+              <div>
+                <h4 class="text-lg font-bold text-slate-800 dark:text-white">All Employees</h4>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Staff across all branches</p>
+              </div>
+              <div>
+                <select id="admin-emp-filter" onchange="filterAdminEmployees()" class="px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs focus:ring-2 focus:ring-primary focus:border-transparent">
+                  <option value="all">All Branches</option>
+                </select>
+              </div>
+            </div>
+            <div id="admin-employees-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-px bg-slate-100 dark:bg-slate-800 max-h-96 overflow-y-auto">
+              <div class="col-span-full bg-white dark:bg-[#1c2631] p-6 text-center text-slate-400 text-sm">Loading...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== EDIT LOG PAGE (Admin) ===== -->
+      <div id="page-editlog" class="hidden">
+
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-8">
+          <div>
+            <h2 class="text-2xl font-bold text-slate-800 dark:text-white">Edit Log</h2>
+            <p class="text-sm text-slate-500 dark:text-slate-400">Audit trail of all transaction edits across branches</p>
+          </div>
+          <div class="flex items-center gap-2 px-3 py-1.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-full text-xs font-bold uppercase tracking-wider">
+            <span class="material-symbols-outlined text-sm">edit_note</span>
+            Audit
+          </div>
+        </div>
+
+        <!-- KPI Row -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <div class="bg-white dark:bg-[#1c2631] p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+            <div class="flex items-center justify-between mb-4">
+              <span class="p-2 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-lg">
+                <span class="material-symbols-outlined">edit</span>
+              </span>
+              <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">All Time</span>
+            </div>
+            <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Total Edits</p>
+            <h3 class="text-2xl font-bold text-slate-800 dark:text-white mt-1" id="editlog-kpi-total">--</h3>
+          </div>
+
+          <div class="bg-white dark:bg-[#1c2631] p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+            <div class="flex items-center justify-between mb-4">
+              <span class="p-2 bg-violet-100 dark:bg-violet-900/30 text-violet-600 dark:text-violet-400 rounded-lg">
+                <span class="material-symbols-outlined">location_on</span>
+              </span>
+              <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Unique</span>
+            </div>
+            <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Branches with Edits</p>
+            <h3 class="text-2xl font-bold text-slate-800 dark:text-white mt-1" id="editlog-kpi-branches">--</h3>
+          </div>
+        </div>
+
+        <!-- Edit Log Table -->
+        <div class="bg-white dark:bg-[#1c2631] rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+          <div class="p-6 border-b border-slate-200 dark:border-slate-800">
+            <h4 class="text-lg font-bold text-slate-800 dark:text-white">All Edits</h4>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Complete history of transaction modifications</p>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left">
+              <thead class="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider">
+                <tr>
+                  <th class="px-6 py-4 font-semibold">Date</th>
+                  <th class="px-6 py-4 font-semibold">Item</th>
+                  <th class="px-6 py-4 font-semibold">Old → New</th>
+                  <th class="px-6 py-4 font-semibold">Edited By</th>
+                  <th class="px-6 py-4 font-semibold">Branch</th>
+                </tr>
+              </thead>
+              <tbody id="editlog-table" class="divide-y divide-slate-100 dark:divide-slate-800 text-sm">
+                <tr><td class="px-6 py-4 text-slate-400 text-center" colspan="5">Loading...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== DELETED LOG PAGE (Admin) ===== -->
+      <div id="page-deletelog" class="hidden">
+
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-8">
+          <div>
+            <h2 class="text-2xl font-bold text-slate-800 dark:text-white">Deleted Log</h2>
+            <p class="text-sm text-slate-500 dark:text-slate-400">Record of all deletions by BOE users</p>
+          </div>
+          <div class="flex items-center gap-2 px-3 py-1.5 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-full text-xs font-bold uppercase tracking-wider">
+            <span class="material-symbols-outlined text-sm">delete_sweep</span>
+            Deletions
+          </div>
+        </div>
+
+        <!-- KPI Row -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <div class="bg-white dark:bg-[#1c2631] p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+            <div class="flex items-center justify-between mb-4">
+              <span class="p-2 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg">
+                <span class="material-symbols-outlined">delete</span>
+              </span>
+              <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">All Time</span>
+            </div>
+            <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Total Deletions</p>
+            <h3 class="text-2xl font-bold text-slate-800 dark:text-white mt-1" id="deletelog-kpi-total">--</h3>
+          </div>
+
+          <div class="bg-white dark:bg-[#1c2631] p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+            <div class="flex items-center justify-between mb-4">
+              <span class="p-2 bg-violet-100 dark:bg-violet-900/30 text-violet-600 dark:text-violet-400 rounded-lg">
+                <span class="material-symbols-outlined">location_on</span>
+              </span>
+              <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Unique</span>
+            </div>
+            <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Branches with Deletions</p>
+            <h3 class="text-2xl font-bold text-slate-800 dark:text-white mt-1" id="deletelog-kpi-branches">--</h3>
+          </div>
+        </div>
+
+        <!-- Filter Toggle -->
+        <div class="flex items-center gap-2 mb-6">
+          <button onclick="filterDeleteLog('transactions')" id="deletelog-filter-txn" class="px-4 py-2 rounded-lg text-sm font-semibold bg-primary text-white transition-colors">
+            Transactions
+          </button>
+          <button onclick="filterDeleteLog('received')" id="deletelog-filter-rd" class="px-4 py-2 rounded-lg text-sm font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+            Received Dates
+          </button>
+        </div>
+
+        <!-- Deleted Log Table -->
+        <div class="bg-white dark:bg-[#1c2631] rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+          <div class="p-6 border-b border-slate-200 dark:border-slate-800">
+            <h4 class="text-lg font-bold text-slate-800 dark:text-white" id="deletelog-table-title">All Deletions</h4>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1" id="deletelog-table-subtitle">Complete history of deleted transactions</p>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left">
+              <thead id="deletelog-thead" class="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider">
+                <tr>
+                  <th class="px-6 py-4 font-semibold">Deleted At</th>
+                  <th class="px-6 py-4 font-semibold">Item</th>
+                  <th class="px-6 py-4 font-semibold">Type & Qty</th>
+                  <th class="px-6 py-4 font-semibold">Original Date</th>
+                  <th class="px-6 py-4 font-semibold">Deleted By</th>
+                  <th class="px-6 py-4 font-semibold">Branch</th>
+                </tr>
+              </thead>
+              <tbody id="deletelog-table" class="divide-y divide-slate-100 dark:divide-slate-800 text-sm">
+                <tr><td class="px-6 py-4 text-slate-400 text-center" colspan="6">Loading...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== BRANCHES PAGE (Admin) ===== -->
+      <div id="page-branches" class="hidden">
+
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-8">
+          <div>
+            <h2 class="text-2xl font-bold text-slate-800 dark:text-white">Branches</h2>
+            <p class="text-sm text-slate-500 dark:text-slate-400">Monitor branch activity and employee contacts</p>
+          </div>
+          <div class="flex items-center gap-3">
+            <button onclick="downloadBranchesExcel()" class="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-xs font-bold transition-colors shadow-sm">
+              <span class="material-symbols-outlined text-sm">download</span>
+              Download
+            </button>
+            <div class="flex items-center gap-2 px-3 py-1.5 bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-400 rounded-full text-xs font-bold uppercase tracking-wider">
+              <span class="material-symbols-outlined text-sm">shield</span>
+              Admin
+            </div>
+          </div>
+        </div>
+
+        <!-- Filter Bar -->
+        <div class="flex flex-col sm:flex-row gap-4 mb-6">
+          <div class="flex items-center gap-3 bg-white dark:bg-[#1c2631] border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 flex-1">
+            <span class="material-symbols-outlined text-slate-400">search</span>
+            <input id="branches-search" type="text" placeholder="Search branches..." oninput="renderBranches()" class="bg-transparent border-none p-0 text-sm font-semibold text-slate-800 dark:text-white focus:ring-0 w-full placeholder-slate-400"/>
+          </div>
+          <div class="flex items-center gap-3 bg-white dark:bg-[#1c2631] border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 flex-1">
+            <span class="material-symbols-outlined text-amber-500">filter_list</span>
+            <div class="flex flex-col gap-0.5 flex-1">
+              <label for="branches-status-filter" class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Update Status</label>
+              <select id="branches-status-filter" onchange="renderBranches()" class="bg-transparent border-none p-0 text-sm font-semibold text-slate-800 dark:text-white focus:ring-0 w-full">
+                <option value="all">All</option>
+                <option value="updated">Updated Today</option>
+                <option value="not-updated">Not Updated Today</option>
+                <option value="inactive">No Updates</option>
+              </select>
+            </div>
+          </div>
+          <div class="flex items-center gap-3 bg-white dark:bg-[#1c2631] border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 flex-1">
+            <span class="material-symbols-outlined text-primary">source</span>
+            <div class="flex flex-col gap-0.5 flex-1">
+              <label for="branches-source-filter" class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Update Source</label>
+              <select id="branches-source-filter" onchange="renderBranches()" class="bg-transparent border-none p-0 text-sm font-semibold text-slate-800 dark:text-white focus:ring-0 w-full">
+                <option value="entries">Stock Entries</option>
+                <option value="received">Received Dates</option>
+                <option value="both">Both</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- KPI Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div class="bg-white dark:bg-[#1c2631] p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+            <div class="flex items-center justify-between mb-4">
+              <span class="p-2 bg-blue-100 dark:bg-blue-900/30 text-primary rounded-lg">
+                <span class="material-symbols-outlined">apartment</span>
+              </span>
+            </div>
+            <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Total Branches</p>
+            <h3 class="text-2xl font-bold text-slate-800 dark:text-white mt-1" id="branches-kpi-total">--</h3>
+          </div>
+          <div class="bg-white dark:bg-[#1c2631] p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+            <div class="flex items-center justify-between mb-4">
+              <span class="p-2 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-lg">
+                <span class="material-symbols-outlined">check_circle</span>
+              </span>
+            </div>
+            <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Updated Today</p>
+            <h3 class="text-2xl font-bold text-slate-800 dark:text-white mt-1" id="branches-kpi-updated">--</h3>
+          </div>
+          <div class="bg-white dark:bg-[#1c2631] p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+            <div class="flex items-center justify-between mb-4">
+              <span class="p-2 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-lg">
+                <span class="material-symbols-outlined">pending</span>
+              </span>
+            </div>
+            <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Not Updated</p>
+            <h3 class="text-2xl font-bold text-slate-800 dark:text-white mt-1" id="branches-kpi-not-updated">--</h3>
+          </div>
+        </div>
+
+        <!-- Branch Activity Chart -->
+        <div class="bg-white dark:bg-[#1c2631] rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm p-5 mb-8">
+          <h4 class="text-sm font-bold text-slate-800 dark:text-white mb-4">Branch Activity Overview</h4>
+          <div id="branches-chart" class="space-y-3">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+
+        <!-- Branch Cards -->
+        <div id="branches-list" class="space-y-4">
+          <div class="text-center text-slate-400 py-8">Loading...</div>
+        </div>
+      </div>
+
+      <!-- ===== BRANCH DETAIL PAGE (Admin) ===== -->
+      <div id="page-branchdetail" class="hidden">
+
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-8">
+          <div class="flex items-center gap-4">
+            <button onclick="navigateTo('admin')" class="flex items-center gap-2 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors">
+              <span class="material-symbols-outlined">arrow_back</span>
+              <span class="text-sm font-medium">Back</span>
+            </button>
+            <div>
+              <h2 class="text-2xl font-bold text-slate-800 dark:text-white" id="bd-branch-name">--</h2>
+              <p class="text-sm text-slate-500 dark:text-slate-400">Branch Overview</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2 px-3 py-1.5 bg-primary/10 text-primary rounded-full text-xs font-bold uppercase tracking-wider">
+            <span class="material-symbols-outlined text-sm">location_on</span>
+            <span id="bd-branch-badge">--</span>
+          </div>
+        </div>
+
+        <!-- KPI Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div class="bg-white dark:bg-[#1c2631] p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+            <div class="flex items-center justify-between mb-4">
+              <span class="p-2 bg-blue-100 dark:bg-blue-900/30 text-primary rounded-lg">
+                <span class="material-symbols-outlined">inventory</span>
+              </span>
+            </div>
+            <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Closing Stock</p>
+            <h3 class="text-2xl font-bold text-slate-800 dark:text-white mt-1" id="bd-kpi-closing">--</h3>
+          </div>
+          <div class="bg-white dark:bg-[#1c2631] p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+            <div class="flex items-center justify-between mb-4">
+              <span class="p-2 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-lg">
+                <span class="material-symbols-outlined">warning</span>
+              </span>
+            </div>
+            <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Low Stock Items</p>
+            <h3 class="text-2xl font-bold text-slate-800 dark:text-white mt-1" id="bd-kpi-low">--</h3>
+          </div>
+          <div class="bg-white dark:bg-[#1c2631] p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+            <div class="flex items-center justify-between mb-4">
+              <span class="p-2 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-lg">
+                <span class="material-symbols-outlined">login</span>
+              </span>
+            </div>
+            <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Total Stock In</p>
+            <h3 class="text-2xl font-bold text-slate-800 dark:text-white mt-1" id="bd-kpi-in">--</h3>
+          </div>
+          <div class="bg-white dark:bg-[#1c2631] p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+            <div class="flex items-center justify-between mb-4">
+              <span class="p-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-lg">
+                <span class="material-symbols-outlined">logout</span>
+              </span>
+            </div>
+            <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Total Stock Out</p>
+            <h3 class="text-2xl font-bold text-slate-800 dark:text-white mt-1" id="bd-kpi-out">--</h3>
+          </div>
+        </div>
+
+        <!-- Inventory Table -->
+        <div class="bg-white dark:bg-[#1c2631] rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden mb-8">
+          <div class="p-6 border-b border-slate-200 dark:border-slate-800">
+            <h4 class="text-lg font-bold text-slate-800 dark:text-white">Inventory</h4>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Current stock levels at this branch</p>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left">
+              <thead class="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider">
+                <tr>
+                  <th class="px-6 py-4 font-semibold">Item Name</th>
+                  <th class="px-6 py-4 font-semibold">Category</th>
+                  <th class="px-6 py-4 font-semibold">Quantity</th>
+                  <th class="px-6 py-4 font-semibold">Reorder Level</th>
+                  <th class="px-6 py-4 font-semibold">Status</th>
+                </tr>
+              </thead>
+              <tbody id="bd-inventory-table" class="divide-y divide-slate-100 dark:divide-slate-800 text-sm">
+                <tr><td class="px-6 py-4 text-slate-400 text-center" colspan="5">Loading...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Recent Transactions Table -->
+        <div class="bg-white dark:bg-[#1c2631] rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden mb-8">
+          <div class="p-6 border-b border-slate-200 dark:border-slate-800">
+            <h4 class="text-lg font-bold text-slate-800 dark:text-white">Recent Transactions</h4>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Last 10 stock entries at this branch</p>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left">
+              <thead class="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider">
+                <tr>
+                  <th class="px-6 py-4 font-semibold">Item</th>
+                  <th class="px-6 py-4 font-semibold">Type</th>
+                  <th class="px-6 py-4 font-semibold">Quantity</th>
+                  <th class="px-6 py-4 font-semibold">Date</th>
+                  <th class="px-6 py-4 font-semibold">User</th>
+                </tr>
+              </thead>
+              <tbody id="bd-txn-table" class="divide-y divide-slate-100 dark:divide-slate-800 text-sm">
+                <tr><td class="px-6 py-4 text-slate-400 text-center" colspan="5">Loading...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Team Members Grid -->
+        <div class="bg-white dark:bg-[#1c2631] rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+          <div class="p-6 border-b border-slate-200 dark:border-slate-800">
+            <div class="flex items-center gap-3">
+              <h4 class="text-lg font-bold text-slate-800 dark:text-white">Team Members</h4>
+              <span id="bd-team-count" class="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hidden"></span>
+            </div>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">All employees at this branch</p>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-px bg-slate-100 dark:bg-slate-800" id="bd-team-grid">
+            <div class="col-span-full bg-white dark:bg-[#1c2631] p-6 text-center text-slate-400 text-sm">Loading...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== CLOSING STOCK PAGE (Admin) ===== -->
+      <div id="page-closingstock" class="hidden">
+
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-8">
+          <div class="flex items-center gap-4">
+            <button onclick="navigateTo('admin')" class="flex items-center gap-2 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors">
+              <span class="material-symbols-outlined">arrow_back</span>
+              <span class="text-sm font-medium">Back</span>
+            </button>
+            <div>
+              <h2 class="text-2xl font-bold text-slate-800 dark:text-white">Closing Stock</h2>
+              <p class="text-sm text-slate-500 dark:text-slate-400">Branch-wise inventory levels</p>
+            </div>
+          </div>
+          <button onclick="exportClosingStockToExcel()" class="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-semibold hover:bg-green-700 transition-colors">
+            <span class="material-symbols-outlined text-base">download</span>
+            Export Excel
+          </button>
+        </div>
+
+        <!-- Branch Closing Stock Table -->
+        <div class="bg-white dark:bg-[#1c2631] rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left">
+              <thead class="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider">
+                <tr>
+                  <th class="px-6 py-4 font-semibold">Branch</th>
+                  <th class="px-6 py-4 font-semibold text-right">Closing Stock</th>
+                </tr>
+              </thead>
+              <tbody id="cs-branch-table" class="divide-y divide-slate-100 dark:divide-slate-800 text-sm">
+                <tr><td class="px-6 py-4 text-slate-400 text-center" colspan="2">Loading...</td></tr>
+              </tbody>
+              <tfoot class="border-t-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
+                <tr>
+                  <td class="px-6 py-4 font-bold text-slate-800 dark:text-white">Total</td>
+                  <td class="px-6 py-4 font-bold text-slate-800 dark:text-white text-right" id="cs-grand-total">--</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== STOCK RECEIVED DATE PAGE (Branch only) ===== -->
+      <div id="page-receiveddate" class="hidden">
+        <div class="flex items-center justify-between mb-8">
+          <div>
+            <h2 class="text-2xl font-bold text-slate-800 dark:text-white">Stock Received Date</h2>
+            <p class="text-sm text-slate-500 dark:text-slate-400">Log the date when stock was physically received at your branch</p>
+          </div>
+        </div>
+
+        <!-- Add New Entry -->
+        <div class="bg-white dark:bg-[#1c2631] rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm p-6 mb-8">
+          <h4 class="text-sm font-bold text-slate-800 dark:text-white mb-4">Log Received Date</h4>
+          <div class="flex flex-col sm:flex-row items-start sm:items-end gap-4">
+            <div class="flex-1 w-full">
+              <label for="rd-date-input" class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1">Date Received</label>
+              <input id="rd-date-input" type="date" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-800 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent"/>
+            </div>
+            <div class="flex-1 w-full">
+              <label for="rd-note-input" class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1">Note (optional)</label>
+              <input id="rd-note-input" type="text" placeholder="e.g. Monthly stationery delivery" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-primary focus:border-transparent"/>
+            </div>
+            <button onclick="saveReceivedDateLog()" class="flex items-center gap-2 px-5 py-2.5 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary/90 transition-colors whitespace-nowrap">
+              <span class="material-symbols-outlined text-base">save</span>
+              Save
+            </button>
+          </div>
+        </div>
+
+        <!-- Logged Dates Table -->
+        <div class="bg-white dark:bg-[#1c2631] rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+          <div class="p-6 border-b border-slate-200 dark:border-slate-800">
+            <h4 class="text-lg font-bold text-slate-800 dark:text-white">Received Date Log</h4>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">All recorded stock receipt dates for this branch</p>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left">
+              <thead class="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider">
+                <tr>
+                  <th class="px-6 py-4 font-semibold">Date Received</th>
+                  <th class="px-6 py-4 font-semibold">Note</th>
+                  <th class="px-6 py-4 font-semibold">Logged By</th>
+                  <th class="px-6 py-4 font-semibold">Logged At</th>
+                  <th class="px-6 py-4 font-semibold w-20"></th>
+                </tr>
+              </thead>
+              <tbody id="received-date-table" class="divide-y divide-slate-100 dark:divide-slate-800 text-sm">
+                <tr><td class="px-6 py-4 text-slate-400 text-center" colspan="5">Loading...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== NEW ENTRY PAGE ===== -->
+      <div id="page-newentry" class="hidden">
+        <!-- Top Bar: Back + Stock In/Out Toggle -->
+        <div class="flex items-center justify-between mb-6">
+          <div class="flex items-center gap-4">
+            <button onclick="navigateTo('dashboard')" class="flex items-center gap-2 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors">
+              <span class="material-symbols-outlined">arrow_back</span>
+              <span class="text-sm font-medium">Back</span>
+            </button>
+            <div>
+              <h2 class="text-2xl font-bold text-slate-800 dark:text-white">New Stock Entry</h2>
+              <p class="text-sm text-slate-500 dark:text-slate-400">Select items and quantities</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 rounded-lg p-1">
+            <button id="entry-type-in" onclick="setEntryType('in')" class="px-4 py-2 rounded-md text-sm font-semibold transition-colors bg-green-500 text-white">
+              <span class="material-symbols-outlined text-base align-middle mr-1">arrow_downward</span>Stock In
+            </button>
+            <button id="entry-type-out" onclick="setEntryType('out')" class="px-4 py-2 rounded-md text-sm font-semibold transition-colors text-slate-500 dark:text-slate-400">
+              <span class="material-symbols-outlined text-base align-middle mr-1">arrow_upward</span>Stock Out
+            </button>
+          </div>
+        </div>
+
+        <!-- Category Filter Tabs -->
+        <div class="mb-6 overflow-x-auto scrollbar-hide">
+          <div id="category-tabs" class="flex gap-2 min-w-max">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+
+        <!-- Item Card Grid -->
+        <div id="entry-cards-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 pb-24">
+          <!-- Rendered by JS -->
+        </div>
+
+        <!-- Floating Bottom Bar -->
+        <div id="entry-bottom-bar" class="fixed bottom-0 left-0 md:left-64 right-0 bg-white dark:bg-[#1c2631] border-t border-slate-200 dark:border-slate-800 shadow-2xl px-6 py-4 flex items-center justify-between z-40">
+          <div class="flex items-center gap-3">
+            <span class="material-symbols-outlined text-primary">shopping_cart</span>
+            <span id="entry-bar-count" class="text-sm font-semibold text-slate-700 dark:text-slate-300">0 items selected</span>
+            <button onclick="clearEntryCart()" class="text-xs text-red-500 hover:text-red-600 font-medium ml-2">Clear</button>
+          </div>
+          <button onclick="confirmEntry()" class="flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary/90 transition-colors">
+            <span class="material-symbols-outlined text-base">check_circle</span>
+            Confirm Entry
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Modal Overlay -->
+<!-- FIX #17 --><div id="modal-overlay" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4" role="dialog" aria-modal="true">
+  <div class="bg-white dark:bg-[#1c2631] rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+    <div class="p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+      <h3 id="modal-title" class="text-lg font-bold text-slate-800 dark:text-white">Add New Item</h3>
+      <!-- FIX #16 --><button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200" aria-label="Close">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+    <form id="item-form" class="p-6 space-y-4">
+      <div>
+        <!-- FIX #15 --><label for="form-name" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Item Name</label>
+        <input id="form-name" type="text" required class="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-transparent"/>
+      </div>
+      <div>
+        <!-- FIX #15 --><label for="form-sku" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">SKU</label>
+        <input id="form-sku" type="text" required class="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-transparent"/>
+      </div>
+      <div>
+        <!-- FIX #15 --><label for="form-category" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Category</label>
+        <select id="form-category" class="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-transparent">
+          <option value="Writing">Writing</option>
+          <option value="Paper & Covers">Paper & Covers</option>
+          <option value="Filing">Filing</option>
+          <option value="Books & Registers">Books & Registers</option>
+          <option value="Desk Supplies">Desk Supplies</option>
+          <option value="Tapes & Adhesives">Tapes & Adhesives</option>
+          <option value="Machines">Machines</option>
+        </select>
+      </div>
+      <div>
+        <!-- FIX #15 --><label for="form-qty" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Quantity</label>
+        <input id="form-qty" type="number" min="0" required class="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-transparent"/>
+      </div>
+      <div>
+        <!-- FIX #15 --><label for="form-reorder" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Reorder Level</label>
+        <input id="form-reorder" type="number" min="0" required class="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-transparent"/>
+      </div>
+      <input type="hidden" id="form-edit-id" value=""/>
+      <div class="flex gap-3 pt-2">
+        <button type="submit" class="flex-1 px-4 py-2.5 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary/90 transition-colors">
+          Save Item
+        </button>
+        <button type="button" onclick="closeModal()" class="px-4 py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg text-sm font-semibold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+          Cancel
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Team Member Modal -->
+<!-- FIX #17 --><div id="team-modal-overlay" onclick="closeTeamModal()" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4" role="dialog" aria-modal="true">
+  <!-- Content injected by JS -->
+</div>
+
+<!-- Transaction Edit Modal -->
+<!-- FIX #17 --><div id="txn-edit-modal-overlay" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4" role="dialog" aria-modal="true">
+  <div class="bg-white dark:bg-[#1c2631] rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xl w-full max-w-md">
+    <div class="p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+      <h3 class="text-lg font-bold text-slate-800 dark:text-white">Edit Transaction</h3>
+      <!-- FIX #16 --><button onclick="closeTxnEditModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200" aria-label="Close">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+    <form id="txn-edit-form" onsubmit="saveTxnEdit(event)" class="p-6 space-y-4">
+      <div>
+        <!-- FIX #15 --><label for="txn-edit-item" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Item Name</label>
+        <input id="txn-edit-item" type="text" readonly class="w-full px-4 py-2 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-500 dark:text-slate-400 cursor-not-allowed"/>
+      </div>
+      <div>
+        <!-- FIX #15 --><label for="txn-edit-type" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Entry Type</label>
+        <select id="txn-edit-type" class="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-transparent">
+          <option value="in">Stock In</option>
+          <option value="out">Stock Out</option>
+        </select>
+      </div>
+      <div>
+        <!-- FIX #15 --><label for="txn-edit-qty" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Quantity</label>
+        <input id="txn-edit-qty" type="number" min="1" required class="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-transparent"/>
+      </div>
+      <input type="hidden" id="txn-edit-id" value=""/>
+      <div class="flex gap-3 pt-2">
+        <button type="submit" class="flex-1 px-4 py-2.5 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary/90 transition-colors">
+          Save Changes
+        </button>
+        <button type="button" onclick="closeTxnEditModal()" class="px-4 py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg text-sm font-semibold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+          Cancel
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Entry Date Picker Modal -->
+<!-- FIX #17 --><div id="entry-date-modal-overlay" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4" role="dialog" aria-modal="true">
+  <div class="bg-white dark:bg-[#1c2631] rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xl w-full max-w-sm">
+    <div class="px-5 pt-5 pb-3 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <span class="material-symbols-outlined text-primary text-xl">calendar_month</span>
+        <h3 class="text-base font-bold text-slate-800 dark:text-white">Select Entry Date</h3>
+      </div>
+      <!-- FIX #16 --><button onclick="closeEntryDateModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200" aria-label="Close">
+        <span class="material-symbols-outlined text-xl">close</span>
+      </button>
+    </div>
+    <div class="px-5 pb-2">
+      <div id="entry-date-type-label" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400">
+        Stock In
+      </div>
+    </div>
+    <!-- Calendar Grid -->
+    <div class="px-5 pb-2">
+      <div class="flex items-center justify-between mb-3">
+        <!-- FIX #16 --><button onclick="calendarPrevMonth()" class="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors" aria-label="Previous month">
+          <span class="material-symbols-outlined text-lg">chevron_left</span>
+        </button>
+        <span id="calendar-month-label" class="text-sm font-semibold text-slate-800 dark:text-white"></span>
+        <!-- FIX #16 --><button onclick="calendarNextMonth()" class="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors" aria-label="Next month">
+          <span class="material-symbols-outlined text-lg">chevron_right</span>
+        </button>
+      </div>
+      <div class="grid grid-cols-7 gap-0 mb-1">
+        <div class="text-center text-[10px] font-semibold text-slate-400 dark:text-slate-500 py-1">Su</div>
+        <div class="text-center text-[10px] font-semibold text-slate-400 dark:text-slate-500 py-1">Mo</div>
+        <div class="text-center text-[10px] font-semibold text-slate-400 dark:text-slate-500 py-1">Tu</div>
+        <div class="text-center text-[10px] font-semibold text-slate-400 dark:text-slate-500 py-1">We</div>
+        <div class="text-center text-[10px] font-semibold text-slate-400 dark:text-slate-500 py-1">Th</div>
+        <div class="text-center text-[10px] font-semibold text-slate-400 dark:text-slate-500 py-1">Fr</div>
+        <div class="text-center text-[10px] font-semibold text-slate-400 dark:text-slate-500 py-1">Sa</div>
+      </div>
+      <div id="calendar-grid" class="grid grid-cols-7 gap-0">
+        <!-- Rendered by JS -->
+      </div>
+    </div>
+    <div class="px-5 pb-4 pt-2">
+      <p id="entry-date-preview" class="text-xs text-slate-500 dark:text-slate-400 mb-3 text-center"></p>
+      <div class="flex gap-3">
+        <button type="button" onclick="confirmEntryWithDate()" class="flex-1 px-4 py-2.5 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary/90 transition-colors">
+          Confirm
+        </button>
+        <button type="button" onclick="closeEntryDateModal()" class="px-4 py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg text-sm font-semibold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Entry Type Selection Modal -->
+<!-- FIX #17 --><div id="entry-type-modal-overlay" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4" role="dialog" aria-modal="true" onclick="if(event.target===this)closeEntryTypeModal()">
+  <div class="entry-type-modal-card bg-white dark:bg-[#1c2631] rounded-2xl shadow-2xl w-full max-w-sm p-6 relative">
+    <!-- FIX #16 --><button onclick="closeEntryTypeModal()" class="absolute top-3 right-3 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 dark:text-slate-500 transition-colors" aria-label="Close">
+      <span class="material-symbols-outlined text-xl">close</span>
+    </button>
+    <h3 class="text-lg font-bold text-slate-800 dark:text-white text-center mb-1">New Entry</h3>
+    <p class="text-sm text-slate-500 dark:text-slate-400 text-center mb-6">Choose entry type</p>
+    <div class="flex gap-3">
+      <button onclick="selectEntryType('in')" class="flex-1 flex flex-col items-center gap-3 p-5 rounded-xl border-2 border-slate-200 dark:border-slate-700 hover:border-green-400 dark:hover:border-green-500 hover:bg-green-50 dark:hover:bg-green-500/10 transition-all group">
+        <div class="w-14 h-14 rounded-full bg-green-100 dark:bg-green-500/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+          <span class="material-symbols-outlined text-3xl text-green-600 dark:text-green-400">arrow_downward</span>
+        </div>
+        <span class="text-sm font-bold text-slate-700 dark:text-slate-200 group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors">Stock In</span>
+      </button>
+      <button onclick="selectEntryType('out')" class="flex-1 flex flex-col items-center gap-3 p-5 rounded-xl border-2 border-slate-200 dark:border-slate-700 hover:border-red-400 dark:hover:border-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all group">
+        <div class="w-14 h-14 rounded-full bg-red-100 dark:bg-red-500/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+          <span class="material-symbols-outlined text-3xl text-red-600 dark:text-red-400">arrow_upward</span>
+        </div>
+        <span class="text-sm font-bold text-slate-700 dark:text-slate-200 group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors">Stock Out</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Notification Panel -->
+<div id="notif-panel" class="fixed top-16 right-4 w-80 bg-white dark:bg-[#1c2631] rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xl z-50 hidden">
+  <div class="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+    <h4 class="text-sm font-bold text-slate-800 dark:text-white">Notifications</h4>
+    <button onclick="clearNotifications()" class="text-xs text-primary hover:underline">Clear all</button>
+  </div>
+  <div id="notif-list" class="max-h-64 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800">
+    <!-- Rendered by JS -->
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" class="fixed bottom-6 right-6 z-50 hidden">
+  <div class="flex items-center gap-3 px-5 py-3 bg-slate-800 dark:bg-white text-white dark:text-slate-800 rounded-lg shadow-2xl text-sm font-medium">
+    <span class="material-symbols-outlined text-green-400 dark:text-green-600" id="toast-icon">check_circle</span>
+    <span id="toast-msg">Item saved successfully</span>
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>

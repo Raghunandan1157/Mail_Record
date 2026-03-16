@@ -3,499 +3,196 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mail Record</title>
+  <title>Navachetana Hub</title>
   <link rel="icon" href="data:,">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL@20..48,100..700,0..1" rel="stylesheet">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
-  <script>
-    tailwindcss = undefined;
-    tailwind.config = { theme: { extend: { colors: { primary: '#0f3460', accent: '#27ae60' }, fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] } } } };
-  </script>
   <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', system-ui, sans-serif; background: #f0f2f5; min-height: 100vh; }
     .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
-    .nav-link.active { background: rgba(15,52,96,0.1); color: #0f3460; font-weight: 600; }
-    .nav-link:hover:not(.active) { background: #f1f5f9; }
-    #sidebar.open { display: flex !important; position: fixed; top: 0; left: 0; z-index: 40; height: 100vh; box-shadow: 4px 0 24px rgba(0,0,0,0.15); }
-    .kpi-card:hover { transform: scale(1.02); box-shadow: 0 4px 16px rgba(0,0,0,0.1); }
-    .badge-inward { background: rgba(39,174,96,0.12); color: #27ae60; }
-    .badge-outward { background: rgba(15,52,96,0.12); color: #0f3460; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-    .fade-in { animation: fadeIn 0.3s ease; }
-    .scrollbar-hide::-webkit-scrollbar { display: none; }
-    .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-    @media print { #sidebar, header, .no-print { display: none !important; } #page-content { padding: 0 !important; } }
 
     /* Login */
-    .login-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); }
-    .login-card { background: #fff; border-radius: 16px; padding: 40px 44px; width: 420px; max-width: 95vw; box-shadow: 0 8px 32px rgba(0,0,0,0.2); }
-    .login-card h1 { font-size: 1.5rem; color: #0f3460; margin-bottom: 6px; }
+    .login-screen {
+      min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    }
+    .login-card {
+      background: #fff; border-radius: 16px; padding: 40px 44px; width: 420px; max-width: 95vw;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+    }
+    .login-card h1 { font-size: 1.5rem; color: #0f3460; margin-bottom: 4px; font-weight: 700; }
     .login-card p.sub { font-size: 0.88rem; color: #888; margin-bottom: 28px; }
+    .login-card label { display: block; font-size: 0.78rem; font-weight: 600; color: #555; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 6px; }
+    .login-card select, .login-card input[type="text"], .login-card input[type="password"] {
+      width: 100%; padding: 11px 14px; border: 1.5px solid #dde1e7; border-radius: 8px;
+      font-size: 0.95rem; font-family: inherit; background: #fafbfc; margin-bottom: 18px; outline: none;
+    }
+    .login-card select:focus, .login-card input:focus { border-color: #0f3460; box-shadow: 0 0 0 3px rgba(15,52,96,0.1); }
+    .login-error { color: #e74c3c; font-size: 0.85rem; margin-bottom: 12px; display: none; }
     .login-step { display: none; }
     .login-step.active { display: block; }
-    .login-error { color: #e74c3c; font-size: 0.85rem; margin-bottom: 12px; display: none; }
-    .profile-card { display: flex; align-items: center; gap: 14px; padding: 12px 16px; border: 2px solid #e8ecf1; border-radius: 10px; cursor: pointer; transition: all 0.2s; }
+    .btn { display: block; width: 100%; padding: 11px; border: none; border-radius: 8px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.2s; font-family: inherit; }
+    .btn-primary { background: linear-gradient(135deg, #0f3460, #16213e); color: #fff; }
+    .btn-primary:hover { box-shadow: 0 4px 12px rgba(15,52,96,0.3); }
+    .btn-secondary { background: #e8ecf1; color: #555; margin-top: 10px; }
+    .btn-secondary:hover { background: #dde1e7; }
+
+    .profile-card {
+      display: flex; align-items: center; gap: 14px; padding: 12px 16px;
+      border: 2px solid #e8ecf1; border-radius: 10px; cursor: pointer; transition: all 0.2s;
+    }
     .profile-card:hover, .profile-card.selected { border-color: #0f3460; background: rgba(15,52,96,0.04); }
+    .profile-card .avatar {
+      width: 42px; height: 42px; border-radius: 50%; background: linear-gradient(135deg, #0f3460, #16213e);
+      color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; flex-shrink: 0;
+    }
     .otp-inputs { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; }
-    .otp-inputs input { width: 52px; height: 56px; text-align: center; font-size: 1.5rem; font-weight: 700; border: 2px solid #dde1e7; border-radius: 10px; background: #fafbfc; outline: none; }
+    .otp-inputs input {
+      width: 52px; height: 56px; text-align: center; font-size: 1.5rem; font-weight: 700;
+      border: 2px solid #dde1e7; border-radius: 10px; background: #fafbfc; outline: none;
+    }
     .otp-inputs input:focus { border-color: #0f3460; box-shadow: 0 0 0 3px rgba(15,52,96,0.1); }
+
+    /* Module Selection */
+    .module-screen {
+      min-height: 100vh; display: none; flex-direction: column; align-items: center; justify-content: center;
+      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    }
+    .module-header {
+      text-align: center; margin-bottom: 40px;
+    }
+    .module-header h1 { font-size: 1.6rem; font-weight: 700; color: #1a1a2e; margin-bottom: 4px; }
+    .module-header p { font-size: 0.9rem; color: #888; }
+    .module-user {
+      display: flex; align-items: center; gap: 10px; background: #fff; border-radius: 50px; padding: 8px 20px 8px 8px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06); margin-bottom: 32px;
+    }
+    .module-user .avatar {
+      width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #0f3460, #16213e);
+      color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.75rem;
+    }
+    .module-user .info { font-size: 0.85rem; }
+    .module-user .info .name { font-weight: 600; color: #1a1a2e; }
+    .module-user .info .loc { color: #888; font-size: 0.78rem; }
+
+    .module-cards { display: flex; gap: 28px; }
+    .module-card {
+      background: #fff; border-radius: 20px; padding: 40px 48px; text-align: center; width: 260px;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.06); cursor: pointer; transition: all 0.3s; border: 3px solid transparent;
+    }
+    .module-card:hover { transform: translateY(-6px); box-shadow: 0 12px 36px rgba(0,0,0,0.1); }
+    .module-card.stationary:hover { border-color: #137fec; }
+    .module-card.mail:hover { border-color: #0f3460; }
+    .module-card .icon-wrap {
+      width: 72px; height: 72px; border-radius: 18px; display: flex; align-items: center;
+      justify-content: center; margin: 0 auto 18px;
+    }
+    .module-card.stationary .icon-wrap { background: rgba(19,127,236,0.1); }
+    .module-card.mail .icon-wrap { background: rgba(15,52,96,0.1); }
+    .module-card .icon-wrap .material-symbols-outlined { font-size: 2rem; }
+    .module-card.stationary .icon-wrap .material-symbols-outlined { color: #137fec; }
+    .module-card.mail .icon-wrap .material-symbols-outlined { color: #0f3460; }
+    .module-card h2 { font-size: 1.15rem; font-weight: 700; margin-bottom: 6px; }
+    .module-card.stationary h2 { color: #137fec; }
+    .module-card.mail h2 { color: #0f3460; }
+    .module-card p { font-size: 0.82rem; color: #888; line-height: 1.4; }
+
+    .logout-link {
+      margin-top: 36px; font-size: 0.82rem; color: #e74c3c; cursor: pointer; display: flex;
+      align-items: center; gap: 4px; transition: opacity 0.2s;
+    }
+    .logout-link:hover { opacity: 0.7; }
+
+    @media (max-width: 600px) {
+      .module-cards { flex-direction: column; gap: 16px; }
+      .module-card { width: 100%; max-width: 300px; padding: 32px 36px; }
+      .login-card { padding: 28px 24px; }
+    }
   </style>
 </head>
-<body class="font-sans bg-slate-50 text-slate-800">
+<body>
 
   <!-- ===== LOGIN ===== -->
   <div class="login-screen" id="loginScreen">
     <div class="login-card">
+      <!-- Step 1: Location -->
       <div class="login-step active" id="loginStep1">
-        <h1 class="font-bold">Mail Record</h1>
+        <h1>Navachetana Hub</h1>
         <p class="sub">Select your branch to continue</p>
-        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Branch / Location</label>
-        <select id="loginLocation" class="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"><option value="">Loading locations...</option></select>
+        <label>Branch / Location</label>
+        <select id="loginLocation"><option value="">Loading locations...</option></select>
         <div class="login-error" id="loginError1"></div>
-        <button onclick="loginSelectLocation()" class="w-full bg-primary text-white py-2.5 rounded-lg font-semibold text-sm hover:bg-primary/90 transition">Continue</button>
-        <div class="text-center mt-4"><a onclick="loginAdminStart()" class="text-primary text-xs cursor-pointer underline">Login as Admin</a></div>
+        <button onclick="loginSelectLocation()" class="btn btn-primary">Continue</button>
+        <div style="text-align:center;margin-top:16px"><a onclick="loginAdminStart()" style="color:#0f3460;font-size:0.82rem;cursor:pointer;text-decoration:underline">Login as Admin</a></div>
       </div>
+      <!-- Step 2: Profile -->
       <div class="login-step" id="loginStep2">
-        <h1 class="font-bold">Select Profile</h1>
+        <h1>Select Profile</h1>
         <p class="sub" id="loginStep2Sub">Choose your profile</p>
-        <div class="flex flex-col gap-2.5 mb-4 max-h-56 overflow-y-auto" id="loginProfiles"></div>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px;max-height:240px;overflow-y:auto" id="loginProfiles"></div>
         <div id="nameInputSection" style="display:none"></div>
         <div class="login-error" id="loginError2"></div>
-        <button id="loginConfirmBtn" onclick="loginConfirm()" class="w-full bg-primary text-white py-2.5 rounded-lg font-semibold text-sm hover:bg-primary/90 transition">Start Session</button>
-        <button onclick="showStep(1)" class="w-full bg-slate-100 text-slate-600 py-2.5 rounded-lg font-semibold text-sm mt-2 hover:bg-slate-200 transition">Back</button>
+        <button id="loginConfirmBtn" onclick="loginConfirm()" class="btn btn-primary">Start Session</button>
+        <button onclick="showStep(1)" class="btn btn-secondary">Back</button>
       </div>
+      <!-- Step 3: Admin OTP -->
       <div class="login-step" id="loginStep3">
-        <h1 class="font-bold">Admin Login</h1>
+        <h1>Admin Login</h1>
         <p class="sub">Enter 4-digit OTP to continue</p>
         <div class="otp-inputs"><input type="password" maxlength="1"><input type="password" maxlength="1"><input type="password" maxlength="1"><input type="password" maxlength="1"></div>
         <div class="login-error" id="loginError3"></div>
-        <button onclick="loginVerifyOTP()" class="w-full bg-primary text-white py-2.5 rounded-lg font-semibold text-sm hover:bg-primary/90 transition">Verify</button>
-        <button onclick="showStep(1)" class="w-full bg-slate-100 text-slate-600 py-2.5 rounded-lg font-semibold text-sm mt-2 hover:bg-slate-200 transition">Back</button>
+        <button onclick="loginVerifyOTP()" class="btn btn-primary">Verify</button>
+        <button onclick="showStep(1)" class="btn btn-secondary">Back</button>
       </div>
     </div>
   </div>
 
-  <!-- ===== APP ===== -->
-  <div id="appScreen" class="flex h-screen overflow-hidden" style="display:none">
-
-    <!-- Sidebar -->
-    <aside id="sidebar" class="w-64 flex-shrink-0 bg-white border-r border-slate-200 hidden md:flex flex-col">
-      <div class="p-5 flex items-center gap-3 border-b border-slate-100">
-        <div class="w-9 h-9 bg-primary rounded-lg flex items-center justify-center"><span class="material-symbols-outlined text-white text-lg">mail</span></div>
-        <span class="font-bold text-primary text-base">MailRecord</span>
-      </div>
-
-      <!-- Regular Nav -->
-      <nav id="navRegular" class="flex-1 p-3 space-y-1">
-        <a class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm cursor-pointer active" data-page="dashboard" onclick="navigateTo('dashboard')">
-          <span class="material-symbols-outlined text-xl">dashboard</span>Dashboard</a>
-        <a class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm cursor-pointer" data-page="outward" onclick="navigateTo('outward')">
-          <span class="material-symbols-outlined text-xl">call_made</span>Outward</a>
-        <a class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm cursor-pointer" data-page="inward" onclick="navigateTo('inward')">
-          <span class="material-symbols-outlined text-xl">call_received</span>Inward</a>
-        <a class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm cursor-pointer" data-page="reports" onclick="navigateTo('reports')">
-          <span class="material-symbols-outlined text-xl">bar_chart</span>Reports</a>
-      </nav>
-
-      <!-- Admin Nav -->
-      <nav id="navAdmin" class="flex-1 p-3 space-y-1 hidden">
-        <a class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm cursor-pointer active" data-page="admin-dashboard" onclick="navigateTo('admin-dashboard')">
-          <span class="material-symbols-outlined text-xl">admin_panel_settings</span>Dashboard</a>
-        <a class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm cursor-pointer" data-page="admin-records" onclick="navigateTo('admin-records')">
-          <span class="material-symbols-outlined text-xl">folder_open</span>All Records</a>
-        <a class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm cursor-pointer" data-page="admin-editlog" onclick="navigateTo('admin-editlog')">
-          <span class="material-symbols-outlined text-xl">edit_note</span>Edit Log</a>
-        <a class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm cursor-pointer" data-page="admin-reports" onclick="navigateTo('admin-reports')">
-          <span class="material-symbols-outlined text-xl">bar_chart</span>Reports</a>
-      </nav>
-
-      <!-- User Footer -->
-      <div class="p-4 border-t border-slate-100">
-        <div class="flex items-center gap-3">
-          <div class="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-blue-400 flex items-center justify-center text-white text-xs font-bold" id="sidebarAvatar">?</div>
-          <div class="flex-1 min-w-0">
-            <div class="text-sm font-semibold truncate" id="sidebarName">User</div>
-            <div class="text-xs text-slate-400 truncate" id="sidebarRole">BOE</div>
-          </div>
-        </div>
-      </div>
-    </aside>
-
-    <!-- Main -->
-    <main class="flex-1 flex flex-col min-w-0 overflow-hidden">
-      <!-- Header -->
-      <header class="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-4 md:px-6 flex-shrink-0">
-        <button id="menuBtn" onclick="toggleSidebar()" class="md:hidden p-1.5 rounded-lg hover:bg-slate-100"><span class="material-symbols-outlined">menu</span></button>
-        <div class="flex items-center gap-2 ml-2 md:ml-0">
-          <span class="text-sm font-semibold text-slate-700" id="headerTitle">Dashboard</span>
-        </div>
-        <div class="flex items-center gap-3">
-          <span class="text-xs text-slate-400 hidden sm:block" id="headerDate"></span>
-          <button onclick="logout()" class="flex items-center gap-1.5 text-red-500 hover:bg-red-50 px-3 py-1.5 rounded-lg text-sm font-medium transition">
-            <span class="material-symbols-outlined text-lg">logout</span><span class="hidden sm:inline">Logout</span></button>
-        </div>
-      </header>
-
-      <!-- Content -->
-      <div id="pageContent" class="flex-1 overflow-y-auto p-4 md:p-6 space-y-6">
-
-        <!-- ===== DASHBOARD ===== -->
-        <div id="page-dashboard" class="page fade-in">
-          <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6" id="dashKpis"></div>
-          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div class="bg-white rounded-xl border border-slate-200 p-5">
-              <h3 class="font-semibold text-sm mb-4 text-slate-700">Recent Outward</h3>
-              <div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr class="text-xs text-slate-400 uppercase border-b"><th class="pb-2 text-left">ID</th><th class="pb-2 text-left">Date</th><th class="pb-2 text-left">To</th><th class="pb-2 text-left">Documents</th></tr></thead><tbody id="dashOutward"></tbody></table></div>
-            </div>
-            <div class="bg-white rounded-xl border border-slate-200 p-5">
-              <h3 class="font-semibold text-sm mb-4 text-slate-700">Recent Inward</h3>
-              <div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr class="text-xs text-slate-400 uppercase border-b"><th class="pb-2 text-left">ID</th><th class="pb-2 text-left">Date</th><th class="pb-2 text-left">From</th><th class="pb-2 text-left">Documents</th></tr></thead><tbody id="dashInward"></tbody></table></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- ===== OUTWARD ===== -->
-        <div id="page-outward" class="page fade-in hidden">
-          <div class="bg-white rounded-xl border border-slate-200 p-5 mb-6">
-            <h3 class="font-semibold text-sm mb-4 text-primary flex items-center gap-2"><span class="material-symbols-outlined text-lg">call_made</span>New Outward Record</h3>
-            <form id="outwardForm" onsubmit="return submitRecord(event,'outward')">
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div><label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Date</label><input type="date" id="outDate" required class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"></div>
-                <div><label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Employee ID</label><input type="text" id="outEmpId" required placeholder="e.g. NL12345" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"></div>
-                <div><label class="block text-xs font-semibold text-slate-500 uppercase mb-1">To</label><input type="text" id="outName" required placeholder="Recipient name" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"></div>
-                <div><label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Department</label><input type="text" id="outDept" required placeholder="e.g. Finance, HR" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"></div>
-                <div class="md:col-span-2">
-                  <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">List of Documents Sent</label>
-                  <div class="relative">
-                    <input type="text" id="outDocsDisplay" readonly placeholder="Select category..." onclick="toggleDropdown('outDocsDrop')" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary cursor-pointer bg-white pr-9">
-                    <span class="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 text-lg pointer-events-none">expand_more</span>
-                    <div id="outDocsDrop" class="absolute z-30 left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-xl shadow-xl max-h-56 overflow-y-auto hidden">
-                      <div class="p-2 space-y-0.5" id="outDocsOptions"></div>
-                    </div>
-                  </div>
-                  <input type="text" id="outDocsOther" placeholder="Other - type here..." class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary mt-2 hidden">
-                  <input type="hidden" id="outDocs">
-                </div>
-                <div><label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Particular</label><input type="text" id="outParticular" required placeholder="Mail type / category" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"></div>
-                <div><label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Details (optional)</label><input type="text" id="outDetails" placeholder="Additional details" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"></div>
-              </div>
-              <div class="flex gap-3 mt-5">
-                <button type="submit" id="outSubmitBtn" class="bg-primary text-white px-6 py-2 rounded-lg text-sm font-semibold hover:bg-primary/90 transition">Add Record</button>
-                <button type="button" id="outCancelBtn" onclick="cancelOutEdit()" class="bg-slate-100 text-slate-600 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-slate-200 transition hidden">Cancel</button>
-                <button type="button" onclick="document.getElementById('outwardForm').reset();setToday('outDate')" class="bg-slate-100 text-slate-600 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-slate-200 transition">Clear</button>
-              </div>
-            </form>
-          </div>
-          <div class="bg-white rounded-xl border border-slate-200 p-5">
-            <div class="flex items-center justify-between mb-4 flex-wrap gap-3">
-              <div class="flex items-center gap-3"><h3 class="font-semibold text-sm text-slate-700">Outward Records</h3><span class="text-xs bg-slate-100 text-slate-500 px-2.5 py-0.5 rounded-full" id="outCount">0</span></div>
-              <div class="flex gap-2">
-                <input type="text" id="outSearch" placeholder="Search..." oninput="renderOutward()" class="px-3 py-1.5 border border-slate-300 rounded-lg text-sm w-44 focus:outline-none focus:ring-2 focus:ring-primary/20">
-                <button onclick="exportToExcel('outward')" class="bg-green-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-green-700 transition flex items-center gap-1"><span class="material-symbols-outlined text-sm">download</span>Excel</button>
-              </div>
-            </div>
-            <div class="overflow-x-auto"><table class="w-full text-sm min-w-[700px]"><thead><tr class="text-xs text-slate-400 uppercase border-b"><th class="pb-2 text-left">ID</th><th class="pb-2 text-left">Date</th><th class="pb-2 text-left">Emp ID</th><th class="pb-2 text-left">To</th><th class="pb-2 text-left">Dept</th><th class="pb-2 text-left">Documents Sent</th><th class="pb-2 text-left">Particular</th><th class="pb-2 text-left">Details</th><th class="pb-2 text-left">Actions</th></tr></thead><tbody id="outBody"></tbody></table></div>
-            <div class="text-center py-8 text-slate-400 text-sm" id="outEmpty">No outward records yet.</div>
-          </div>
-        </div>
-
-        <!-- ===== INWARD ===== -->
-        <div id="page-inward" class="page fade-in hidden">
-          <div class="bg-white rounded-xl border border-slate-200 p-5 mb-6">
-            <h3 class="font-semibold text-sm mb-4 text-accent flex items-center gap-2"><span class="material-symbols-outlined text-lg">call_received</span>New Inward Record</h3>
-            <form id="inwardForm" onsubmit="return submitRecord(event,'inward')">
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div><label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Date</label><input type="date" id="inDate" required class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"></div>
-                <div><label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Employee ID</label><input type="text" id="inEmpId" required placeholder="e.g. NL12345" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"></div>
-                <div><label class="block text-xs font-semibold text-slate-500 uppercase mb-1">From</label><input type="text" id="inName" required placeholder="Sender name" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"></div>
-                <div><label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Department</label><input type="text" id="inDept" required placeholder="e.g. Finance, HR" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"></div>
-                <div class="md:col-span-2">
-                  <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">List of Documents Received</label>
-                  <div class="relative">
-                    <input type="text" id="inDocsDisplay" readonly placeholder="Select category..." onclick="toggleDropdown('inDocsDrop')" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent cursor-pointer bg-white pr-9">
-                    <span class="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 text-lg pointer-events-none">expand_more</span>
-                    <div id="inDocsDrop" class="absolute z-30 left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-xl shadow-xl max-h-56 overflow-y-auto hidden">
-                      <div class="p-2 space-y-0.5" id="inDocsOptions"></div>
-                    </div>
-                  </div>
-                  <input type="text" id="inDocsOther" placeholder="Other - type here..." class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent mt-2 hidden">
-                  <input type="hidden" id="inDocs">
-                </div>
-                <div><label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Particular</label><input type="text" id="inParticular" required placeholder="Mail type / category" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"></div>
-                <div><label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Details (optional)</label><input type="text" id="inDetails" placeholder="Additional details" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"></div>
-              </div>
-              <div class="flex gap-3 mt-5">
-                <button type="submit" id="inSubmitBtn" class="bg-accent text-white px-6 py-2 rounded-lg text-sm font-semibold hover:bg-accent/90 transition">Add Record</button>
-                <button type="button" id="inCancelBtn" onclick="cancelInEdit()" class="bg-slate-100 text-slate-600 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-slate-200 transition hidden">Cancel</button>
-                <button type="button" onclick="document.getElementById('inwardForm').reset();setToday('inDate')" class="bg-slate-100 text-slate-600 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-slate-200 transition">Clear</button>
-              </div>
-            </form>
-          </div>
-          <div class="bg-white rounded-xl border border-slate-200 p-5">
-            <div class="flex items-center justify-between mb-4 flex-wrap gap-3">
-              <div class="flex items-center gap-3"><h3 class="font-semibold text-sm text-slate-700">Inward Records</h3><span class="text-xs bg-slate-100 text-slate-500 px-2.5 py-0.5 rounded-full" id="inCount">0</span></div>
-              <div class="flex gap-2">
-                <input type="text" id="inSearch" placeholder="Search..." oninput="renderInward()" class="px-3 py-1.5 border border-slate-300 rounded-lg text-sm w-44 focus:outline-none focus:ring-2 focus:ring-accent/20">
-                <button onclick="exportToExcel('inward')" class="bg-green-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-green-700 transition flex items-center gap-1"><span class="material-symbols-outlined text-sm">download</span>Excel</button>
-              </div>
-            </div>
-            <div class="overflow-x-auto"><table class="w-full text-sm min-w-[700px]"><thead><tr class="text-xs text-slate-400 uppercase border-b"><th class="pb-2 text-left">ID</th><th class="pb-2 text-left">Date</th><th class="pb-2 text-left">Emp ID</th><th class="pb-2 text-left">From</th><th class="pb-2 text-left">Dept</th><th class="pb-2 text-left">Documents Received</th><th class="pb-2 text-left">Particular</th><th class="pb-2 text-left">Details</th><th class="pb-2 text-left">Actions</th></tr></thead><tbody id="inBody"></tbody></table></div>
-            <div class="text-center py-8 text-slate-400 text-sm" id="inEmpty">No inward records yet.</div>
-          </div>
-        </div>
-
-        <!-- ===== REPORTS ===== -->
-        <div id="page-reports" class="page fade-in hidden">
-          <div class="flex items-center justify-between mb-4 flex-wrap gap-3">
-            <h3 class="font-semibold text-lg text-slate-700">Daily Report</h3>
-            <div class="flex gap-3 items-center">
-              <div class="bg-white border border-slate-200 rounded-xl px-4 py-2 flex items-center gap-2">
-                <span class="material-symbols-outlined text-amber-500 text-lg">today</span>
-                <input type="date" id="reportDate" onchange="renderDailyReport()" class="text-sm border-none outline-none bg-transparent">
-              </div>
-              <button onclick="exportDailyReport()" class="bg-green-600 text-white px-4 py-2 rounded-lg text-xs font-semibold hover:bg-green-700 transition flex items-center gap-1.5"><span class="material-symbols-outlined text-sm">download</span>Export Excel</button>
-              <button onclick="printReport()" class="bg-slate-700 text-white px-4 py-2 rounded-lg text-xs font-semibold hover:bg-slate-800 transition flex items-center gap-1.5 no-print"><span class="material-symbols-outlined text-sm">print</span>Print</button>
-            </div>
-          </div>
-          <div id="dailyReportContent"></div>
-        </div>
-
-        <!-- ===== ADMIN DASHBOARD ===== -->
-        <div id="page-admin-dashboard" class="page fade-in hidden">
-          <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6" id="adminKpis"></div>
-          <div class="bg-white rounded-xl border border-slate-200 p-5">
-            <h3 class="font-semibold text-sm mb-4 text-slate-700">Recent Records (All Branches)</h3>
-            <div class="overflow-x-auto"><table class="w-full text-sm min-w-[800px]"><thead><tr class="text-xs text-slate-400 uppercase border-b"><th class="pb-2 text-left">ID</th><th class="pb-2 text-left">Date</th><th class="pb-2 text-left">Type</th><th class="pb-2 text-left">To/From</th><th class="pb-2 text-left">Dept</th><th class="pb-2 text-left">Documents</th><th class="pb-2 text-left">Location</th><th class="pb-2 text-left">By</th></tr></thead><tbody id="adminRecentBody"></tbody></table></div>
-          </div>
-        </div>
-
-        <!-- ===== ADMIN ALL RECORDS ===== -->
-        <div id="page-admin-records" class="page fade-in hidden">
-          <div class="bg-white rounded-xl border border-slate-200 p-5">
-            <div class="flex items-center justify-between mb-4 flex-wrap gap-3">
-              <div class="flex items-center gap-3"><h3 class="font-semibold text-sm text-slate-700">All Records</h3><span class="text-xs bg-slate-100 text-slate-500 px-2.5 py-0.5 rounded-full" id="adminRecordCount">0</span></div>
-              <div class="flex gap-2">
-                <select id="adminTypeFilter" onchange="renderAdminRecords()" class="px-3 py-1.5 border border-slate-300 rounded-lg text-sm"><option value="">All Types</option><option value="inward">Inward</option><option value="outward">Outward</option></select>
-                <input type="text" id="adminSearchInput" placeholder="Search..." oninput="renderAdminRecords()" class="px-3 py-1.5 border border-slate-300 rounded-lg text-sm w-44 focus:outline-none focus:ring-2 focus:ring-primary/20">
-                <button onclick="exportToExcel('all')" class="bg-green-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-green-700 transition flex items-center gap-1"><span class="material-symbols-outlined text-sm">download</span>Excel</button>
-              </div>
-            </div>
-            <div class="overflow-x-auto"><table class="w-full text-sm min-w-[900px]"><thead><tr class="text-xs text-slate-400 uppercase border-b">
-              <th class="pb-2 text-left">ID</th>
-              <th class="pb-2 text-left">Date</th>
-              <th class="pb-2 text-left cursor-pointer hover:text-primary" onclick="openColFilter('mail_type','Type')">Type <span class="material-symbols-outlined text-xs align-middle">filter_list</span></th>
-              <th class="pb-2 text-left cursor-pointer hover:text-primary" onclick="openColFilter('employee_id','Emp ID')">Emp ID <span class="material-symbols-outlined text-xs align-middle">filter_list</span></th>
-              <th class="pb-2 text-left cursor-pointer hover:text-primary" onclick="openColFilter('name','To/From')">To/From <span class="material-symbols-outlined text-xs align-middle">filter_list</span></th>
-              <th class="pb-2 text-left cursor-pointer hover:text-primary" onclick="openColFilter('department','Dept')">Dept <span class="material-symbols-outlined text-xs align-middle">filter_list</span></th>
-              <th class="pb-2 text-left">Documents</th>
-              <th class="pb-2 text-left cursor-pointer hover:text-primary" onclick="openColFilter('particular','Particular')">Particular <span class="material-symbols-outlined text-xs align-middle">filter_list</span></th>
-              <th class="pb-2 text-left">Details</th>
-              <th class="pb-2 text-left cursor-pointer hover:text-primary" onclick="openColFilter('location','Location')">Location <span class="material-symbols-outlined text-xs align-middle">filter_list</span></th>
-              <th class="pb-2 text-left cursor-pointer hover:text-primary" onclick="openColFilter('created_by','By')">By <span class="material-symbols-outlined text-xs align-middle">filter_list</span></th>
-            </tr></thead><tbody id="adminAllBody"></tbody></table></div>
-            <div class="text-center py-8 text-slate-400 text-sm" id="adminEmptyState" style="display:none">No records found.</div>
-          </div>
-        </div>
-
-        <!-- ===== ADMIN EDIT LOG ===== -->
-        <div id="page-admin-editlog" class="page fade-in hidden">
-          <div class="bg-white rounded-xl border border-slate-200 p-5">
-            <h3 class="font-semibold text-sm mb-4 text-slate-700">Edit Log</h3>
-            <div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr class="text-xs text-slate-400 uppercase border-b"><th class="pb-2 text-left">Date</th><th class="pb-2 text-left">Record</th><th class="pb-2 text-left">Type</th><th class="pb-2 text-left">Field</th><th class="pb-2 text-left">Old</th><th class="pb-2 text-left">New</th><th class="pb-2 text-left">By</th></tr></thead><tbody id="adminEditBody"></tbody></table></div>
-            <div class="text-center py-8 text-slate-400 text-sm" id="editlogEmpty">No edits yet.</div>
-          </div>
-        </div>
-
-        <!-- ===== ADMIN REPORTS ===== -->
-        <div id="page-admin-reports" class="page fade-in hidden">
-          <div class="flex items-center justify-between mb-4 flex-wrap gap-3">
-            <h3 class="font-semibold text-lg text-slate-700">Daily Report (All Branches)</h3>
-            <div class="flex gap-3 items-center">
-              <div class="bg-white border border-slate-200 rounded-xl px-4 py-2 flex items-center gap-2">
-                <span class="material-symbols-outlined text-amber-500 text-lg">today</span>
-                <input type="date" id="adminReportDate" onchange="renderAdminDailyReport()" class="text-sm border-none outline-none bg-transparent">
-              </div>
-              <button onclick="exportDailyReport(true)" class="bg-green-600 text-white px-4 py-2 rounded-lg text-xs font-semibold hover:bg-green-700 transition flex items-center gap-1.5"><span class="material-symbols-outlined text-sm">download</span>Export</button>
-            </div>
-          </div>
-          <div id="adminDailyReportContent"></div>
-        </div>
-
-      </div>
-    </main>
-  </div>
-
-  <!-- Column Filter Modal -->
-  <div id="colFilterModal" class="fixed inset-0 bg-black/30 z-50 flex items-center justify-center hidden" onclick="if(event.target===this)closeColFilter()">
-    <div class="bg-white rounded-xl shadow-xl w-80 max-w-[90vw] max-h-[70vh] flex flex-col">
-      <div class="flex items-center justify-between px-5 pt-4 pb-2 border-b border-slate-100">
-        <h3 class="font-semibold text-sm text-slate-700" id="colFilterTitle">Filter</h3>
-        <button onclick="closeColFilter()" class="text-slate-400 hover:text-slate-600"><span class="material-symbols-outlined text-lg">close</span></button>
-      </div>
-      <div class="px-5 py-3 border-b border-slate-100">
-        <input type="text" id="colFilterSearch" placeholder="Search values..." oninput="filterColOptions()" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20">
-      </div>
-      <div class="flex-1 overflow-y-auto px-5 py-2 space-y-1" id="colFilterOptions"></div>
-      <div class="px-5 py-3 border-t border-slate-100 flex gap-2">
-        <button onclick="applyColFilter()" class="flex-1 bg-primary text-white py-2 rounded-lg text-sm font-semibold hover:bg-primary/90 transition">Apply</button>
-        <button onclick="clearColFilter()" class="flex-1 bg-slate-100 text-slate-600 py-2 rounded-lg text-sm font-semibold hover:bg-slate-200 transition">Clear</button>
+  <!-- ===== MODULE SELECTION ===== -->
+  <div class="module-screen" id="moduleScreen">
+    <div class="module-user" id="moduleUser">
+      <div class="avatar" id="moduleAvatar">?</div>
+      <div class="info">
+        <div class="name" id="moduleName">User</div>
+        <div class="loc" id="moduleLoc">Branch</div>
       </div>
     </div>
-  </div>
-
-  <!-- Toast -->
-  <div id="toast" class="fixed bottom-6 right-6 bg-accent text-white px-5 py-3 rounded-xl shadow-lg text-sm font-medium flex items-center gap-2 transform translate-y-24 opacity-0 transition-all duration-300 z-50">
-    <span class="material-symbols-outlined text-lg">check_circle</span><span id="toastMsg"></span>
+    <div class="module-header">
+      <h1>Choose a Module</h1>
+      <p>Select the application you want to use</p>
+    </div>
+    <div class="module-cards">
+      <div class="module-card stationary" onclick="openModule('stationary')">
+        <div class="icon-wrap"><span class="material-symbols-outlined">inventory_2</span></div>
+        <h2>Stationary</h2>
+        <p>Stock register, inventory management & branch reports</p>
+      </div>
+      <div class="module-card mail" onclick="openModule('mail')">
+        <div class="icon-wrap"><span class="material-symbols-outlined">mail</span></div>
+        <h2>Mail Record</h2>
+        <p>Inward & outward mail tracking with daily reports</p>
+      </div>
+    </div>
+    <div class="logout-link" onclick="logout()">
+      <span class="material-symbols-outlined" style="font-size:16px">logout</span> Logout
+    </div>
   </div>
 
   <script>
-    // ===== SUPABASE =====
     const SB = 'https://zovnmmdfthpbubrorsgh.supabase.co';
     const SK = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpvdm5tbWRmdGhwYnVicm9yc2doIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE1NzE3ODgsImV4cCI6MjA3NzE0Nzc4OH0.92BH2sjUOgkw6iSRj1_4gt0p3eThg3QT4VK-Q4EdmBE';
-    const H = { 'apikey': SK, 'Authorization': 'Bearer ' + SK, 'Content-Type': 'application/json', 'Prefer': 'return=representation' };
+    const H = { 'apikey': SK, 'Authorization': 'Bearer ' + SK, 'Content-Type': 'application/json' };
     async function sbGet(t, p = '') { return (await fetch(`${SB}/rest/v1/${t}?${p}`, { headers: H })).json(); }
-    async function sbPost(t, d) { return (await fetch(`${SB}/rest/v1/${t}`, { method: 'POST', headers: H, body: JSON.stringify(d) })).json(); }
-    async function sbPatch(t, id, d) { return (await fetch(`${SB}/rest/v1/${t}?id=eq.${id}`, { method: 'PATCH', headers: H, body: JSON.stringify(d) })).json(); }
 
-    // ===== STATE =====
     let currentEmployee = null, selectedLocation = null, isAdmin = false;
-    let outRecords = [], inRecords = [], adminAllRecords = [];
-    let editingOutId = null, editingInId = null;
     let selectedProfileIdx = -1, profilesList = [];
 
-    // ===== HELPERS =====
     function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
     function getInitials(n) { return n ? n.split(/\s+/).map(w => w[0]).join('').substring(0, 2).toUpperCase() : '?'; }
-    function setToday(id) { document.getElementById(id).valueAsDate = new Date(); }
-
-    // ===== DOCUMENT CATEGORY DROPDOWN =====
-    const DOC_CATEGORIES = ['Printing', 'IT related', 'Assets', 'Admin', 'Insurance - Customer', 'Insurance - Staff', 'Human Resources', 'Operations', 'Business', 'Building', 'Festival Gifts', 'Staff Awards/Prizes', 'Others'];
-
-    function initDocDropdown(optionsId, displayId, hiddenId, otherId) {
-      const container = document.getElementById(optionsId);
-      container.innerHTML = DOC_CATEGORIES.map(cat =>
-        `<label class="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-slate-50 cursor-pointer text-sm">
-          <input type="checkbox" value="${esc(cat)}" onchange="onDocCheck('${optionsId}','${displayId}','${hiddenId}','${otherId}')" class="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary/20">
-          <span>${esc(cat)}</span>
-        </label>`
-      ).join('');
-      document.getElementById(displayId).value = '';
-      document.getElementById(hiddenId).value = '';
-      document.getElementById(otherId).value = '';
-      document.getElementById(otherId).classList.add('hidden');
-    }
-
-    function toggleDropdown(dropId) {
-      const drop = document.getElementById(dropId);
-      drop.classList.toggle('hidden');
-    }
-
-    // Close dropdowns on outside click
-    document.addEventListener('click', function(e) {
-      ['outDocsDrop', 'inDocsDrop'].forEach(id => {
-        const drop = document.getElementById(id);
-        if (!drop) return;
-        const parent = drop.closest('.relative');
-        if (parent && !parent.contains(e.target)) drop.classList.add('hidden');
-      });
-    });
-
-    function onDocCheck(optionsId, displayId, hiddenId, otherId) {
-      const checks = document.querySelectorAll(`#${optionsId} input[type=checkbox]`);
-      const selected = [];
-      let othersChecked = false;
-      checks.forEach(c => {
-        if (c.checked) {
-          if (c.value === 'Others') othersChecked = true;
-          else selected.push(c.value);
-        }
-      });
-
-      const otherInput = document.getElementById(otherId);
-      if (othersChecked) {
-        otherInput.classList.remove('hidden');
-        const otherVal = otherInput.value.trim();
-        if (otherVal) selected.push('Others: ' + otherVal);
-      } else {
-        otherInput.classList.add('hidden');
-        otherInput.value = '';
-      }
-
-      document.getElementById(displayId).value = selected.join(', ') + (othersChecked && !selected.some(s => s.startsWith('Others:')) ? (selected.length ? ', Others' : 'Others') : '');
-      document.getElementById(hiddenId).value = selected.join(', ') || (othersChecked ? 'Others' : '');
-    }
-
-    function updateDocHidden(optionsId, hiddenId, otherId) {
-      const displayId = optionsId.replace('Options', 'Display').replace('Chips', 'Display');
-      onDocCheck(optionsId, displayId, hiddenId, otherId);
-    }
-
-    function setDocFromValue(optionsId, displayId, hiddenId, otherId, value) {
-      const checks = document.querySelectorAll(`#${optionsId} input[type=checkbox]`);
-      const parts = (value || '').split(',').map(s => s.trim()).filter(Boolean);
-      const otherInput = document.getElementById(otherId);
-
-      checks.forEach(c => { c.checked = false; });
-      otherInput.classList.add('hidden');
-      otherInput.value = '';
-
-      parts.forEach(p => {
-        if (p.startsWith('Others:')) {
-          const othersBox = [...checks].find(c => c.value === 'Others');
-          if (othersBox) othersBox.checked = true;
-          otherInput.value = p.replace('Others:', '').trim();
-          otherInput.classList.remove('hidden');
-        } else {
-          const box = [...checks].find(c => c.value === p);
-          if (box) box.checked = true;
-        }
-      });
-
-      document.getElementById(displayId).value = value;
-      document.getElementById(hiddenId).value = value;
-    }
-
-    // Listen for Others text input changes
-    document.addEventListener('input', function(e) {
-      if (e.target.id === 'outDocsOther') onDocCheck('outDocsOptions', 'outDocsDisplay', 'outDocs', 'outDocsOther');
-      if (e.target.id === 'inDocsOther') onDocCheck('inDocsOptions', 'inDocsDisplay', 'inDocs', 'inDocsOther');
-    });
-    function showToast(msg) { const t = document.getElementById('toast'); document.getElementById('toastMsg').textContent = msg; t.classList.remove('translate-y-24', 'opacity-0'); t.classList.add('translate-y-0', 'opacity-100'); setTimeout(() => { t.classList.add('translate-y-24', 'opacity-0'); t.classList.remove('translate-y-0', 'opacity-100'); }, 2500); }
     function showStep(n) { document.querySelectorAll('.login-step').forEach(s => s.classList.remove('active')); document.getElementById('loginStep' + n).classList.add('active'); }
     function showLoginError(step, msg) { const el = document.getElementById('loginError' + step); el.textContent = msg; el.style.display = 'block'; setTimeout(() => el.style.display = 'none', 3000); }
-    function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
 
-    // FY: April 1 → March 31. Returns { start: 'YYYY-04-01', end: 'YYYY-03-31' }
-    function getFY(dateStr) {
-      const d = new Date(dateStr + 'T00:00:00');
-      const m = d.getMonth(), y = d.getFullYear();
-      const fyStart = m >= 3 ? y : y - 1; // month 3 = April (0-indexed)
-      return { start: `${fyStart}-04-01`, end: `${fyStart + 1}-03-31`, label: `FY ${fyStart}-${String(fyStart + 1).slice(2)}` };
-    }
-    function getCurrentFY() { return getFY(new Date().toISOString().split('T')[0]); }
-
-
-    // ===== NAVIGATION =====
-    function navigateTo(page) {
-      document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
-      const el = document.getElementById('page-' + page);
-      if (el) el.classList.remove('hidden');
-      document.querySelectorAll('.nav-link').forEach(l => l.classList.toggle('active', l.dataset.page === page));
-      const titles = { dashboard: 'Dashboard', outward: 'Outward Mail', inward: 'Inward Mail', reports: 'Reports', 'admin-dashboard': 'Admin Dashboard', 'admin-records': 'All Records', 'admin-editlog': 'Edit Log', 'admin-reports': 'Reports' };
-      document.getElementById('headerTitle').textContent = titles[page] || page;
-      document.getElementById('sidebar').classList.remove('open');
-      if (page === 'outward') { loadRecords('outward'); setToday('outDate'); initDocDropdown('outDocsOptions', 'outDocsDisplay', 'outDocs', 'outDocsOther'); }
-      if (page === 'inward') { loadRecords('inward'); setToday('inDate'); initDocDropdown('inDocsOptions', 'inDocsDisplay', 'inDocs', 'inDocsOther'); }
-      if (page === 'reports') { setToday('reportDate'); renderDailyReport(); }
-      if (page === 'admin-dashboard') loadAdminData();
-      if (page === 'admin-records') loadAdminData();
-      if (page === 'admin-editlog') loadAdminEditLogs();
-      if (page === 'admin-reports') { setToday('adminReportDate'); renderAdminDailyReport(); }
-      if (page === 'dashboard') loadDashboard();
-    }
-
-    // ===== LOGIN =====
+    // ===== LOGIN (same as Stationary Management) =====
     async function initLogin() {
       try {
         const emps = await sbGet('employees', 'select=location&location=not.is.null');
@@ -511,28 +208,28 @@
       if (!loc) { showLoginError(1, 'Please select a branch'); return; }
       selectedLocation = loc;
       if (loc === 'Head Office' || loc === 'Corporate Office') {
-        currentEmployee = { id: 0, emp_id: loc === 'Head Office' ? 'HO-USER' : 'CO-USER', name: loc === 'Head Office' ? 'Santosh' : 'Chetan', role: 'Admin Executive', location: loc };
-        startSession(); return;
+        currentEmployee = { id: 0, emp_id: loc === 'Head Office' ? 'HO-USER' : 'CO-USER', name: loc === 'Head Office' ? 'Santosh' : 'Chetan', role: 'Admin Executive', mobile: '', location: loc };
+        saveSessionAndShowModules(); return;
       }
       try {
         const data = await sbGet('employees', `select=*&location=eq.${encodeURIComponent(loc)}&role=eq.BOE`);
         profilesList = data;
         if (data.length === 0) {
           const saved = localStorage.getItem('mr_temp_user_' + loc);
-          if (saved) { currentEmployee = JSON.parse(saved); startSession(); return; }
+          if (saved) { currentEmployee = JSON.parse(saved); saveSessionAndShowModules(); return; }
           document.getElementById('loginStep2Sub').textContent = `Branch: ${loc}`;
           document.getElementById('loginProfiles').innerHTML = '';
           document.getElementById('loginConfirmBtn').textContent = 'Continue';
           const s = document.getElementById('nameInputSection'); s.style.display = 'block';
-          s.innerHTML = `<p class="text-sm text-slate-400 mb-3">No profiles found. Enter your name.</p><label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Your Name</label><input type="text" id="newUserName" placeholder="Full name" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm mb-1">`;
+          s.innerHTML = `<p style="font-size:0.88rem;color:#888;margin-bottom:12px">No profiles found. Enter your name.</p><label style="display:block;font-size:0.78rem;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:6px">Your Name</label><input type="text" id="newUserName" placeholder="Full name" style="width:100%;padding:11px 14px;border:1.5px solid #dde1e7;border-radius:8px;font-size:0.95rem;font-family:inherit;background:#fafbfc;margin-bottom:4px;outline:none">`;
           showStep(2); setTimeout(() => document.getElementById('newUserName').focus(), 100); return;
         }
-        if (data.length === 1) { currentEmployee = data[0]; startSession(); return; }
+        if (data.length === 1) { currentEmployee = data[0]; saveSessionAndShowModules(); return; }
         document.getElementById('loginStep2Sub').textContent = `Branch: ${loc}`;
         document.getElementById('nameInputSection').style.display = 'none';
         document.getElementById('loginConfirmBtn').textContent = 'Start Session';
         selectedProfileIdx = -1;
-        document.getElementById('loginProfiles').innerHTML = data.map((p, i) => `<div class="profile-card" onclick="selectProfile(${i})" id="prof-${i}"><div class="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-blue-400 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">${getInitials(p.name)}</div><div class="flex-1 min-w-0"><div class="font-semibold text-sm">${esc(p.name)}</div><div class="text-xs text-slate-400">${esc(p.emp_id)} · ${esc(p.role||'BOE')}</div></div></div>`).join('');
+        document.getElementById('loginProfiles').innerHTML = data.map((p, i) => `<div class="profile-card" onclick="selectProfile(${i})" id="prof-${i}"><div class="avatar">${getInitials(p.name)}</div><div style="flex:1;min-width:0"><div style="font-weight:600;font-size:0.95rem">${esc(p.name)}</div><div style="font-size:0.78rem;color:#888">${esc(p.emp_id)} · ${esc(p.role||'BOE')}</div></div></div>`).join('');
         showStep(2);
       } catch (e) { showLoginError(1, 'Failed to load profiles'); }
     }
@@ -544,11 +241,12 @@
       if (ns.style.display !== 'none') {
         const name = (document.getElementById('newUserName') || {}).value?.trim();
         if (!name) { showLoginError(2, 'Please enter your name'); return; }
-        currentEmployee = { id: 'temp-' + Date.now(), emp_id: 'TEMP-' + Math.floor(Math.random() * 10000), name, role: 'BOE', location: selectedLocation };
-        localStorage.setItem('mr_temp_user_' + selectedLocation, JSON.stringify(currentEmployee)); startSession(); return;
+        currentEmployee = { id: 'temp-' + Date.now(), emp_id: 'TEMP-' + Math.floor(Math.random() * 10000), name, role: 'BOE', mobile: '', location: selectedLocation };
+        localStorage.setItem('mr_temp_user_' + selectedLocation, JSON.stringify(currentEmployee));
+        saveSessionAndShowModules(); return;
       }
       if (selectedProfileIdx < 0) { showLoginError(2, 'Select a profile'); return; }
-      currentEmployee = profilesList[selectedProfileIdx]; startSession();
+      currentEmployee = profilesList[selectedProfileIdx]; saveSessionAndShowModules();
     }
 
     function loginAdminStart() { showStep(3); document.querySelectorAll('.otp-inputs input').forEach(i => { i.value = ''; }); setTimeout(() => document.querySelector('.otp-inputs input').focus(), 100); }
@@ -556,440 +254,102 @@
       inp.addEventListener('input', () => { if (inp.value && i < 3) all[i + 1].focus(); });
       inp.addEventListener('keydown', e => { if (e.key === 'Backspace' && !inp.value && i > 0) all[i - 1].focus(); if (e.key === 'Enter') loginVerifyOTP(); });
     });
+
     async function loginVerifyOTP() {
       const otp = [...document.querySelectorAll('.otp-inputs input')].map(i => i.value).join('');
       if (otp.length < 4) { showLoginError(3, 'Enter all 4 digits'); return; }
       try {
         const c = await sbGet('app_config', 'select=value&key=eq.admin_otp');
-        if (c.length && c[0].value === otp) { isAdmin = true; currentEmployee = { id: 0, emp_id: 'HO-ADMIN', name: 'Santosh', role: 'Administrator', location: 'Head Office' }; selectedLocation = 'Head Office'; startSession(); }
-        else showLoginError(3, 'Invalid OTP');
+        if (c.length && c[0].value === otp) {
+          isAdmin = true;
+          currentEmployee = { id: 0, emp_id: 'HO-ADMIN', name: 'Santosh', role: 'Administrator', mobile: '', location: 'Head Office' };
+          selectedLocation = 'Head Office';
+          saveSessionAndShowModules();
+        } else showLoginError(3, 'Invalid OTP');
       } catch (e) { showLoginError(3, 'Verification failed'); }
     }
 
-    // ===== SESSION =====
-    function startSession() {
-      const s = { employee: currentEmployee, location: selectedLocation, admin: isAdmin, time: Date.now() };
-      sessionStorage.setItem('mr_session', JSON.stringify(s)); localStorage.setItem('mr_session', JSON.stringify(s)); showApp();
+    // ===== SESSION (writes BOTH formats for both apps) =====
+    function saveSessionAndShowModules() {
+      const loginTime = Date.now().toString();
+
+      // Stationary Management session keys (sr_*)
+      sessionStorage.setItem('sr_employee', JSON.stringify(currentEmployee));
+      sessionStorage.setItem('sr_location', selectedLocation);
+      sessionStorage.setItem('sr_login_time', loginTime);
+      localStorage.setItem('sr_employee', JSON.stringify(currentEmployee));
+      localStorage.setItem('sr_location', selectedLocation);
+      localStorage.setItem('sr_login_time', loginTime);
+      if (isAdmin) {
+        sessionStorage.setItem('sr_headoffice', 'true');
+        localStorage.setItem('sr_headoffice', 'true');
+      }
+
+      // Mail Record session key (mr_session)
+      const mrSession = { employee: currentEmployee, location: selectedLocation, admin: isAdmin, time: Date.now() };
+      sessionStorage.setItem('mr_session', JSON.stringify(mrSession));
+      localStorage.setItem('mr_session', JSON.stringify(mrSession));
+
+      showModuleScreen();
     }
-    function checkSession() {
+
+    function checkExistingSession() {
+      // Check sr_* first (Stationary format)
+      let emp = sessionStorage.getItem('sr_employee') || localStorage.getItem('sr_employee');
+      let loc = sessionStorage.getItem('sr_location') || localStorage.getItem('sr_location');
+      let loginTime = sessionStorage.getItem('sr_login_time') || localStorage.getItem('sr_login_time');
+      if (emp && loc) {
+        if (Date.now() - parseInt(loginTime || '0') > 86400000) { logout(); return false; }
+        currentEmployee = JSON.parse(emp);
+        selectedLocation = loc;
+        isAdmin = (sessionStorage.getItem('sr_headoffice') || localStorage.getItem('sr_headoffice')) === 'true';
+        return true;
+      }
+      // Fallback to mr_session
       const raw = sessionStorage.getItem('mr_session') || localStorage.getItem('mr_session');
-      if (!raw) return false; const s = JSON.parse(raw);
-      if (Date.now() - s.time > 86400000) { logout(); return false; }
-      currentEmployee = s.employee; selectedLocation = s.location; isAdmin = s.admin; return true;
-    }
-    function showApp() {
-      document.getElementById('loginScreen').style.display = 'none';
-      document.getElementById('appScreen').style.display = 'flex';
-      document.getElementById('sidebarAvatar').textContent = getInitials(currentEmployee.name);
-      document.getElementById('sidebarName').textContent = currentEmployee.name;
-      document.getElementById('sidebarRole').textContent = `${currentEmployee.role} · ${selectedLocation}`;
-      document.getElementById('headerDate').textContent = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-      if (isAdmin) { document.getElementById('navRegular').classList.add('hidden'); document.getElementById('navAdmin').classList.remove('hidden'); navigateTo('admin-dashboard'); }
-      else { document.getElementById('navRegular').classList.remove('hidden'); document.getElementById('navAdmin').classList.add('hidden'); navigateTo('dashboard'); }
-    }
-    function logout() {
-      sessionStorage.removeItem('mr_session'); localStorage.removeItem('mr_session');
-      currentEmployee = null; selectedLocation = null; isAdmin = false;
-      document.getElementById('appScreen').style.display = 'none'; document.getElementById('loginScreen').style.display = 'flex';
-      showStep(1); initLogin();
-    }
-
-    // ===== RECORDS CRUD =====
-    async function loadRecords(type) {
-      const fy = getCurrentFY();
-      const allRecs = await sbGet('mail_records', `select=*&mail_type=eq.${type}&location=eq.${encodeURIComponent(selectedLocation)}&date=gte.${fy.start}&date=lte.${fy.end}&order=created_at.asc`);
-      allRecs.forEach((r, i) => r.seq = i + 1);
-      const recs = allRecs;
-      if (type === 'outward') { outRecords = recs; renderOutward(); }
-      else { inRecords = recs; renderInward(); }
-    }
-
-    function renderOutward() {
-      const f = (document.getElementById('outSearch').value || '').toLowerCase();
-      const filtered = outRecords.filter(r => !f || Object.values(r).some(v => String(v).toLowerCase().includes(f)));
-      document.getElementById('outCount').textContent = filtered.length + ' records';
-      document.getElementById('outEmpty').style.display = filtered.length ? 'none' : 'block';
-      document.getElementById('outBody').innerHTML = [...filtered].reverse().map(r => `<tr class="border-b border-slate-100 hover:bg-slate-50"><td class="py-2.5 font-semibold text-primary">${r.seq}</td><td class="py-2.5">${esc(r.date)}</td><td class="py-2.5">${esc(r.employee_id)}</td><td class="py-2.5 font-medium">${esc(r.name)}</td><td class="py-2.5">${esc(r.department)}</td><td class="py-2.5">${esc(r.documents)}</td><td class="py-2.5">${esc(r.particular)}</td><td class="py-2.5 text-slate-400">${esc(r.details||'')}</td><td class="py-2.5"><button onclick="editOutRecord(${r.id})" class="text-blue-500 hover:text-blue-700 text-xs font-semibold">Edit</button></td></tr>`).join('');
-    }
-
-    function renderInward() {
-      const f = (document.getElementById('inSearch').value || '').toLowerCase();
-      const filtered = inRecords.filter(r => !f || Object.values(r).some(v => String(v).toLowerCase().includes(f)));
-      document.getElementById('inCount').textContent = filtered.length + ' records';
-      document.getElementById('inEmpty').style.display = filtered.length ? 'none' : 'block';
-      document.getElementById('inBody').innerHTML = [...filtered].reverse().map(r => `<tr class="border-b border-slate-100 hover:bg-slate-50"><td class="py-2.5 font-semibold text-accent">${r.seq}</td><td class="py-2.5">${esc(r.date)}</td><td class="py-2.5">${esc(r.employee_id)}</td><td class="py-2.5 font-medium">${esc(r.name)}</td><td class="py-2.5">${esc(r.department)}</td><td class="py-2.5">${esc(r.documents)}</td><td class="py-2.5">${esc(r.particular)}</td><td class="py-2.5 text-slate-400">${esc(r.details||'')}</td><td class="py-2.5"><button onclick="editInRecord(${r.id})" class="text-blue-500 hover:text-blue-700 text-xs font-semibold">Edit</button></td></tr>`).join('');
-    }
-
-    async function submitRecord(e, type) {
-      e.preventDefault();
-      const pre = type === 'outward' ? 'out' : 'in';
-      // Update hidden docs field before reading
-      onDocCheck(pre + 'DocsOptions', pre + 'DocsDisplay', pre + 'Docs', pre + 'DocsOther');
-      const docsVal = document.getElementById(pre + 'Docs').value.trim();
-      if (!docsVal) { showToast('Please select at least one document category'); return false; }
-      const data = {
-        mail_type: type, date: document.getElementById(pre + 'Date').value,
-        employee_id: document.getElementById(pre + 'EmpId').value.trim(), name: document.getElementById(pre + 'Name').value.trim(),
-        department: document.getElementById(pre + 'Dept').value.trim(), documents: docsVal,
-        particular: document.getElementById(pre + 'Particular').value.trim(), details: document.getElementById(pre + 'Details').value.trim(),
-        location: selectedLocation, created_by: currentEmployee.name,
-      };
-      const editId = type === 'outward' ? editingOutId : editingInId;
-      try {
-        if (editId) {
-          const oldRec = (type === 'outward' ? outRecords : inRecords).find(r => r.id === editId);
-          await sbPatch('mail_records', editId, { ...data, updated_at: new Date().toISOString() });
-          if (oldRec) { for (const [k, v] of Object.entries(data)) { if (['mail_type','location','created_by'].includes(k)) continue; if (String(oldRec[k]||'') !== String(v||'')) await sbPost('mail_edit_log', { record_id: editId, mail_type: type, field_changed: k, old_value: String(oldRec[k]||''), new_value: String(v||''), edited_by: currentEmployee.name }); } }
-          showToast('Record updated');
-          if (type === 'outward') cancelOutEdit(); else cancelInEdit();
-        } else {
-          await sbPost('mail_records', data);
-          showToast('Record added');
-          document.getElementById(pre === 'out' ? 'outwardForm' : 'inwardForm').reset();
-          setToday(pre + 'Date');
-        }
-        await loadRecords(type);
-      } catch (err) { showToast('Failed to save'); }
+      if (raw) {
+        const s = JSON.parse(raw);
+        if (Date.now() - s.time > 86400000) { logout(); return false; }
+        currentEmployee = s.employee;
+        selectedLocation = s.location;
+        isAdmin = s.admin;
+        return true;
+      }
       return false;
     }
 
-    function editOutRecord(id) {
-      const r = outRecords.find(x => x.id === id); if (!r) return;
-      editingOutId = id;
-      document.getElementById('outDate').value = r.date; document.getElementById('outEmpId').value = r.employee_id;
-      document.getElementById('outName').value = r.name; document.getElementById('outDept').value = r.department;
-      setDocFromValue('outDocsOptions', 'outDocsDisplay', 'outDocs', 'outDocsOther', r.documents); document.getElementById('outParticular').value = r.particular;
-      document.getElementById('outDetails').value = r.details || '';
-      document.getElementById('outSubmitBtn').textContent = 'Update Record';
-      document.getElementById('outCancelBtn').classList.remove('hidden');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-    function cancelOutEdit() { editingOutId = null; document.getElementById('outwardForm').reset(); setToday('outDate'); document.getElementById('outSubmitBtn').textContent = 'Add Record'; document.getElementById('outCancelBtn').classList.add('hidden'); initDocDropdown('outDocsOptions', 'outDocsDisplay', 'outDocs', 'outDocsOther'); }
-
-    function editInRecord(id) {
-      const r = inRecords.find(x => x.id === id); if (!r) return;
-      editingInId = id;
-      document.getElementById('inDate').value = r.date; document.getElementById('inEmpId').value = r.employee_id;
-      document.getElementById('inName').value = r.name; document.getElementById('inDept').value = r.department;
-      setDocFromValue('inDocsOptions', 'inDocsDisplay', 'inDocs', 'inDocsOther', r.documents); document.getElementById('inParticular').value = r.particular;
-      document.getElementById('inDetails').value = r.details || '';
-      document.getElementById('inSubmitBtn').textContent = 'Update Record';
-      document.getElementById('inCancelBtn').classList.remove('hidden');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-    function cancelInEdit() { editingInId = null; document.getElementById('inwardForm').reset(); setToday('inDate'); document.getElementById('inSubmitBtn').textContent = 'Add Record'; document.getElementById('inCancelBtn').classList.add('hidden'); initDocDropdown('inDocsOptions', 'inDocsDisplay', 'inDocs', 'inDocsOther'); }
-
-    // ===== DASHBOARD =====
-    async function loadDashboard() {
-      const fy = getCurrentFY();
-      const [outFY, inFY] = await Promise.all([
-        sbGet('mail_records', `select=*&mail_type=eq.outward&location=eq.${encodeURIComponent(selectedLocation)}&date=gte.${fy.start}&date=lte.${fy.end}&order=created_at.asc`),
-        sbGet('mail_records', `select=*&mail_type=eq.inward&location=eq.${encodeURIComponent(selectedLocation)}&date=gte.${fy.start}&date=lte.${fy.end}&order=created_at.asc`),
-      ]);
-      outFY.forEach((r, i) => r.seq = i + 1);
-      inFY.forEach((r, i) => r.seq = i + 1);
-      const today = new Date().toISOString().split('T')[0];
-      const todayOut = outFY.filter(r => r.date === today).length;
-      const todayIn = inFY.filter(r => r.date === today).length;
-
-      document.getElementById('dashKpis').innerHTML = [
-        { v: outFY.length, l: `Outward (${fy.label})`, icon: 'call_made', bg: 'bg-blue-100', tc: 'text-blue-600' },
-        { v: inFY.length, l: `Inward (${fy.label})`, icon: 'call_received', bg: 'bg-green-100', tc: 'text-green-600' },
-        { v: todayOut, l: 'Today Outward', icon: 'today', bg: 'bg-amber-100', tc: 'text-amber-600' },
-        { v: todayIn, l: 'Today Inward', icon: 'event', bg: 'bg-violet-100', tc: 'text-violet-600' },
-      ].map(k => `<div class="kpi-card bg-white rounded-xl border border-slate-200 p-5 transition-all duration-200 cursor-default"><div class="flex items-center gap-3 mb-2"><div class="${k.bg} w-10 h-10 rounded-lg flex items-center justify-center"><span class="material-symbols-outlined ${k.tc}">${k.icon}</span></div></div><div class="text-2xl font-bold text-slate-800">${k.v}</div><div class="text-xs text-slate-400 uppercase tracking-wide mt-1">${k.l}</div></div>`).join('');
-
-      document.getElementById('dashOutward').innerHTML = outFY.slice(-5).reverse().map(r => `<tr class="border-b border-slate-50"><td class="py-2 font-semibold text-primary">${r.seq}</td><td class="py-2">${esc(r.date)}</td><td class="py-2">${esc(r.name)}</td><td class="py-2 text-slate-500">${esc(r.documents)}</td></tr>`).join('') || '<tr><td colspan="4" class="py-6 text-center text-slate-300">No records</td></tr>';
-      document.getElementById('dashInward').innerHTML = inFY.slice(-5).reverse().map(r => `<tr class="border-b border-slate-50"><td class="py-2 font-semibold text-accent">${r.seq}</td><td class="py-2">${esc(r.date)}</td><td class="py-2">${esc(r.name)}</td><td class="py-2 text-slate-500">${esc(r.documents)}</td></tr>`).join('') || '<tr><td colspan="4" class="py-6 text-center text-slate-300">No records</td></tr>';
+    function showModuleScreen() {
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('moduleScreen').style.display = 'flex';
+      document.getElementById('moduleAvatar').textContent = getInitials(currentEmployee.name);
+      document.getElementById('moduleName').textContent = currentEmployee.name;
+      document.getElementById('moduleLoc').textContent = selectedLocation;
     }
 
-    // ===== DAILY REPORT =====
-    async function renderDailyReport() {
-      const date = document.getElementById('reportDate').value;
-      if (!date) return;
-      const [out, inn] = await Promise.all([
-        sbGet('mail_records', `select=*&mail_type=eq.outward&location=eq.${encodeURIComponent(selectedLocation)}&date=eq.${date}&order=created_at.asc`),
-        sbGet('mail_records', `select=*&mail_type=eq.inward&location=eq.${encodeURIComponent(selectedLocation)}&date=eq.${date}&order=created_at.asc`),
-      ]);
-      // Get FY-based sequential IDs
-      const fy = getFY(date);
-      const [allOut, allIn] = await Promise.all([
-        sbGet('mail_records', `select=id,date&mail_type=eq.outward&location=eq.${encodeURIComponent(selectedLocation)}&date=gte.${fy.start}&date=lte.${fy.end}&order=created_at.asc`),
-        sbGet('mail_records', `select=id,date&mail_type=eq.inward&location=eq.${encodeURIComponent(selectedLocation)}&date=gte.${fy.start}&date=lte.${fy.end}&order=created_at.asc`),
-      ]);
-      const outSeqMap = {}; allOut.forEach((r, i) => outSeqMap[r.id] = i + 1);
-      const inSeqMap = {}; allIn.forEach((r, i) => inSeqMap[r.id] = i + 1);
-      const eId = currentEmployee.id || 0;
-
-      const dateStr = new Date(date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-      let html = `<div class="mb-2 text-sm text-slate-500">${dateStr} · ${selectedLocation} · ${fy.label}</div>`;
-
-      html += `<div class="bg-white rounded-xl border border-slate-200 p-5 mb-6"><h3 class="font-semibold text-sm text-primary mb-3 flex items-center gap-2"><span class="material-symbols-outlined text-lg">call_made</span>Outward (${out.length})</h3>`;
-      if (out.length) {
-        html += `<div class="overflow-x-auto"><table class="w-full text-sm" id="reportOutTable"><thead><tr class="text-xs text-slate-400 uppercase border-b"><th class="pb-2 text-left">ID</th><th class="pb-2 text-left">Sl No</th><th class="pb-2 text-left">Emp ID</th><th class="pb-2 text-left">To</th><th class="pb-2 text-left">Dept</th><th class="pb-2 text-left">Documents Sent</th><th class="pb-2 text-left">Particular</th><th class="pb-2 text-left">Details</th></tr></thead><tbody>`;
-        html += out.map(r => { const seq = outSeqMap[r.id]||'-'; return `<tr class="border-b border-slate-50"><td class="py-2 font-semibold text-primary text-xs">OUT/${eId}/${seq}</td><td class="py-2">${seq}</td><td class="py-2">${esc(r.employee_id)}</td><td class="py-2">${esc(r.name)}</td><td class="py-2">${esc(r.department)}</td><td class="py-2">${esc(r.documents)}</td><td class="py-2">${esc(r.particular)}</td><td class="py-2 text-slate-400">${esc(r.details||'')}</td></tr>`; }).join('');
-        html += `</tbody></table></div>`;
-      } else html += `<p class="text-sm text-slate-300">No outward records for this date.</p>`;
-      html += `</div>`;
-
-      html += `<div class="bg-white rounded-xl border border-slate-200 p-5"><h3 class="font-semibold text-sm text-accent mb-3 flex items-center gap-2"><span class="material-symbols-outlined text-lg">call_received</span>Inward (${inn.length})</h3>`;
-      if (inn.length) {
-        html += `<div class="overflow-x-auto"><table class="w-full text-sm" id="reportInTable"><thead><tr class="text-xs text-slate-400 uppercase border-b"><th class="pb-2 text-left">ID</th><th class="pb-2 text-left">Sl No</th><th class="pb-2 text-left">Emp ID</th><th class="pb-2 text-left">From</th><th class="pb-2 text-left">Dept</th><th class="pb-2 text-left">Documents Received</th><th class="pb-2 text-left">Particular</th><th class="pb-2 text-left">Details</th></tr></thead><tbody>`;
-        html += inn.map(r => { const seq = inSeqMap[r.id]||'-'; return `<tr class="border-b border-slate-50"><td class="py-2 font-semibold text-accent text-xs">IN/${eId}/${seq}</td><td class="py-2">${seq}</td><td class="py-2">${esc(r.employee_id)}</td><td class="py-2">${esc(r.name)}</td><td class="py-2">${esc(r.department)}</td><td class="py-2">${esc(r.documents)}</td><td class="py-2">${esc(r.particular)}</td><td class="py-2 text-slate-400">${esc(r.details||'')}</td></tr>`; }).join('');
-        html += `</tbody></table></div>`;
-      } else html += `<p class="text-sm text-slate-300">No inward records for this date.</p>`;
-      html += `</div>`;
-
-      document.getElementById('dailyReportContent').innerHTML = html;
-    }
-
-    // ===== ADMIN =====
-    async function loadAdminData() {
-      const fy = getCurrentFY();
-      adminAllRecords = await sbGet('mail_records', `select=*&date=gte.${fy.start}&date=lte.${fy.end}&order=created_at.asc`);
-      adminAllRecords.forEach((r, i) => r.seq = i + 1);
-      const inward = adminAllRecords.filter(r => r.mail_type === 'inward').length;
-      const outward = adminAllRecords.filter(r => r.mail_type === 'outward').length;
-      const locs = new Set(adminAllRecords.map(r => r.location)).size;
-      const today = adminAllRecords.filter(r => r.date === new Date().toISOString().split('T')[0]).length;
-
-      document.getElementById('adminKpis').innerHTML = [
-        { v: adminAllRecords.length, l: 'Total', icon: 'inbox', bg: 'bg-blue-100', tc: 'text-blue-600' },
-        { v: outward, l: 'Outward', icon: 'call_made', bg: 'bg-indigo-100', tc: 'text-indigo-600' },
-        { v: inward, l: 'Inward', icon: 'call_received', bg: 'bg-green-100', tc: 'text-green-600' },
-        { v: locs, l: 'Branches', icon: 'apartment', bg: 'bg-amber-100', tc: 'text-amber-600' },
-        { v: today, l: 'Today', icon: 'today', bg: 'bg-violet-100', tc: 'text-violet-600' },
-      ].map(k => `<div class="kpi-card bg-white rounded-xl border border-slate-200 p-5 transition-all duration-200"><div class="flex items-center gap-3 mb-2"><div class="${k.bg} w-10 h-10 rounded-lg flex items-center justify-center"><span class="material-symbols-outlined ${k.tc}">${k.icon}</span></div></div><div class="text-2xl font-bold text-slate-800">${k.v}</div><div class="text-xs text-slate-400 uppercase tracking-wide mt-1">${k.l}</div></div>`).join('');
-
-      document.getElementById('adminRecentBody').innerHTML = [...adminAllRecords].reverse().slice(0, 20).map(r => `<tr class="border-b border-slate-100"><td class="py-2 font-semibold">${r.seq}</td><td class="py-2">${esc(r.date)}</td><td class="py-2"><span class="inline-block px-2 py-0.5 rounded-full text-xs font-semibold badge-${r.mail_type}">${r.mail_type}</span></td><td class="py-2">${esc(r.name)}</td><td class="py-2">${esc(r.department)}</td><td class="py-2">${esc(r.documents)}</td><td class="py-2">${esc(r.location)}</td><td class="py-2 text-slate-400">${esc(r.created_by)}</td></tr>`).join('') || '<tr><td colspan="8" class="py-8 text-center text-slate-300">No records yet</td></tr>';
-      renderAdminRecords();
-    }
-
-    // Column filters state: { column: Set of selected values }
-    let colFilters = {};
-    let colFilterField = '';
-    let colFilterAllValues = [];
-
-    function renderAdminRecords() {
-      const tf = document.getElementById('adminTypeFilter').value, s = (document.getElementById('adminSearchInput').value || '').toLowerCase();
-      let f = adminAllRecords;
-      if (tf) f = f.filter(r => r.mail_type === tf);
-      if (s) f = f.filter(r => Object.values(r).some(v => String(v).toLowerCase().includes(s)));
-      // Apply column filters
-      for (const [col, vals] of Object.entries(colFilters)) {
-        if (vals.size > 0) f = f.filter(r => vals.has(String(r[col] || '')));
-      }
-      document.getElementById('adminRecordCount').textContent = f.length + ' records';
-      document.getElementById('adminEmptyState').style.display = f.length ? 'none' : 'block';
-      document.getElementById('adminAllBody').innerHTML = [...f].reverse().map(r => `<tr class="border-b border-slate-100 hover:bg-slate-50"><td class="py-2 font-semibold">${r.seq}</td><td class="py-2">${esc(r.date)}</td><td class="py-2"><span class="inline-block px-2 py-0.5 rounded-full text-xs font-semibold badge-${r.mail_type}">${r.mail_type}</span></td><td class="py-2">${esc(r.employee_id)}</td><td class="py-2">${esc(r.name)}</td><td class="py-2">${esc(r.department)}</td><td class="py-2">${esc(r.documents)}</td><td class="py-2">${esc(r.particular)}</td><td class="py-2 text-slate-400">${esc(r.details||'')}</td><td class="py-2">${esc(r.location)}</td><td class="py-2 text-slate-400">${esc(r.created_by)}</td></tr>`).join('');
-    }
-
-    function openColFilter(field, title) {
-      colFilterField = field;
-      document.getElementById('colFilterTitle').textContent = 'Filter: ' + title;
-      document.getElementById('colFilterSearch').value = '';
-      // Get unique values for this column
-      colFilterAllValues = [...new Set(adminAllRecords.map(r => String(r[field] || '')))].sort();
-      const selected = colFilters[field] || new Set();
-      renderColOptions(colFilterAllValues, selected);
-      document.getElementById('colFilterModal').classList.remove('hidden');
-    }
-
-    function renderColOptions(values, selected) {
-      document.getElementById('colFilterOptions').innerHTML = values.map(v => `
-        <label class="flex items-center gap-2.5 py-1.5 px-1 rounded hover:bg-slate-50 cursor-pointer text-sm">
-          <input type="checkbox" value="${esc(v)}" ${selected.has(v) ? 'checked' : ''} class="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary/20">
-          <span>${esc(v) || '<em class="text-slate-300">empty</em>'}</span>
-        </label>
-      `).join('');
-    }
-
-    function filterColOptions() {
-      const q = document.getElementById('colFilterSearch').value.toLowerCase();
-      const filtered = colFilterAllValues.filter(v => v.toLowerCase().includes(q));
-      const selected = colFilters[colFilterField] || new Set();
-      renderColOptions(filtered, selected);
-    }
-
-    function applyColFilter() {
-      const checked = [...document.querySelectorAll('#colFilterOptions input:checked')].map(i => i.value);
-      if (checked.length === 0 || checked.length === colFilterAllValues.length) {
-        delete colFilters[colFilterField];
+    function openModule(mod) {
+      if (mod === 'stationary') {
+        window.location.href = 'stationary.html';
       } else {
-        colFilters[colFilterField] = new Set(checked);
+        window.location.href = 'mailrecord.html';
       }
-      closeColFilter();
-      renderAdminRecords();
     }
 
-    function clearColFilter() {
-      delete colFilters[colFilterField];
-      closeColFilter();
-      renderAdminRecords();
-    }
-
-    function closeColFilter() {
-      document.getElementById('colFilterModal').classList.add('hidden');
-    }
-
-    async function loadAdminEditLogs() {
-      const logs = await sbGet('mail_edit_log', 'select=*&order=edited_at.desc');
-      document.getElementById('editlogEmpty').style.display = logs.length ? 'none' : 'block';
-      document.getElementById('adminEditBody').innerHTML = logs.map(l => `<tr class="border-b border-slate-100"><td class="py-2">${new Date(l.edited_at).toLocaleString()}</td><td class="py-2">#${l.record_id}</td><td class="py-2"><span class="inline-block px-2 py-0.5 rounded-full text-xs font-semibold badge-${l.mail_type}">${l.mail_type}</span></td><td class="py-2">${esc(l.field_changed)}</td><td class="py-2 text-red-400">${esc(l.old_value)}</td><td class="py-2 text-green-500">${esc(l.new_value)}</td><td class="py-2">${esc(l.edited_by)}</td></tr>`).join('');
-    }
-
-    async function renderAdminDailyReport() {
-      const date = document.getElementById('adminReportDate').value; if (!date) return;
-      const recs = await sbGet('mail_records', `select=*&date=eq.${date}&order=location,mail_type,created_at.asc`);
-      const fy = getFY(date);
-      const allRecs = await sbGet('mail_records', `select=id,date,mail_type,location&date=gte.${fy.start}&date=lte.${fy.end}&order=created_at.asc`);
-      const seqMap = {}; const counters = {};
-      allRecs.forEach(r => { const k = r.mail_type + '|' + r.location; counters[k] = (counters[k] || 0) + 1; seqMap[r.id] = counters[k]; });
-
-      const byLoc = {}; recs.forEach(r => { (byLoc[r.location] = byLoc[r.location] || []).push(r); });
-      const dateStr = new Date(date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-      let html = `<div class="mb-2 text-sm text-slate-500">${dateStr}</div>`;
-      for (const [loc, lrecs] of Object.entries(byLoc)) {
-        html += `<div class="bg-white rounded-xl border border-slate-200 p-5 mb-4"><h3 class="font-semibold text-sm mb-3">${esc(loc)} <span class="text-slate-400 font-normal">(${lrecs.length} records)</span></h3>`;
-        html += `<div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr class="text-xs text-slate-400 uppercase border-b"><th class="pb-2 text-left">ID</th><th class="pb-2 text-left">Type</th><th class="pb-2 text-left">To/From</th><th class="pb-2 text-left">Dept</th><th class="pb-2 text-left">Documents</th><th class="pb-2 text-left">By</th></tr></thead><tbody>`;
-        html += lrecs.map(r => `<tr class="border-b border-slate-50"><td class="py-2 font-semibold">${seqMap[r.id]||'-'}</td><td class="py-2"><span class="inline-block px-2 py-0.5 rounded-full text-xs font-semibold badge-${r.mail_type}">${r.mail_type}</span></td><td class="py-2">${esc(r.name)}</td><td class="py-2">${esc(r.department)}</td><td class="py-2">${esc(r.documents)}</td><td class="py-2 text-slate-400">${esc(r.created_by)}</td></tr>`).join('');
-        html += `</tbody></table></div></div>`;
-      }
-      if (!Object.keys(byLoc).length) html += `<div class="bg-white rounded-xl border p-8 text-center text-slate-300">No records for this date.</div>`;
-      document.getElementById('adminDailyReportContent').innerHTML = html;
-    }
-
-    // ===== EXPORT =====
-    function styleSheet(ws, data, titleRow) {
-      // Auto column widths
-      const cols = [];
-      const allRows = titleRow ? [titleRow, Object.keys(data[0] || {}), ...data.map(r => Object.values(r))] : [Object.keys(data[0] || {}), ...data.map(r => Object.values(r))];
-      allRows.forEach(row => {
-        (Array.isArray(row) ? row : Object.values(row)).forEach((cell, i) => {
-          const len = String(cell || '').length;
-          cols[i] = Math.max(cols[i] || 0, len);
-        });
+    function logout() {
+      ['sr_employee', 'sr_location', 'sr_headoffice', 'sr_login_time', 'mr_session'].forEach(k => {
+        sessionStorage.removeItem(k); localStorage.removeItem(k);
       });
-      ws['!cols'] = cols.map(w => ({ wch: Math.min(Math.max(w + 3, 8), 45) }));
-      return ws;
+      currentEmployee = null; selectedLocation = null; isAdmin = false;
+      document.getElementById('moduleScreen').style.display = 'none';
+      document.getElementById('loginScreen').style.display = 'flex';
+      showStep(1); initLogin();
     }
-
-    function exportToExcel(type) {
-      const fy = getCurrentFY();
-      let data, filename, sheetName, title;
-
-      // ID format: {OUT/IN}/{employee_table_id}/{seq}
-      const empId = currentEmployee.id || 0;
-      function makeRecordId(r) {
-        const prefix = r.mail_type === 'outward' ? 'OUT' : 'IN';
-        return `${prefix}/${empId}/${r.seq}`;
-      }
-
-      if (type === 'outward') {
-        data = outRecords.map(r => ({ 'ID': makeRecordId(r), 'Sl No': r.seq, 'Date': r.date, 'Employee ID': r.employee_id, 'To': r.name, 'Department': r.department, 'Documents Sent': r.documents, 'Particular': r.particular, 'Details': r.details || '' }));
-        sheetName = 'Outward';
-        title = `Outward Mail Register - ${selectedLocation}`;
-        filename = `Outward_${selectedLocation}_${fy.label.replace(/\s/g,'_')}.xlsx`;
-      } else if (type === 'inward') {
-        data = inRecords.map(r => ({ 'ID': makeRecordId(r), 'Sl No': r.seq, 'Date': r.date, 'Employee ID': r.employee_id, 'From': r.name, 'Department': r.department, 'Documents Received': r.documents, 'Particular': r.particular, 'Details': r.details || '' }));
-        sheetName = 'Inward';
-        title = `Inward Mail Register - ${selectedLocation}`;
-        filename = `Inward_${selectedLocation}_${fy.label.replace(/\s/g,'_')}.xlsx`;
-      } else {
-        data = adminAllRecords.map(r => ({ 'ID': makeRecordId(r), 'Sl No': r.seq, 'Date': r.date, 'Type': r.mail_type.toUpperCase(), 'Employee ID': r.employee_id, 'To/From': r.name, 'Department': r.department, 'Documents': r.documents, 'Particular': r.particular, 'Details': r.details || '', 'Location': r.location, 'Created By': r.created_by }));
-        sheetName = 'All Records';
-        title = 'All Mail Records';
-        filename = `All_Records_${fy.label.replace(/\s/g,'_')}.xlsx`;
-      }
-
-      if (!data.length) { showToast('No data to export'); return; }
-
-      // Build worksheet with title header rows
-      const wb = XLSX.utils.book_new();
-      const headerRows = [
-        [title],
-        [fy.label, '', `Branch: ${selectedLocation}`, '', `Generated: ${new Date().toLocaleDateString('en-IN')}`],
-        [] // blank row
-      ];
-      const ws = XLSX.utils.aoa_to_sheet(headerRows);
-
-      // Merge title across all columns
-      const numCols = Object.keys(data[0]).length;
-      ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: numCols - 1 } }];
-
-      // Append data with headers
-      XLSX.utils.sheet_add_json(ws, data, { origin: 'A4' });
-      styleSheet(ws, data, headerRows[0]);
-
-      XLSX.utils.book_append_sheet(wb, ws, sheetName);
-      XLSX.writeFile(wb, filename);
-    }
-
-    async function exportDailyReport(admin) {
-      const date = document.getElementById(admin ? 'adminReportDate' : 'reportDate').value;
-      if (!date) { showToast('Select a date first'); return; }
-      const fy = getFY(date);
-      const dateStr = new Date(date + 'T00:00:00').toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-      const eId = currentEmployee.id || 0;
-
-      // Fetch records for the date
-      let locFilter = admin ? '' : `&location=eq.${encodeURIComponent(selectedLocation)}`;
-      const [outRecs, inRecs] = await Promise.all([
-        sbGet('mail_records', `select=*&mail_type=eq.outward&date=eq.${date}${locFilter}&order=created_at.asc`),
-        sbGet('mail_records', `select=*&mail_type=eq.inward&date=eq.${date}${locFilter}&order=created_at.asc`),
-      ]);
-
-      // Get FY-based sequential IDs
-      const [allOut, allIn] = await Promise.all([
-        sbGet('mail_records', `select=id,date&mail_type=eq.outward${locFilter}&date=gte.${fy.start}&date=lte.${fy.end}&order=created_at.asc`),
-        sbGet('mail_records', `select=id,date&mail_type=eq.inward${locFilter}&date=gte.${fy.start}&date=lte.${fy.end}&order=created_at.asc`),
-      ]);
-      const outSeq = {}; allOut.forEach((r, i) => outSeq[r.id] = i + 1);
-      const inSeq = {}; allIn.forEach((r, i) => inSeq[r.id] = i + 1);
-
-      if (!outRecs.length && !inRecs.length) { showToast('No records for this date'); return; }
-
-      const wb = XLSX.utils.book_new();
-      const branch = admin ? 'All Branches' : selectedLocation;
-
-      // Outward sheet
-      if (outRecs.length) {
-        const data = outRecs.map(r => {
-          const seq = outSeq[r.id] || '-';
-          return { 'ID': `OUT/${eId}/${seq}`, 'Sl No': seq, 'Date': r.date, 'Employee ID': r.employee_id, 'To': r.name, 'Department': r.department, 'Documents Sent': r.documents, 'Particular': r.particular, 'Details': r.details || '', ...(admin ? { 'Location': r.location } : {}), 'Created By': r.created_by };
-        });
-        const headerRows = [['Outward Mail Register - Daily Report'], [dateStr, '', branch, '', fy.label], []];
-        const ws = XLSX.utils.aoa_to_sheet(headerRows);
-        const numCols = Object.keys(data[0]).length;
-        ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: numCols - 1 } }];
-        XLSX.utils.sheet_add_json(ws, data, { origin: 'A4' });
-        styleSheet(ws, data, headerRows[0]);
-        XLSX.utils.book_append_sheet(wb, ws, 'Outward');
-      }
-
-      // Inward sheet
-      if (inRecs.length) {
-        const data = inRecs.map(r => {
-          const seq = inSeq[r.id] || '-';
-          return { 'ID': `IN/${eId}/${seq}`, 'Sl No': seq, 'Date': r.date, 'Employee ID': r.employee_id, 'From': r.name, 'Department': r.department, 'Documents Received': r.documents, 'Particular': r.particular, 'Details': r.details || '', ...(admin ? { 'Location': r.location } : {}), 'Created By': r.created_by };
-        });
-        const headerRows = [['Inward Mail Register - Daily Report'], [dateStr, '', branch, '', fy.label], []];
-        const ws = XLSX.utils.aoa_to_sheet(headerRows);
-        const numCols = Object.keys(data[0]).length;
-        ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: numCols - 1 } }];
-        XLSX.utils.sheet_add_json(ws, data, { origin: 'A4' });
-        styleSheet(ws, data, headerRows[0]);
-        XLSX.utils.book_append_sheet(wb, ws, 'Inward');
-      }
-
-      XLSX.writeFile(wb, `Daily_Report_${date}.xlsx`);
-      showToast('Report exported');
-    }
-
-    function printReport() { window.print(); }
 
     // ===== INIT =====
-    if (checkSession()) showApp(); else initLogin();
+    if (checkExistingSession()) {
+      showModuleScreen();
+    } else {
+      initLogin();
+    }
   </script>
 </body>
 </html>

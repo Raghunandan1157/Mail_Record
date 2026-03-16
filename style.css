@@ -1,0 +1,310 @@
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #475569;
+  border-radius: 999px;
+}
+
+/* Bounce + Ripple click animation */
+@keyframes bounce-click {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(0.88); }
+  70%  { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+.btn-bounce {
+  position: relative;
+  overflow: hidden;
+}
+.btn-bounce:active {
+  animation: bounce-click 0.35s ease;
+}
+@keyframes ripple-wave {
+  0%   { transform: translate(-50%, -50%) scale(0); opacity: 0.5; }
+  100% { transform: translate(-50%, -50%) scale(4); opacity: 0; }
+}
+.btn-bounce .ripple {
+  position: absolute;
+  border-radius: 50%;
+  width: 100px;
+  height: 100px;
+  background: radial-gradient(circle, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.3) 40%, transparent 70%);
+  pointer-events: none;
+  animation: ripple-wave 0.6s ease-out forwards;
+}
+
+/* Toast animation */
+#toast {
+  transition: opacity 0.3s, transform 0.3s;
+}
+#toast.show {
+  display: block !important;
+  animation: toast-in 0.3s ease-out;
+}
+#toast.hide {
+  animation: toast-out 0.3s ease-in forwards;
+}
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes toast-out {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(16px); }
+}
+
+/* Mobile sidebar */
+@media (max-width: 767px) {
+  #sidebar.open {
+    display: flex !important;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 40;
+    height: 100vh;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  }
+}
+
+/* === LOGIN SCREEN === */
+#login-screen {
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+#login-screen.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* Entry type modal animation */
+@keyframes modal-pop-in {
+  0%   { opacity: 0; transform: scale(0.9); }
+  100% { opacity: 1; transform: scale(1); }
+}
+.entry-type-modal-card {
+  animation: modal-pop-in 0.2s ease-out;
+}
+
+/* === NEW ENTRY PAGE === */
+
+/* Hide scrollbar for category tabs */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Entry card styles */
+.entry-card {
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+.entry-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1), 0 4px 10px -5px rgba(0, 0, 0, 0.04);
+}
+.entry-card.selected {
+  border-color: #137fec !important;
+  box-shadow: 0 0 0 3px rgba(19, 127, 236, 0.15);
+}
+.entry-card.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* Quantity bump animation */
+.qty-display.bump {
+  animation: qty-bump 0.2s ease;
+}
+@keyframes qty-bump {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.3); }
+  100% { transform: scale(1); }
+}
+
+/* Bottom bar slide-up */
+#entry-bottom-bar {
+  transform: translateY(100%);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+#entry-bottom-bar.visible {
+  transform: translateY(0);
+}
+
+/* Stock warning pulse */
+.stock-warning {
+  animation: stock-pulse 2s ease-in-out infinite;
+}
+@keyframes stock-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+/* ============================================
+   LEMON LIGHT MODE OVERRIDES
+   Scoped to html:not(.dark) — dark mode untouched
+   ============================================ */
+
+/* --- Background surfaces --- */
+html:not(.dark) .bg-white {
+  background-color: #fffef5 !important;
+}
+html:not(.dark) .bg-slate-50 {
+  background-color: #fef9c3 !important;
+}
+html:not(.dark) .bg-slate-100 {
+  background-color: #fef3c7 !important;
+}
+html:not(.dark) .bg-slate-200 {
+  background-color: #fde68a !important;
+}
+
+/* --- Hover backgrounds --- */
+html:not(.dark) .hover\:bg-slate-50:hover {
+  background-color: #fef9c3 !important;
+}
+html:not(.dark) .hover\:bg-slate-100:hover {
+  background-color: #fef3c7 !important;
+}
+html:not(.dark) .hover\:bg-white:hover {
+  background-color: #fffef5 !important;
+}
+html:not(.dark) .hover\:bg-slate-200:hover {
+  background-color: #fde68a !important;
+}
+
+/* --- Borders --- */
+html:not(.dark) .border-slate-200 {
+  border-color: #fde047 !important;
+}
+html:not(.dark) .border-slate-100 {
+  border-color: #fef3c7 !important;
+}
+html:not(.dark) .border-white {
+  border-color: #fffef5 !important;
+}
+html:not(.dark) .hover\:border-slate-300:hover {
+  border-color: #facc15 !important;
+}
+
+/* --- Dividers --- */
+html:not(.dark) .divide-slate-100 > :not([hidden]) ~ :not([hidden]) {
+  border-color: #fef3c7 !important;
+}
+html:not(.dark) .divide-slate-200 > :not([hidden]) ~ :not([hidden]) {
+  border-color: #fde047 !important;
+}
+
+/* --- Ring / outline --- */
+html:not(.dark) .ring-white {
+  --tw-ring-color: #fffef5 !important;
+}
+html:not(.dark) .ring-slate-200 {
+  --tw-ring-color: #fde047 !important;
+}
+
+/* --- Text colors --- */
+html:not(.dark) .text-slate-900 {
+  color: #451a03 !important;
+}
+html:not(.dark) .text-slate-800 {
+  color: #78350f !important;
+}
+html:not(.dark) .text-slate-700 {
+  color: #92400e !important;
+}
+html:not(.dark) .text-slate-600 {
+  color: #b45309 !important;
+}
+html:not(.dark) .text-slate-500 {
+  color: #d97706 !important;
+}
+html:not(.dark) .text-slate-400 {
+  color: #f59e0b !important;
+}
+
+/* --- Hover text --- */
+html:not(.dark) .hover\:text-slate-900:hover {
+  color: #451a03 !important;
+}
+html:not(.dark) .hover\:text-slate-800:hover {
+  color: #78350f !important;
+}
+html:not(.dark) .hover\:text-slate-700:hover {
+  color: #92400e !important;
+}
+html:not(.dark) .hover\:text-slate-600:hover {
+  color: #b45309 !important;
+}
+
+/* --- Group-hover text --- */
+html:not(.dark) .group:hover .group-hover\:text-slate-900 {
+  color: #451a03 !important;
+}
+html:not(.dark) .group:hover .group-hover\:text-slate-700 {
+  color: #92400e !important;
+}
+
+/* --- Placeholder text --- */
+html:not(.dark) .placeholder-slate-400::placeholder,
+html:not(.dark) .placeholder\:text-slate-400::placeholder {
+  color: #f59e0b !important;
+}
+
+/* --- Scrollbar (light mode) --- */
+html:not(.dark) ::-webkit-scrollbar-thumb {
+  background: #d97706;
+}
+
+/* --- Focus rings stay blue (no override needed) --- */
+
+/* --- Ensure bg-background-light picks up lemon --- */
+html:not(.dark) .bg-background-light {
+  background-color: #fefce8 !important;
+}
+
+/* --- Shadow warmth for cards --- */
+html:not(.dark) .shadow-sm,
+html:not(.dark) .shadow {
+  --tw-shadow-color: rgba(180, 83, 9, 0.06);
+}
+
+/* --- Native select dropdown options (force readable in both modes) --- */
+select option {
+  background-color: #ffffff;
+  color: #1e293b;
+}
+.dark select option {
+  background-color: #1e293b;
+  color: #f1f5f9;
+}
+
+/* --- Table striping if any --- */
+html:not(.dark) .even\:bg-slate-50:nth-child(even) {
+  background-color: #fef9c3 !important;
+}
+html:not(.dark) .odd\:bg-white:nth-child(odd) {
+  background-color: #fffef5 !important;
+}
