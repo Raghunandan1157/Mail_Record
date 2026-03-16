@@ -740,20 +740,92 @@
     }
 
     // ===== EXPORT =====
+    function styleSheet(ws, data, titleRow) {
+      // Auto column widths
+      const cols = [];
+      const allRows = titleRow ? [titleRow, Object.keys(data[0] || {}), ...data.map(r => Object.values(r))] : [Object.keys(data[0] || {}), ...data.map(r => Object.values(r))];
+      allRows.forEach(row => {
+        (Array.isArray(row) ? row : Object.values(row)).forEach((cell, i) => {
+          const len = String(cell || '').length;
+          cols[i] = Math.max(cols[i] || 0, len);
+        });
+      });
+      ws['!cols'] = cols.map(w => ({ wch: Math.min(Math.max(w + 3, 8), 45) }));
+      return ws;
+    }
+
     function exportToExcel(type) {
-      let data, filename;
-      if (type === 'outward') { data = outRecords.map(r => ({ ID: r.seq, Date: r.date, 'Emp ID': r.employee_id, To: r.name, Dept: r.department, 'Documents Sent': r.documents, Particular: r.particular, Details: r.details || '' })); filename = `Outward_${selectedLocation}.xlsx`; }
-      else if (type === 'inward') { data = inRecords.map(r => ({ ID: r.seq, Date: r.date, 'Emp ID': r.employee_id, From: r.name, Dept: r.department, 'Documents Received': r.documents, Particular: r.particular, Details: r.details || '' })); filename = `Inward_${selectedLocation}.xlsx`; }
-      else { data = adminAllRecords.map(r => ({ ID: r.seq, Date: r.date, Type: r.mail_type, 'Emp ID': r.employee_id, 'To/From': r.name, Dept: r.department, Documents: r.documents, Particular: r.particular, Details: r.details || '', Location: r.location, By: r.created_by })); filename = 'All_Records.xlsx'; }
-      const ws = XLSX.utils.json_to_sheet(data); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Records'); XLSX.writeFile(wb, filename);
+      const fy = getCurrentFY();
+      let data, filename, sheetName, title;
+
+      if (type === 'outward') {
+        data = outRecords.map(r => ({ 'Sl No': r.seq, 'Date': r.date, 'Employee ID': r.employee_id, 'To': r.name, 'Department': r.department, 'Documents Sent': r.documents, 'Particular': r.particular, 'Details': r.details || '' }));
+        sheetName = 'Outward';
+        title = `Outward Mail Register - ${selectedLocation}`;
+        filename = `Outward_${selectedLocation}_${fy.label.replace(/\s/g,'_')}.xlsx`;
+      } else if (type === 'inward') {
+        data = inRecords.map(r => ({ 'Sl No': r.seq, 'Date': r.date, 'Employee ID': r.employee_id, 'From': r.name, 'Department': r.department, 'Documents Received': r.documents, 'Particular': r.particular, 'Details': r.details || '' }));
+        sheetName = 'Inward';
+        title = `Inward Mail Register - ${selectedLocation}`;
+        filename = `Inward_${selectedLocation}_${fy.label.replace(/\s/g,'_')}.xlsx`;
+      } else {
+        data = adminAllRecords.map(r => ({ 'Sl No': r.seq, 'Date': r.date, 'Type': r.mail_type.toUpperCase(), 'Employee ID': r.employee_id, 'To/From': r.name, 'Department': r.department, 'Documents': r.documents, 'Particular': r.particular, 'Details': r.details || '', 'Location': r.location, 'Created By': r.created_by }));
+        sheetName = 'All Records';
+        title = 'All Mail Records';
+        filename = `All_Records_${fy.label.replace(/\s/g,'_')}.xlsx`;
+      }
+
+      if (!data.length) { showToast('No data to export'); return; }
+
+      // Build worksheet with title header rows
+      const wb = XLSX.utils.book_new();
+      const headerRows = [
+        [title],
+        [fy.label, '', `Branch: ${selectedLocation}`, '', `Generated: ${new Date().toLocaleDateString('en-IN')}`],
+        [] // blank row
+      ];
+      const ws = XLSX.utils.aoa_to_sheet(headerRows);
+
+      // Merge title across all columns
+      const numCols = Object.keys(data[0]).length;
+      ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: numCols - 1 } }];
+
+      // Append data with headers
+      XLSX.utils.sheet_add_json(ws, data, { origin: 'A4' });
+      styleSheet(ws, data, headerRows[0]);
+
+      XLSX.utils.book_append_sheet(wb, ws, sheetName);
+      XLSX.writeFile(wb, filename);
     }
 
     function exportDailyReport(admin) {
       const date = document.getElementById(admin ? 'adminReportDate' : 'reportDate').value;
+      if (!date) { showToast('Select a date first'); return; }
+      const fy = getFY(date);
+      const dateStr = new Date(date + 'T00:00:00').toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
       const tables = document.querySelectorAll(`#${admin ? 'adminDailyReportContent' : 'dailyReportContent'} table`);
       if (!tables.length) { showToast('No data to export'); return; }
+
       const wb = XLSX.utils.book_new();
-      tables.forEach((t, i) => { const ws = XLSX.utils.table_to_sheet(t); XLSX.utils.book_append_sheet(wb, ws, `Report_${i + 1}`); });
+      const sheetNames = ['Outward', 'Inward'];
+      tables.forEach((t, i) => {
+        const name = sheetNames[i] || `Sheet_${i + 1}`;
+        const headerRows = [
+          [`${name} Mail Register - Daily Report`],
+          [dateStr, '', `${admin ? 'All Branches' : selectedLocation}`, '', fy.label],
+          []
+        ];
+        const ws = XLSX.utils.aoa_to_sheet(headerRows);
+        const tableData = XLSX.utils.sheet_to_json(XLSX.utils.table_to_sheet(t), { header: 1 });
+        const numCols = tableData[0] ? tableData[0].length : 1;
+        ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: numCols - 1 } }];
+        XLSX.utils.sheet_add_aoa(ws, tableData, { origin: 'A4' });
+        // Auto column widths
+        const maxWidths = [];
+        tableData.forEach(row => { row.forEach((cell, c) => { maxWidths[c] = Math.max(maxWidths[c] || 0, String(cell || '').length); }); });
+        ws['!cols'] = maxWidths.map(w => ({ wch: Math.min(Math.max(w + 3, 8), 45) }));
+        XLSX.utils.book_append_sheet(wb, ws, name);
+      });
       XLSX.writeFile(wb, `Daily_Report_${date}.xlsx`);
     }
 
