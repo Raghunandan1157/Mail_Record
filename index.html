@@ -242,7 +242,7 @@
 
       <div class="main-content" id="mainContent">
         <div class="card">
-          <h2 id="formTitle">New Record <span class="mode-badge" id="modeBadge"></span></h2>
+          <h2 id="formTitle"><span id="formTitleText">New Record</span> <span class="mode-badge" id="modeBadge"></span></h2>
           <form id="recordForm">
             <input type="hidden" id="editId" value="">
             <div class="form-grid">
@@ -575,7 +575,7 @@
       document.getElementById('recName').value = r.name; document.getElementById('dept').value = r.department;
       document.getElementById('documents').value = r.documents; document.getElementById('particular').value = r.particular;
       document.getElementById('details').value = r.details || ''; document.getElementById('editId').value = r.id;
-      document.getElementById('formTitle').innerHTML = 'Edit Record <span class="mode-badge ' + currentMode + '">' + currentMode + '</span>';
+      document.getElementById('formTitleText').textContent = 'Edit Record';
       document.getElementById('submitBtn').textContent = 'Update Record';
       document.getElementById('cancelBtn').style.display = 'inline-block';
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -583,7 +583,7 @@
 
     function cancelEdit() {
       document.getElementById('editId').value = '';
-      if (currentMode) document.getElementById('formTitle').innerHTML = 'New Record <span class="mode-badge ' + currentMode + '">' + currentMode + '</span>';
+      document.getElementById('formTitleText').textContent = 'New Record';
       document.getElementById('submitBtn').textContent = 'Add Record';
       document.getElementById('cancelBtn').style.display = 'none'; clearForm();
     }
