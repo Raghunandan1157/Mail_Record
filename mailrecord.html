@@ -292,6 +292,7 @@
               <th class="pb-2 text-left cursor-pointer hover:text-primary" onclick="openColFilter('name','To/From')">To/From <span class="material-symbols-outlined text-xs align-middle">filter_list</span></th>
               <th class="pb-2 text-left cursor-pointer hover:text-primary" onclick="openColFilter('department','Dept')">Dept <span class="material-symbols-outlined text-xs align-middle">filter_list</span></th>
               <th class="pb-2 text-left">Documents</th>
+              <th class="pb-2 text-left">Docket No.</th>
               <th class="pb-2 text-left cursor-pointer hover:text-primary" onclick="openColFilter('particular','Particular')">Particular <span class="material-symbols-outlined text-xs align-middle">filter_list</span></th>
               <th class="pb-2 text-left">Details</th>
               <th class="pb-2 text-left cursor-pointer hover:text-primary" onclick="openColFilter('location','Location')">Location <span class="material-symbols-outlined text-xs align-middle">filter_list</span></th>
@@ -786,7 +787,7 @@
       }
       document.getElementById('adminRecordCount').textContent = f.length + ' records';
       document.getElementById('adminEmptyState').style.display = f.length ? 'none' : 'block';
-      document.getElementById('adminAllBody').innerHTML = [...f].reverse().map(r => `<tr class="border-b border-slate-100 hover:bg-slate-50"><td class="py-2 font-semibold">${r.seq}</td><td class="py-2">${esc(r.date)}</td><td class="py-2"><span class="inline-block px-2 py-0.5 rounded-full text-xs font-semibold badge-${r.mail_type}">${r.mail_type}</span></td><td class="py-2">${esc(r.employee_id)}</td><td class="py-2">${esc(r.name)}</td><td class="py-2">${esc(r.department)}</td><td class="py-2">${esc(r.documents)}</td><td class="py-2">${esc(r.particular)}</td><td class="py-2 text-slate-400">${esc(r.details||'')}</td><td class="py-2">${esc(r.location)}</td><td class="py-2 text-slate-400">${esc(r.created_by)}</td></tr>`).join('');
+      document.getElementById('adminAllBody').innerHTML = [...f].reverse().map(r => `<tr class="border-b border-slate-100 hover:bg-slate-50"><td class="py-2 font-semibold">${r.seq}</td><td class="py-2">${esc(r.date)}</td><td class="py-2"><span class="inline-block px-2 py-0.5 rounded-full text-xs font-semibold badge-${r.mail_type}">${r.mail_type}</span></td><td class="py-2">${esc(r.employee_id)}</td><td class="py-2">${esc(r.name)}</td><td class="py-2">${esc(r.department)}</td><td class="py-2">${esc(r.documents)}</td><td class="py-2 font-medium">${esc(r.docket_number||'')}</td><td class="py-2">${esc(r.particular)}</td><td class="py-2 text-slate-400">${esc(r.details||'')}</td><td class="py-2">${esc(r.location)}</td><td class="py-2 text-slate-400">${esc(r.created_by)}</td></tr>`).join('');
     }
 
     function openColFilter(field, title) {
@@ -901,7 +902,7 @@
         title = `Inward Mail Register - ${selectedLocation}`;
         filename = `Inward_${selectedLocation}_${fy.label.replace(/\s/g,'_')}.xlsx`;
       } else {
-        data = adminAllRecords.map(r => ({ 'ID': makeRecordId(r), 'Sl No': r.seq, 'Date': r.date, 'Type': r.mail_type.toUpperCase(), 'Employee ID': r.employee_id, 'To/From': r.name, 'Department': r.department, 'Documents': r.documents, 'Particular': r.particular, 'Details': r.details || '', 'Location': r.location, 'Created By': r.created_by }));
+        data = adminAllRecords.map(r => ({ 'ID': makeRecordId(r), 'Sl No': r.seq, 'Date': r.date, 'Type': r.mail_type.toUpperCase(), 'Employee ID': r.employee_id, 'To/From': r.name, 'Department': r.department, 'Documents': r.documents, 'Docket No.': r.docket_number || '', 'Particular': r.particular, 'Details': r.details || '', 'Location': r.location, 'Created By': r.created_by }));
         sheetName = 'All Records';
         title = 'All Mail Records';
         filename = `All_Records_${fy.label.replace(/\s/g,'_')}.xlsx`;
