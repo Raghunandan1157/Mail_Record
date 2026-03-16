@@ -758,18 +758,24 @@
       const fy = getCurrentFY();
       let data, filename, sheetName, title;
 
+      // ID format: {OUT/IN}/{employee_id}/{seq}
+      function makeRecordId(r) {
+        const prefix = r.mail_type === 'outward' ? 'OUT' : 'IN';
+        return `${prefix}/${r.employee_id}/${r.seq}`;
+      }
+
       if (type === 'outward') {
-        data = outRecords.map(r => ({ 'Sl No': r.seq, 'Date': r.date, 'Employee ID': r.employee_id, 'To': r.name, 'Department': r.department, 'Documents Sent': r.documents, 'Particular': r.particular, 'Details': r.details || '' }));
+        data = outRecords.map(r => ({ 'ID': makeRecordId(r), 'Sl No': r.seq, 'Date': r.date, 'Employee ID': r.employee_id, 'To': r.name, 'Department': r.department, 'Documents Sent': r.documents, 'Particular': r.particular, 'Details': r.details || '' }));
         sheetName = 'Outward';
         title = `Outward Mail Register - ${selectedLocation}`;
         filename = `Outward_${selectedLocation}_${fy.label.replace(/\s/g,'_')}.xlsx`;
       } else if (type === 'inward') {
-        data = inRecords.map(r => ({ 'Sl No': r.seq, 'Date': r.date, 'Employee ID': r.employee_id, 'From': r.name, 'Department': r.department, 'Documents Received': r.documents, 'Particular': r.particular, 'Details': r.details || '' }));
+        data = inRecords.map(r => ({ 'ID': makeRecordId(r), 'Sl No': r.seq, 'Date': r.date, 'Employee ID': r.employee_id, 'From': r.name, 'Department': r.department, 'Documents Received': r.documents, 'Particular': r.particular, 'Details': r.details || '' }));
         sheetName = 'Inward';
         title = `Inward Mail Register - ${selectedLocation}`;
         filename = `Inward_${selectedLocation}_${fy.label.replace(/\s/g,'_')}.xlsx`;
       } else {
-        data = adminAllRecords.map(r => ({ 'Sl No': r.seq, 'Date': r.date, 'Type': r.mail_type.toUpperCase(), 'Employee ID': r.employee_id, 'To/From': r.name, 'Department': r.department, 'Documents': r.documents, 'Particular': r.particular, 'Details': r.details || '', 'Location': r.location, 'Created By': r.created_by }));
+        data = adminAllRecords.map(r => ({ 'ID': makeRecordId(r), 'Sl No': r.seq, 'Date': r.date, 'Type': r.mail_type.toUpperCase(), 'Employee ID': r.employee_id, 'To/From': r.name, 'Department': r.department, 'Documents': r.documents, 'Particular': r.particular, 'Details': r.details || '', 'Location': r.location, 'Created By': r.created_by }));
         sheetName = 'All Records';
         title = 'All Mail Records';
         filename = `All_Records_${fy.label.replace(/\s/g,'_')}.xlsx`;
