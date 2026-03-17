@@ -30,6 +30,7 @@ CREATE TABLE mail_records (
   name TEXT NOT NULL,
   department TEXT NOT NULL,
   documents TEXT NOT NULL,
+  courier_status TEXT DEFAULT '',
   particular TEXT NOT NULL,
   details TEXT DEFAULT '',
   location TEXT NOT NULL,

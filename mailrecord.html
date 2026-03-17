@@ -180,6 +180,7 @@
                   <input type="hidden" id="outDocs">
                 </div>
                 <div><label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Docket Number</label><input type="text" id="outDocket" required placeholder="e.g. DK-001" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"></div>
+                <div><label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Status of the Courier / Post</label><input type="number" id="outCourierStatus" required placeholder="Enter numeric value" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"></div>
                 <div><label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Particular</label><input type="text" id="outParticular" required placeholder="Mail type / category" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"></div>
                 <div><label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Details (optional)</label><input type="text" id="outDetails" placeholder="Additional details" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"></div>
               </div>
@@ -198,7 +199,7 @@
                 <button onclick="exportToExcel('outward')" class="bg-green-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-green-700 transition flex items-center gap-1"><span class="material-symbols-outlined text-sm">download</span>Excel</button>
               </div>
             </div>
-            <div class="overflow-x-auto"><table class="w-full text-sm min-w-[700px]"><thead><tr class="text-xs text-slate-400 uppercase border-b"><th class="pb-2 text-left">ID</th><th class="pb-2 text-left">Date</th><th class="pb-2 text-left">Emp ID</th><th class="pb-2 text-left">To</th><th class="pb-2 text-left">Dept</th><th class="pb-2 text-left">Documents Sent</th><th class="pb-2 text-left">Docket No.</th><th class="pb-2 text-left">Particular</th><th class="pb-2 text-left">Details</th><th class="pb-2 text-left">Actions</th></tr></thead><tbody id="outBody"></tbody></table></div>
+            <div class="overflow-x-auto"><table class="w-full text-sm min-w-[700px]"><thead><tr class="text-xs text-slate-400 uppercase border-b"><th class="pb-2 text-left">ID</th><th class="pb-2 text-left">Date</th><th class="pb-2 text-left">Emp ID</th><th class="pb-2 text-left">To</th><th class="pb-2 text-left">Dept</th><th class="pb-2 text-left">Documents Sent</th><th class="pb-2 text-left">Docket No.</th><th class="pb-2 text-left">Courier/Post Status</th><th class="pb-2 text-left">Particular</th><th class="pb-2 text-left">Details</th><th class="pb-2 text-left">Actions</th></tr></thead><tbody id="outBody"></tbody></table></div>
             <div class="text-center py-8 text-slate-400 text-sm" id="outEmpty">No outward records yet.</div>
           </div>
         </div>
@@ -293,6 +294,7 @@
               <th class="pb-2 text-left cursor-pointer hover:text-primary" onclick="openColFilter('department','Dept')">Dept <span class="material-symbols-outlined text-xs align-middle">filter_list</span></th>
               <th class="pb-2 text-left">Documents</th>
               <th class="pb-2 text-left">Docket No.</th>
+              <th class="pb-2 text-left">Courier/Post Status</th>
               <th class="pb-2 text-left cursor-pointer hover:text-primary" onclick="openColFilter('particular','Particular')">Particular <span class="material-symbols-outlined text-xs align-middle">filter_list</span></th>
               <th class="pb-2 text-left">Details</th>
               <th class="pb-2 text-left cursor-pointer hover:text-primary" onclick="openColFilter('location','Location')">Location <span class="material-symbols-outlined text-xs align-middle">filter_list</span></th>
@@ -612,7 +614,7 @@
       const filtered = outRecords.filter(r => !f || Object.values(r).some(v => String(v).toLowerCase().includes(f)));
       document.getElementById('outCount').textContent = filtered.length + ' records';
       document.getElementById('outEmpty').style.display = filtered.length ? 'none' : 'block';
-      document.getElementById('outBody').innerHTML = [...filtered].reverse().map(r => `<tr class="border-b border-slate-100 hover:bg-slate-50"><td class="py-2.5 font-semibold text-primary">${r.seq}</td><td class="py-2.5">${esc(r.date)}</td><td class="py-2.5">${esc(r.employee_id)}</td><td class="py-2.5 font-medium">${esc(r.name)}</td><td class="py-2.5">${esc(r.department)}</td><td class="py-2.5">${esc(r.documents)}</td><td class="py-2.5 font-medium">${esc(r.docket_number||'')}</td><td class="py-2.5">${esc(r.particular)}</td><td class="py-2.5 text-slate-400">${esc(r.details||'')}</td><td class="py-2.5"><button onclick="editOutRecord(${r.id})" class="text-blue-500 hover:text-blue-700 text-xs font-semibold">Edit</button></td></tr>`).join('');
+      document.getElementById('outBody').innerHTML = [...filtered].reverse().map(r => `<tr class="border-b border-slate-100 hover:bg-slate-50"><td class="py-2.5 font-semibold text-primary">${r.seq}</td><td class="py-2.5">${esc(r.date)}</td><td class="py-2.5">${esc(r.employee_id)}</td><td class="py-2.5 font-medium">${esc(r.name)}</td><td class="py-2.5">${esc(r.department)}</td><td class="py-2.5">${esc(r.documents)}</td><td class="py-2.5 font-medium">${esc(r.docket_number||'')}</td><td class="py-2.5">${esc(r.courier_status||'')}</td><td class="py-2.5">${esc(r.particular)}</td><td class="py-2.5 text-slate-400">${esc(r.details||'')}</td><td class="py-2.5"><button onclick="editOutRecord(${r.id})" class="text-blue-500 hover:text-blue-700 text-xs font-semibold">Edit</button></td></tr>`).join('');
     }
 
     function renderInward() {
@@ -635,6 +637,7 @@
         employee_id: document.getElementById(pre + 'EmpId').value.trim(), name: document.getElementById(pre + 'Name').value.trim(),
         department: document.getElementById(pre + 'Dept').value.trim(), documents: docsVal,
         docket_number: type === 'outward' ? document.getElementById('outDocket').value.trim() : '',
+        courier_status: type === 'outward' ? document.getElementById('outCourierStatus').value.trim() : '',
         particular: document.getElementById(pre + 'Particular').value.trim(), details: document.getElementById(pre + 'Details').value.trim(),
         location: selectedLocation, created_by: currentEmployee.name,
       };
@@ -664,6 +667,7 @@
       document.getElementById('outName').value = r.name; document.getElementById('outDept').value = r.department;
       setDocFromValue('outDocsOptions', 'outDocsDisplay', 'outDocs', 'outDocsOther', r.documents);
       document.getElementById('outDocket').value = r.docket_number || '';
+      document.getElementById('outCourierStatus').value = r.courier_status || '';
       document.getElementById('outParticular').value = r.particular;
       document.getElementById('outDetails').value = r.details || '';
       document.getElementById('outSubmitBtn').textContent = 'Update Record';
@@ -732,8 +736,8 @@
 
       html += `<div class="bg-white rounded-xl border border-slate-200 p-5 mb-6"><h3 class="font-semibold text-sm text-primary mb-3 flex items-center gap-2"><span class="material-symbols-outlined text-lg">call_made</span>Outward (${out.length})</h3>`;
       if (out.length) {
-        html += `<div class="overflow-x-auto"><table class="w-full text-sm" id="reportOutTable"><thead><tr class="text-xs text-slate-400 uppercase border-b"><th class="pb-2 text-left">ID</th><th class="pb-2 text-left">Sl No</th><th class="pb-2 text-left">Emp ID</th><th class="pb-2 text-left">To</th><th class="pb-2 text-left">Dept</th><th class="pb-2 text-left">Documents Sent</th><th class="pb-2 text-left">Docket No.</th><th class="pb-2 text-left">Particular</th><th class="pb-2 text-left">Details</th></tr></thead><tbody>`;
-        html += out.map(r => { const seq = outSeqMap[r.id]||'-'; return `<tr class="border-b border-slate-50"><td class="py-2 font-semibold text-primary text-xs">OUT/${eId}/${seq}</td><td class="py-2">${seq}</td><td class="py-2">${esc(r.employee_id)}</td><td class="py-2">${esc(r.name)}</td><td class="py-2">${esc(r.department)}</td><td class="py-2">${esc(r.documents)}</td><td class="py-2 font-medium">${esc(r.docket_number||'')}</td><td class="py-2">${esc(r.particular)}</td><td class="py-2 text-slate-400">${esc(r.details||'')}</td></tr>`; }).join('');
+        html += `<div class="overflow-x-auto"><table class="w-full text-sm" id="reportOutTable"><thead><tr class="text-xs text-slate-400 uppercase border-b"><th class="pb-2 text-left">ID</th><th class="pb-2 text-left">Sl No</th><th class="pb-2 text-left">Emp ID</th><th class="pb-2 text-left">To</th><th class="pb-2 text-left">Dept</th><th class="pb-2 text-left">Documents Sent</th><th class="pb-2 text-left">Docket No.</th><th class="pb-2 text-left">Courier/Post Status</th><th class="pb-2 text-left">Particular</th><th class="pb-2 text-left">Details</th></tr></thead><tbody>`;
+        html += out.map(r => { const seq = outSeqMap[r.id]||'-'; return `<tr class="border-b border-slate-50"><td class="py-2 font-semibold text-primary text-xs">OUT/${eId}/${seq}</td><td class="py-2">${seq}</td><td class="py-2">${esc(r.employee_id)}</td><td class="py-2">${esc(r.name)}</td><td class="py-2">${esc(r.department)}</td><td class="py-2">${esc(r.documents)}</td><td class="py-2 font-medium">${esc(r.docket_number||'')}</td><td class="py-2">${esc(r.courier_status||'')}</td><td class="py-2">${esc(r.particular)}</td><td class="py-2 text-slate-400">${esc(r.details||'')}</td></tr>`; }).join('');
         html += `</tbody></table></div>`;
       } else html += `<p class="text-sm text-slate-300">No outward records for this date.</p>`;
       html += `</div>`;
@@ -787,7 +791,7 @@
       }
       document.getElementById('adminRecordCount').textContent = f.length + ' records';
       document.getElementById('adminEmptyState').style.display = f.length ? 'none' : 'block';
-      document.getElementById('adminAllBody').innerHTML = [...f].reverse().map(r => `<tr class="border-b border-slate-100 hover:bg-slate-50"><td class="py-2 font-semibold">${r.seq}</td><td class="py-2">${esc(r.date)}</td><td class="py-2"><span class="inline-block px-2 py-0.5 rounded-full text-xs font-semibold badge-${r.mail_type}">${r.mail_type}</span></td><td class="py-2">${esc(r.employee_id)}</td><td class="py-2">${esc(r.name)}</td><td class="py-2">${esc(r.department)}</td><td class="py-2">${esc(r.documents)}</td><td class="py-2 font-medium">${esc(r.docket_number||'')}</td><td class="py-2">${esc(r.particular)}</td><td class="py-2 text-slate-400">${esc(r.details||'')}</td><td class="py-2">${esc(r.location)}</td><td class="py-2 text-slate-400">${esc(r.created_by)}</td></tr>`).join('');
+      document.getElementById('adminAllBody').innerHTML = [...f].reverse().map(r => `<tr class="border-b border-slate-100 hover:bg-slate-50"><td class="py-2 font-semibold">${r.seq}</td><td class="py-2">${esc(r.date)}</td><td class="py-2"><span class="inline-block px-2 py-0.5 rounded-full text-xs font-semibold badge-${r.mail_type}">${r.mail_type}</span></td><td class="py-2">${esc(r.employee_id)}</td><td class="py-2">${esc(r.name)}</td><td class="py-2">${esc(r.department)}</td><td class="py-2">${esc(r.documents)}</td><td class="py-2 font-medium">${esc(r.docket_number||'')}</td><td class="py-2">${esc(r.courier_status||'')}</td><td class="py-2">${esc(r.particular)}</td><td class="py-2 text-slate-400">${esc(r.details||'')}</td><td class="py-2">${esc(r.location)}</td><td class="py-2 text-slate-400">${esc(r.created_by)}</td></tr>`).join('');
     }
 
     function openColFilter(field, title) {
@@ -892,7 +896,7 @@
       }
 
       if (type === 'outward') {
-        data = outRecords.map(r => ({ 'ID': makeRecordId(r), 'Sl No': r.seq, 'Date': r.date, 'Employee ID': r.employee_id, 'To': r.name, 'Department': r.department, 'Documents Sent': r.documents, 'Docket No.': r.docket_number || '', 'Particular': r.particular, 'Details': r.details || '' }));
+        data = outRecords.map(r => ({ 'ID': makeRecordId(r), 'Sl No': r.seq, 'Date': r.date, 'Employee ID': r.employee_id, 'To': r.name, 'Department': r.department, 'Documents Sent': r.documents, 'Docket No.': r.docket_number || '', 'Courier/Post Status': r.courier_status || '', 'Particular': r.particular, 'Details': r.details || '' }));
         sheetName = 'Outward';
         title = `Outward Mail Register - ${selectedLocation}`;
         filename = `Outward_${selectedLocation}_${fy.label.replace(/\s/g,'_')}.xlsx`;
@@ -902,7 +906,7 @@
         title = `Inward Mail Register - ${selectedLocation}`;
         filename = `Inward_${selectedLocation}_${fy.label.replace(/\s/g,'_')}.xlsx`;
       } else {
-        data = adminAllRecords.map(r => ({ 'ID': makeRecordId(r), 'Sl No': r.seq, 'Date': r.date, 'Type': r.mail_type.toUpperCase(), 'Employee ID': r.employee_id, 'To/From': r.name, 'Department': r.department, 'Documents': r.documents, 'Docket No.': r.docket_number || '', 'Particular': r.particular, 'Details': r.details || '', 'Location': r.location, 'Created By': r.created_by }));
+        data = adminAllRecords.map(r => ({ 'ID': makeRecordId(r), 'Sl No': r.seq, 'Date': r.date, 'Type': r.mail_type.toUpperCase(), 'Employee ID': r.employee_id, 'To/From': r.name, 'Department': r.department, 'Documents': r.documents, 'Docket No.': r.docket_number || '', 'Courier/Post Status': r.courier_status || '', 'Particular': r.particular, 'Details': r.details || '', 'Location': r.location, 'Created By': r.created_by }));
         sheetName = 'All Records';
         title = 'All Mail Records';
         filename = `All_Records_${fy.label.replace(/\s/g,'_')}.xlsx`;
@@ -962,7 +966,7 @@
       if (outRecs.length) {
         const data = outRecs.map(r => {
           const seq = outSeq[r.id] || '-';
-          return { 'ID': `OUT/${eId}/${seq}`, 'Sl No': seq, 'Date': r.date, 'Employee ID': r.employee_id, 'To': r.name, 'Department': r.department, 'Documents Sent': r.documents, 'Docket No.': r.docket_number || '', 'Particular': r.particular, 'Details': r.details || '', ...(admin ? { 'Location': r.location } : {}), 'Created By': r.created_by };
+          return { 'ID': `OUT/${eId}/${seq}`, 'Sl No': seq, 'Date': r.date, 'Employee ID': r.employee_id, 'To': r.name, 'Department': r.department, 'Documents Sent': r.documents, 'Docket No.': r.docket_number || '', 'Courier/Post Status': r.courier_status || '', 'Particular': r.particular, 'Details': r.details || '', ...(admin ? { 'Location': r.location } : {}), 'Created By': r.created_by };
         });
         const headerRows = [['Outward Mail Register - Daily Report'], [dateStr, '', branch, '', fy.label], []];
         const ws = XLSX.utils.aoa_to_sheet(headerRows);
