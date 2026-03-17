@@ -499,6 +499,9 @@ function checkSession() {
     sessionStorage.setItem('sr_employee', savedEmp);
     sessionStorage.setItem('sr_location', savedLoc);
     if (isHeadOffice) sessionStorage.setItem('sr_headoffice', 'true');
+    // Update app profile branch from session
+    appData.profile.branch = savedLoc;
+    saveData(appData);
     document.getElementById('login-screen').classList.add('hidden');
     updateUserUI();
     if (isHeadOffice) switchToAdminMode();
@@ -668,7 +671,7 @@ function loadData() {
     suppliers: DEFAULT_SUPPLIERS,
     notifications: DEFAULT_NOTIFICATIONS,
     profile: {
-      branch: 'Honnavar Branch',
+      branch: selectedLocation || 'Unknown Branch',
       boe: 'Navachetana Livelihoods Pvt Ltd',
     },
   };
