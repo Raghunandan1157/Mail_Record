@@ -285,20 +285,20 @@
                 <button onclick="exportToExcel('all')" class="bg-green-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-green-700 transition flex items-center gap-1"><span class="material-symbols-outlined text-sm">download</span>Excel</button>
               </div>
             </div>
-            <div class="overflow-x-auto"><table class="w-full text-sm min-w-[900px]"><thead><tr class="text-xs text-slate-400 uppercase border-b">
-              <th class="pb-2 text-left">ID</th>
-              <th class="pb-2 text-left cursor-pointer hover:text-primary" onclick="openColFilter('location','Branch Name')">Branch Name <span class="material-symbols-outlined text-xs align-middle">filter_list</span></th>
-              <th class="pb-2 text-left">Date</th>
-              <th class="pb-2 text-left cursor-pointer hover:text-primary" onclick="openColFilter('mail_type','Type')">Type <span class="material-symbols-outlined text-xs align-middle">filter_list</span></th>
-              <th class="pb-2 text-left cursor-pointer hover:text-primary" onclick="openColFilter('employee_id','Emp ID')">Emp ID <span class="material-symbols-outlined text-xs align-middle">filter_list</span></th>
-              <th class="pb-2 text-left cursor-pointer hover:text-primary" onclick="openColFilter('name','To/From')">To/From <span class="material-symbols-outlined text-xs align-middle">filter_list</span></th>
-              <th class="pb-2 text-left cursor-pointer hover:text-primary" onclick="openColFilter('department','Dept')">Dept <span class="material-symbols-outlined text-xs align-middle">filter_list</span></th>
-              <th class="pb-2 text-left">Documents</th>
-              <th class="pb-2 text-left">Docket No.</th>
-              <th class="pb-2 text-left">Courier/Post Status</th>
-              <th class="pb-2 text-left cursor-pointer hover:text-primary" onclick="openColFilter('particular','Particular')">Particular <span class="material-symbols-outlined text-xs align-middle">filter_list</span></th>
-              <th class="pb-2 text-left">Details</th>
-              <th class="pb-2 text-left cursor-pointer hover:text-primary" onclick="openColFilter('created_by','By')">By <span class="material-symbols-outlined text-xs align-middle">filter_list</span></th>
+            <div class="overflow-x-auto"><table class="w-full text-sm min-w-[1400px]"><thead><tr class="text-xs text-slate-400 uppercase border-b whitespace-nowrap">
+              <th class="pb-2 text-left pr-4">ID</th>
+              <th class="pb-2 text-left pr-4 cursor-pointer hover:text-primary" onclick="openColFilter('location','Branch Name')">Branch Name <span class="material-symbols-outlined text-xs align-middle">filter_list</span></th>
+              <th class="pb-2 text-left pr-4">Date</th>
+              <th class="pb-2 text-left pr-4 cursor-pointer hover:text-primary" onclick="openColFilter('mail_type','Type')">Type <span class="material-symbols-outlined text-xs align-middle">filter_list</span></th>
+              <th class="pb-2 text-left pr-4 cursor-pointer hover:text-primary" onclick="openColFilter('employee_id','Emp ID')">Emp ID <span class="material-symbols-outlined text-xs align-middle">filter_list</span></th>
+              <th class="pb-2 text-left pr-4 cursor-pointer hover:text-primary" onclick="openColFilter('name','To/From')">To/From <span class="material-symbols-outlined text-xs align-middle">filter_list</span></th>
+              <th class="pb-2 text-left pr-4 cursor-pointer hover:text-primary" onclick="openColFilter('department','Dept')">Dept <span class="material-symbols-outlined text-xs align-middle">filter_list</span></th>
+              <th class="pb-2 text-left pr-4">Documents</th>
+              <th class="pb-2 text-left pr-4">Docket No.</th>
+              <th class="pb-2 text-left pr-4">Courier/Post Status</th>
+              <th class="pb-2 text-left pr-4 cursor-pointer hover:text-primary" onclick="openColFilter('particular','Particular')">Particular <span class="material-symbols-outlined text-xs align-middle">filter_list</span></th>
+              <th class="pb-2 text-left pr-4">Details</th>
+              <th class="pb-2 text-left pr-4 cursor-pointer hover:text-primary" onclick="openColFilter('created_by','By')">By <span class="material-symbols-outlined text-xs align-middle">filter_list</span></th>
             </tr></thead><tbody id="adminAllBody"></tbody></table></div>
             <div class="text-center py-8 text-slate-400 text-sm" id="adminEmptyState" style="display:none">No records found.</div>
           </div>
@@ -791,7 +791,7 @@
       }
       document.getElementById('adminRecordCount').textContent = f.length + ' records';
       document.getElementById('adminEmptyState').style.display = f.length ? 'none' : 'block';
-      document.getElementById('adminAllBody').innerHTML = [...f].reverse().map(r => `<tr class="border-b border-slate-100 hover:bg-slate-50"><td class="py-2 font-semibold">${r.seq}</td><td class="py-2">${esc(r.location)}</td><td class="py-2">${esc(r.date)}</td><td class="py-2"><span class="inline-block px-2 py-0.5 rounded-full text-xs font-semibold badge-${r.mail_type}">${r.mail_type}</span></td><td class="py-2">${esc(r.employee_id)}</td><td class="py-2">${esc(r.name)}</td><td class="py-2">${esc(r.department)}</td><td class="py-2">${esc(r.documents)}</td><td class="py-2 font-medium">${esc(r.docket_number||'')}</td><td class="py-2">${esc(r.courier_status||'')}</td><td class="py-2">${esc(r.particular)}</td><td class="py-2 text-slate-400">${esc(r.details||'')}</td><td class="py-2 text-slate-400">${esc(r.created_by)}</td></tr>`).join('');
+      document.getElementById('adminAllBody').innerHTML = [...f].reverse().map(r => `<tr class="border-b border-slate-100 hover:bg-slate-50 whitespace-nowrap"><td class="py-2 pr-4 font-semibold">${r.seq}</td><td class="py-2 pr-4">${esc(r.location)}</td><td class="py-2 pr-4">${esc(r.date)}</td><td class="py-2 pr-4"><span class="inline-block px-2 py-0.5 rounded-full text-xs font-semibold badge-${r.mail_type}">${r.mail_type}</span></td><td class="py-2 pr-4">${esc(r.employee_id)}</td><td class="py-2 pr-4">${esc(r.name)}</td><td class="py-2 pr-4">${esc(r.department)}</td><td class="py-2 pr-4">${esc(r.documents)}</td><td class="py-2 pr-4 font-medium">${esc(r.docket_number||'')}</td><td class="py-2 pr-4">${esc(r.courier_status||'')}</td><td class="py-2 pr-4">${esc(r.particular)}</td><td class="py-2 pr-4 text-slate-400">${esc(r.details||'')}</td><td class="py-2 pr-4 text-slate-400">${esc(r.created_by)}</td></tr>`).join('');
     }
 
     function openColFilter(field, title) {
