@@ -270,7 +270,7 @@
           <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6" id="adminKpis"></div>
           <div class="bg-white rounded-xl border border-slate-200 p-5">
             <h3 class="font-semibold text-sm mb-4 text-slate-700">Recent Records (All Branches)</h3>
-            <div class="overflow-x-auto"><table class="w-full text-sm min-w-[800px]"><thead><tr class="text-xs text-slate-400 uppercase border-b"><th class="pb-2 text-left">ID</th><th class="pb-2 text-left">Date</th><th class="pb-2 text-left">Type</th><th class="pb-2 text-left">To/From</th><th class="pb-2 text-left">Dept</th><th class="pb-2 text-left">Documents</th><th class="pb-2 text-left">Location</th><th class="pb-2 text-left">By</th></tr></thead><tbody id="adminRecentBody"></tbody></table></div>
+            <div class="overflow-x-auto"><table class="w-full text-sm min-w-[800px]"><thead><tr class="text-xs text-slate-400 uppercase border-b"><th class="pb-2 text-left">ID</th><th class="pb-2 text-left">Branch Name</th><th class="pb-2 text-left">Date</th><th class="pb-2 text-left">Type</th><th class="pb-2 text-left">To/From</th><th class="pb-2 text-left">Dept</th><th class="pb-2 text-left">Documents</th><th class="pb-2 text-left">By</th></tr></thead><tbody id="adminRecentBody"></tbody></table></div>
           </div>
         </div>
 
@@ -287,6 +287,7 @@
             </div>
             <div class="overflow-x-auto"><table class="w-full text-sm min-w-[900px]"><thead><tr class="text-xs text-slate-400 uppercase border-b">
               <th class="pb-2 text-left">ID</th>
+              <th class="pb-2 text-left cursor-pointer hover:text-primary" onclick="openColFilter('location','Branch Name')">Branch Name <span class="material-symbols-outlined text-xs align-middle">filter_list</span></th>
               <th class="pb-2 text-left">Date</th>
               <th class="pb-2 text-left cursor-pointer hover:text-primary" onclick="openColFilter('mail_type','Type')">Type <span class="material-symbols-outlined text-xs align-middle">filter_list</span></th>
               <th class="pb-2 text-left cursor-pointer hover:text-primary" onclick="openColFilter('employee_id','Emp ID')">Emp ID <span class="material-symbols-outlined text-xs align-middle">filter_list</span></th>
@@ -297,7 +298,6 @@
               <th class="pb-2 text-left">Courier/Post Status</th>
               <th class="pb-2 text-left cursor-pointer hover:text-primary" onclick="openColFilter('particular','Particular')">Particular <span class="material-symbols-outlined text-xs align-middle">filter_list</span></th>
               <th class="pb-2 text-left">Details</th>
-              <th class="pb-2 text-left cursor-pointer hover:text-primary" onclick="openColFilter('location','Location')">Location <span class="material-symbols-outlined text-xs align-middle">filter_list</span></th>
               <th class="pb-2 text-left cursor-pointer hover:text-primary" onclick="openColFilter('created_by','By')">By <span class="material-symbols-outlined text-xs align-middle">filter_list</span></th>
             </tr></thead><tbody id="adminAllBody"></tbody></table></div>
             <div class="text-center py-8 text-slate-400 text-sm" id="adminEmptyState" style="display:none">No records found.</div>
@@ -771,7 +771,7 @@
         { v: today, l: 'Today', icon: 'today', bg: 'bg-violet-100', tc: 'text-violet-600' },
       ].map(k => `<div class="kpi-card bg-white rounded-xl border border-slate-200 p-5 transition-all duration-200"><div class="flex items-center gap-3 mb-2"><div class="${k.bg} w-10 h-10 rounded-lg flex items-center justify-center"><span class="material-symbols-outlined ${k.tc}">${k.icon}</span></div></div><div class="text-2xl font-bold text-slate-800">${k.v}</div><div class="text-xs text-slate-400 uppercase tracking-wide mt-1">${k.l}</div></div>`).join('');
 
-      document.getElementById('adminRecentBody').innerHTML = [...adminAllRecords].reverse().slice(0, 20).map(r => `<tr class="border-b border-slate-100"><td class="py-2 font-semibold">${r.seq}</td><td class="py-2">${esc(r.date)}</td><td class="py-2"><span class="inline-block px-2 py-0.5 rounded-full text-xs font-semibold badge-${r.mail_type}">${r.mail_type}</span></td><td class="py-2">${esc(r.name)}</td><td class="py-2">${esc(r.department)}</td><td class="py-2">${esc(r.documents)}</td><td class="py-2">${esc(r.location)}</td><td class="py-2 text-slate-400">${esc(r.created_by)}</td></tr>`).join('') || '<tr><td colspan="8" class="py-8 text-center text-slate-300">No records yet</td></tr>';
+      document.getElementById('adminRecentBody').innerHTML = [...adminAllRecords].reverse().slice(0, 20).map(r => `<tr class="border-b border-slate-100"><td class="py-2 font-semibold">${r.seq}</td><td class="py-2">${esc(r.location)}</td><td class="py-2">${esc(r.date)}</td><td class="py-2"><span class="inline-block px-2 py-0.5 rounded-full text-xs font-semibold badge-${r.mail_type}">${r.mail_type}</span></td><td class="py-2">${esc(r.name)}</td><td class="py-2">${esc(r.department)}</td><td class="py-2">${esc(r.documents)}</td><td class="py-2 text-slate-400">${esc(r.created_by)}</td></tr>`).join('') || '<tr><td colspan="8" class="py-8 text-center text-slate-300">No records yet</td></tr>';
       renderAdminRecords();
     }
 
@@ -791,7 +791,7 @@
       }
       document.getElementById('adminRecordCount').textContent = f.length + ' records';
       document.getElementById('adminEmptyState').style.display = f.length ? 'none' : 'block';
-      document.getElementById('adminAllBody').innerHTML = [...f].reverse().map(r => `<tr class="border-b border-slate-100 hover:bg-slate-50"><td class="py-2 font-semibold">${r.seq}</td><td class="py-2">${esc(r.date)}</td><td class="py-2"><span class="inline-block px-2 py-0.5 rounded-full text-xs font-semibold badge-${r.mail_type}">${r.mail_type}</span></td><td class="py-2">${esc(r.employee_id)}</td><td class="py-2">${esc(r.name)}</td><td class="py-2">${esc(r.department)}</td><td class="py-2">${esc(r.documents)}</td><td class="py-2 font-medium">${esc(r.docket_number||'')}</td><td class="py-2">${esc(r.courier_status||'')}</td><td class="py-2">${esc(r.particular)}</td><td class="py-2 text-slate-400">${esc(r.details||'')}</td><td class="py-2">${esc(r.location)}</td><td class="py-2 text-slate-400">${esc(r.created_by)}</td></tr>`).join('');
+      document.getElementById('adminAllBody').innerHTML = [...f].reverse().map(r => `<tr class="border-b border-slate-100 hover:bg-slate-50"><td class="py-2 font-semibold">${r.seq}</td><td class="py-2">${esc(r.location)}</td><td class="py-2">${esc(r.date)}</td><td class="py-2"><span class="inline-block px-2 py-0.5 rounded-full text-xs font-semibold badge-${r.mail_type}">${r.mail_type}</span></td><td class="py-2">${esc(r.employee_id)}</td><td class="py-2">${esc(r.name)}</td><td class="py-2">${esc(r.department)}</td><td class="py-2">${esc(r.documents)}</td><td class="py-2 font-medium">${esc(r.docket_number||'')}</td><td class="py-2">${esc(r.courier_status||'')}</td><td class="py-2">${esc(r.particular)}</td><td class="py-2 text-slate-400">${esc(r.details||'')}</td><td class="py-2 text-slate-400">${esc(r.created_by)}</td></tr>`).join('');
     }
 
     function openColFilter(field, title) {
@@ -861,8 +861,8 @@
       let html = `<div class="mb-2 text-sm text-slate-500">${dateStr}</div>`;
       for (const [loc, lrecs] of Object.entries(byLoc)) {
         html += `<div class="bg-white rounded-xl border border-slate-200 p-5 mb-4"><h3 class="font-semibold text-sm mb-3">${esc(loc)} <span class="text-slate-400 font-normal">(${lrecs.length} records)</span></h3>`;
-        html += `<div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr class="text-xs text-slate-400 uppercase border-b"><th class="pb-2 text-left">ID</th><th class="pb-2 text-left">Type</th><th class="pb-2 text-left">To/From</th><th class="pb-2 text-left">Dept</th><th class="pb-2 text-left">Documents</th><th class="pb-2 text-left">By</th></tr></thead><tbody>`;
-        html += lrecs.map(r => `<tr class="border-b border-slate-50"><td class="py-2 font-semibold">${seqMap[r.id]||'-'}</td><td class="py-2"><span class="inline-block px-2 py-0.5 rounded-full text-xs font-semibold badge-${r.mail_type}">${r.mail_type}</span></td><td class="py-2">${esc(r.name)}</td><td class="py-2">${esc(r.department)}</td><td class="py-2">${esc(r.documents)}</td><td class="py-2 text-slate-400">${esc(r.created_by)}</td></tr>`).join('');
+        html += `<div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr class="text-xs text-slate-400 uppercase border-b"><th class="pb-2 text-left">ID</th><th class="pb-2 text-left">Branch Name</th><th class="pb-2 text-left">Type</th><th class="pb-2 text-left">To/From</th><th class="pb-2 text-left">Dept</th><th class="pb-2 text-left">Documents</th><th class="pb-2 text-left">By</th></tr></thead><tbody>`;
+        html += lrecs.map(r => `<tr class="border-b border-slate-50"><td class="py-2 font-semibold">${seqMap[r.id]||'-'}</td><td class="py-2">${esc(r.location)}</td><td class="py-2"><span class="inline-block px-2 py-0.5 rounded-full text-xs font-semibold badge-${r.mail_type}">${r.mail_type}</span></td><td class="py-2">${esc(r.name)}</td><td class="py-2">${esc(r.department)}</td><td class="py-2">${esc(r.documents)}</td><td class="py-2 text-slate-400">${esc(r.created_by)}</td></tr>`).join('');
         html += `</tbody></table></div></div>`;
       }
       if (!Object.keys(byLoc).length) html += `<div class="bg-white rounded-xl border p-8 text-center text-slate-300">No records for this date.</div>`;
@@ -906,7 +906,7 @@
         title = `Inward Mail Register - ${selectedLocation}`;
         filename = `Inward_${selectedLocation}_${fy.label.replace(/\s/g,'_')}.xlsx`;
       } else {
-        data = adminAllRecords.map(r => ({ 'ID': makeRecordId(r), 'Sl No': r.seq, 'Date': r.date, 'Type': r.mail_type.toUpperCase(), 'Employee ID': r.employee_id, 'To/From': r.name, 'Department': r.department, 'Documents': r.documents, 'Docket No.': r.docket_number || '', 'Courier/Post Status': r.courier_status || '', 'Particular': r.particular, 'Details': r.details || '', 'Location': r.location, 'Created By': r.created_by }));
+        data = adminAllRecords.map(r => ({ 'ID': makeRecordId(r), 'Branch Name': r.location, 'Sl No': r.seq, 'Date': r.date, 'Type': r.mail_type.toUpperCase(), 'Employee ID': r.employee_id, 'To/From': r.name, 'Department': r.department, 'Documents': r.documents, 'Docket No.': r.docket_number || '', 'Courier/Post Status': r.courier_status || '', 'Particular': r.particular, 'Details': r.details || '', 'Created By': r.created_by }));
         sheetName = 'All Records';
         title = 'All Mail Records';
         filename = `All_Records_${fy.label.replace(/\s/g,'_')}.xlsx`;
@@ -966,7 +966,7 @@
       if (outRecs.length) {
         const data = outRecs.map(r => {
           const seq = outSeq[r.id] || '-';
-          return { 'ID': `OUT/${eId}/${seq}`, 'Sl No': seq, 'Date': r.date, 'Employee ID': r.employee_id, 'To': r.name, 'Department': r.department, 'Documents Sent': r.documents, 'Docket No.': r.docket_number || '', 'Courier/Post Status': r.courier_status || '', 'Particular': r.particular, 'Details': r.details || '', ...(admin ? { 'Location': r.location } : {}), 'Created By': r.created_by };
+          const base = { 'ID': `OUT/${eId}/${seq}` }; if (admin) base['Branch Name'] = r.location; return { ...base, 'Sl No': seq, 'Date': r.date, 'Employee ID': r.employee_id, 'To': r.name, 'Department': r.department, 'Documents Sent': r.documents, 'Docket No.': r.docket_number || '', 'Courier/Post Status': r.courier_status || '', 'Particular': r.particular, 'Details': r.details || '', 'Created By': r.created_by };
         });
         const headerRows = [['Outward Mail Register - Daily Report'], [dateStr, '', branch, '', fy.label], []];
         const ws = XLSX.utils.aoa_to_sheet(headerRows);
@@ -981,7 +981,7 @@
       if (inRecs.length) {
         const data = inRecs.map(r => {
           const seq = inSeq[r.id] || '-';
-          return { 'ID': `IN/${eId}/${seq}`, 'Sl No': seq, 'Date': r.date, 'Employee ID': r.employee_id, 'From': r.name, 'Department': r.department, 'Documents Received': r.documents, 'Particular': r.particular, 'Details': r.details || '', ...(admin ? { 'Location': r.location } : {}), 'Created By': r.created_by };
+          const base = { 'ID': `IN/${eId}/${seq}` }; if (admin) base['Branch Name'] = r.location; return { ...base, 'Sl No': seq, 'Date': r.date, 'Employee ID': r.employee_id, 'From': r.name, 'Department': r.department, 'Documents Received': r.documents, 'Particular': r.particular, 'Details': r.details || '', 'Created By': r.created_by };
         });
         const headerRows = [['Inward Mail Register - Daily Report'], [dateStr, '', branch, '', fy.label], []];
         const ws = XLSX.utils.aoa_to_sheet(headerRows);
