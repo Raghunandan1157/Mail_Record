@@ -73,6 +73,21 @@
         <button onclick="loginVerifyOTP()" class="w-full bg-primary text-white py-2.5 rounded-lg font-semibold text-sm hover:bg-primary/90 transition">Verify</button>
         <button onclick="showStep(1)" class="w-full bg-slate-100 text-slate-600 py-2.5 rounded-lg font-semibold text-sm mt-2 hover:bg-slate-200 transition">Back</button>
       </div>
+      <div class="login-step" id="loginStep4">
+        <h1 class="font-bold">Select Admin Type</h1>
+        <p class="sub">Choose your admin office</p>
+        <div class="flex flex-col gap-3 mb-4">
+          <div class="profile-card" onclick="loginSelectAdminType('HO')">
+            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-blue-400 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">HO</div>
+            <div><div class="text-sm font-semibold">Admin_HO</div><div class="text-xs text-slate-400">Head Office — Santosh</div></div>
+          </div>
+          <div class="profile-card" onclick="loginSelectAdminType('CO')">
+            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-600 to-teal-400 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">CO</div>
+            <div><div class="text-sm font-semibold">Admin_CO</div><div class="text-xs text-slate-400">Corporate Office — Chetan</div></div>
+          </div>
+        </div>
+        <button onclick="showStep(3)" class="w-full bg-slate-100 text-slate-600 py-2.5 rounded-lg font-semibold text-sm hover:bg-slate-200 transition">Back</button>
+      </div>
     </div>
   </div>
 
@@ -558,6 +573,11 @@
     }
 
     function loginAdminStart() { showStep(3); document.querySelectorAll('.otp-inputs input').forEach(i => { i.value = ''; }); setTimeout(() => document.querySelector('.otp-inputs input').focus(), 100); }
+    function loginSelectAdminType(type) {
+      if (type === 'HO') { currentEmployee = { id: 0, emp_id: 'HO-ADMIN', name: 'Santosh', role: 'Administrator', location: 'Head Office' }; selectedLocation = 'Head Office'; }
+      else { currentEmployee = { id: 0, emp_id: 'CO-ADMIN', name: 'Chetan', role: 'Administrator', location: 'Corporate Office' }; selectedLocation = 'Corporate Office'; }
+      startSession();
+    }
     document.querySelectorAll('.otp-inputs input').forEach((inp, i, all) => {
       inp.addEventListener('input', () => { if (inp.value && i < 3) all[i + 1].focus(); });
       inp.addEventListener('keydown', e => { if (e.key === 'Backspace' && !inp.value && i > 0) all[i - 1].focus(); if (e.key === 'Enter') loginVerifyOTP(); });
@@ -567,7 +587,7 @@
       if (otp.length < 4) { showLoginError(3, 'Enter all 4 digits'); return; }
       try {
         const c = await sbGet('app_config', 'select=value&key=eq.admin_otp');
-        if (c.length && c[0].value === otp) { isAdmin = true; currentEmployee = { id: 0, emp_id: 'HO-ADMIN', name: 'Santosh', role: 'Administrator', location: 'Head Office' }; selectedLocation = 'Head Office'; startSession(); }
+        if (c.length && c[0].value === otp) { isAdmin = true; showStep(4); }
         else showLoginError(3, 'Invalid OTP');
       } catch (e) { showLoginError(3, 'Verification failed'); }
     }
