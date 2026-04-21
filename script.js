@@ -2951,18 +2951,52 @@ function exportInventoryToExcel() {
 }
 
 function exportReportsToExcel() {
-  const txns = appData.transactions;
   const now = new Date();
 
-  // Read selected date/month from pickers
   const datePicker = document.getElementById('report-date-picker');
   const monthPicker = document.getElementById('report-month-picker');
+  const branchPicker = document.getElementById('report-branch-picker');
   const selectedDateStr = datePicker && datePicker.value ? datePicker.value : now.toISOString().slice(0, 10);
   const selectedMonthStr = monthPicker && monthPicker.value ? monthPicker.value : now.toISOString().slice(0, 7);
 
   const [selYear, selMonth] = selectedMonthStr.split('-').map(Number);
   const monthStart = new Date(selYear, selMonth - 1, 1);
   const monthEnd = new Date(selYear, selMonth, 0, 23, 59, 59, 999);
+
+  // Build unified txns source. Admin uses adminData.entries (all branches); BOE uses appData.transactions.
+  let txns;
+  let scopeLabel;
+  let inventorySource;
+  if (isHeadOffice) {
+    const selectedBranchReport = branchPicker ? branchPicker.value : 'all';
+    const sourceEntries = selectedBranchReport === 'all'
+      ? adminData.entries
+      : adminData.entries.filter(e => e.location === selectedBranchReport);
+    txns = sourceEntries.map(e => ({
+      itemName: e.item_name,
+      sku: e.hsn_code,
+      type: e.entry_type,
+      qty: e.quantity,
+      date: e.created_at,
+      user: e.emp_name,
+      location: e.location,
+    }));
+    scopeLabel = selectedBranchReport === 'all' ? 'All_Branches' : selectedBranchReport.replace(/[^a-z0-9]/gi, '_');
+    inventorySource = DEFAULT_INVENTORY.map(item => {
+      let qty = 0;
+      sourceEntries.forEach(e => {
+        if (e.item_name === item.name) {
+          if (e.entry_type === 'in') qty += e.quantity;
+          else qty = Math.max(0, qty - e.quantity);
+        }
+      });
+      return { ...item, qty };
+    });
+  } else {
+    txns = appData.transactions.map(t => ({ ...t, location: selectedLocation || '' }));
+    scopeLabel = (selectedLocation || 'Reports').replace(/[^a-z0-9]/gi, '_');
+    inventorySource = appData.inventory;
+  }
 
   const dateTxns = txns.filter(t => {
     const d = new Date(t.date);
@@ -2974,33 +3008,28 @@ function exportReportsToExcel() {
     return d >= monthStart && d <= monthEnd;
   });
 
-  // Sheet 1: Selected date transactions
-  const dateRows = dateTxns.map(t => ({
-    'Item': t.itemName,
-    'HSN Code': t.sku,
-    'Type': t.type === 'in' ? 'Stock In' : 'Stock Out',
-    'Quantity': t.qty,
-    'Date & Time': formatDate(t.date),
-    'User': t.user,
-  }));
+  const rowFor = t => {
+    const r = { 'Branch': t.location || '' };
+    r['Item'] = t.itemName;
+    r['HSN Code'] = t.sku;
+    r['Type'] = t.type === 'in' ? 'Stock In' : 'Stock Out';
+    r['Quantity'] = t.qty;
+    r['Date & Time'] = formatDate(t.date);
+    r['User'] = t.user;
+    return r;
+  };
 
-  // Sheet 2: Selected month transactions
-  const monthRows = monthTxns.map(t => ({
-    'Item': t.itemName,
-    'HSN Code': t.sku,
-    'Type': t.type === 'in' ? 'Stock In' : 'Stock Out',
-    'Quantity': t.qty,
-    'Date & Time': formatDate(t.date),
-    'User': t.user,
-  }));
+  // Sort rows by branch then date for readability
+  const sortByBranchDate = (a, b) => (a.location || '').localeCompare(b.location || '') || new Date(a.date) - new Date(b.date);
+  const dateRows = [...dateTxns].sort(sortByBranchDate).map(rowFor);
+  const monthRows = [...monthTxns].sort(sortByBranchDate).map(rowFor);
 
-  // Sheet 3: Summary
   const dateInQty = dateTxns.filter(t => t.type === 'in').reduce((s, t) => s + t.qty, 0);
   const dateOutQty = dateTxns.filter(t => t.type === 'out').reduce((s, t) => s + t.qty, 0);
   const monthInQty = monthTxns.filter(t => t.type === 'in').reduce((s, t) => s + t.qty, 0);
   const monthOutQty = monthTxns.filter(t => t.type === 'out').reduce((s, t) => s + t.qty, 0);
-  const closingStock = appData.inventory.reduce((s, i) => s + i.qty, 0);
-  const lowStock = appData.inventory.filter(i => i.qty <= i.reorder).length;
+  const closingStock = inventorySource.reduce((s, i) => s + i.qty, 0);
+  const lowStock = inventorySource.filter(i => i.qty <= i.reorder).length;
 
   const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
@@ -3017,22 +3046,49 @@ function exportReportsToExcel() {
     { 'Metric': 'Low Stock Items', 'Value': lowStock },
   ];
 
+  // Per-branch breakdown sheet (admin + all branches only)
+  let perBranchRows = null;
+  if (isHeadOffice && (branchPicker ? branchPicker.value : 'all') === 'all') {
+    const branchSet = new Set(txns.map(t => t.location).filter(Boolean));
+    perBranchRows = [...branchSet].sort().map(br => {
+      const dIn = dateTxns.filter(t => t.location === br && t.type === 'in').reduce((s, t) => s + t.qty, 0);
+      const dOut = dateTxns.filter(t => t.location === br && t.type === 'out').reduce((s, t) => s + t.qty, 0);
+      const mIn = monthTxns.filter(t => t.location === br && t.type === 'in').reduce((s, t) => s + t.qty, 0);
+      const mOut = monthTxns.filter(t => t.location === br && t.type === 'out').reduce((s, t) => s + t.qty, 0);
+      return {
+        'Branch': br,
+        [`Daily In (${selectedDateStr})`]: dIn,
+        [`Daily Out (${selectedDateStr})`]: dOut,
+        'Daily Net': dIn - dOut,
+        [`Monthly In (${monthNames[selMonth - 1]} ${selYear})`]: mIn,
+        [`Monthly Out (${monthNames[selMonth - 1]} ${selYear})`]: mOut,
+        'Monthly Net': mIn - mOut,
+      };
+    });
+  }
+
   const wb = XLSX.utils.book_new();
-  const colWidths = [{ wch: 28 }, { wch: 14 }, { wch: 12 }, { wch: 10 }, { wch: 20 }, { wch: 20 }];
+  const colWidths = [{ wch: 22 }, { wch: 28 }, { wch: 14 }, { wch: 12 }, { wch: 10 }, { wch: 20 }, { wch: 20 }];
 
   const wsSummary = XLSX.utils.json_to_sheet(summaryRows);
   wsSummary['!cols'] = [{ wch: 40 }, { wch: 14 }];
   XLSX.utils.book_append_sheet(wb, wsSummary, 'Summary');
 
-  const wsDate = XLSX.utils.json_to_sheet(dateRows.length ? dateRows : [{ 'Item': 'No transactions on ' + selectedDateStr }]);
+  if (perBranchRows && perBranchRows.length) {
+    const wsBr = XLSX.utils.json_to_sheet(perBranchRows);
+    wsBr['!cols'] = [{ wch: 22 }, { wch: 18 }, { wch: 18 }, { wch: 12 }, { wch: 22 }, { wch: 22 }, { wch: 14 }];
+    XLSX.utils.book_append_sheet(wb, wsBr, 'Per Branch');
+  }
+
+  const wsDate = XLSX.utils.json_to_sheet(dateRows.length ? dateRows : [{ 'Branch': '', 'Item': 'No transactions on ' + selectedDateStr }]);
   wsDate['!cols'] = colWidths;
   XLSX.utils.book_append_sheet(wb, wsDate, 'Daily (' + selectedDateStr + ')');
 
-  const wsMonth = XLSX.utils.json_to_sheet(monthRows.length ? monthRows : [{ 'Item': 'No transactions in ' + selectedMonthStr }]);
+  const wsMonth = XLSX.utils.json_to_sheet(monthRows.length ? monthRows : [{ 'Branch': '', 'Item': 'No transactions in ' + selectedMonthStr }]);
   wsMonth['!cols'] = colWidths;
   XLSX.utils.book_append_sheet(wb, wsMonth, monthNames[selMonth - 1] + ' ' + selYear);
 
-  XLSX.writeFile(wb, 'Reports_' + selectedDateStr + '.xlsx');
+  XLSX.writeFile(wb, 'Reports_' + scopeLabel + '_' + selectedDateStr + '.xlsx');
   showToast('Reports Excel downloaded');
 }
 
