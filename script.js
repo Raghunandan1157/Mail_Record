@@ -1134,6 +1134,48 @@ function exportClosingStockToExcel() {
   showToast('Closing stock Excel downloaded');
 }
 
+function exportOutOfStockToExcel() {
+  const entries = adminData.entries;
+  const employees = adminData.employees;
+
+  const branchesFromEntries = entries.map(e => e.location).filter(Boolean);
+  const branchesFromEmployees = employees.map(e => e.location).filter(Boolean);
+  const allBranches = [...new Set([...branchesFromEntries, ...branchesFromEmployees])].filter(b => b !== 'Head Office').sort();
+
+  const combinedRows = [];
+
+  allBranches.forEach(branch => {
+    const inv = computeBranchInventory(branch);
+    const outItems = inv.filter(i => i.qty <= 0 && adminData.entries.some(e => e.item_name === i.name && e.location === branch));
+
+    outItems.forEach(item => {
+      combinedRows.push({
+        'Branch': branch,
+        'Item Name': item.name,
+        'Category': item.category,
+        'Quantity': item.qty,
+        'Unit': item.unit || 'No',
+        'Reorder Level': item.reorder,
+        'Status': 'Out of Stock',
+      });
+    });
+  });
+
+  const wb = XLSX.utils.book_new();
+
+  if (combinedRows.length === 0) {
+    const ws = XLSX.utils.json_to_sheet([{ 'Info': 'No out-of-stock items found' }]);
+    XLSX.utils.book_append_sheet(wb, ws, 'Out of Stock');
+  } else {
+    const ws = XLSX.utils.json_to_sheet(combinedRows);
+    ws['!cols'] = [{ wch: 22 }, { wch: 28 }, { wch: 18 }, { wch: 10 }, { wch: 8 }, { wch: 14 }, { wch: 14 }];
+    XLSX.utils.book_append_sheet(wb, ws, 'Out of Stock');
+  }
+
+  XLSX.writeFile(wb, 'Out_Of_Stock_' + new Date().toISOString().slice(0, 10) + '.xlsx');
+  showToast('Out of stock Excel downloaded');
+}
+
 // --- STOCK RECEIVED DATE (Branch) ---
 
 async function renderReceivedDate() {
