@@ -2210,12 +2210,14 @@ function renderReports() {
   // --- Admin branch filter ---
   const branchFilterEl = document.getElementById('report-branch-filter');
   const branchPicker = document.getElementById('report-branch-picker');
+  const outOfStockBtn = document.getElementById('reports-out-of-stock-btn');
 
   let inv, txns;
 
   if (isHeadOffice) {
     // Show branch filter and populate options
     if (branchFilterEl) branchFilterEl.classList.remove('hidden');
+    if (outOfStockBtn) outOfStockBtn.style.display = 'flex';
 
     const allEntries = adminData.entries;
     const allEmployees = adminData.employees;
@@ -2264,6 +2266,7 @@ function renderReports() {
   } else {
     // Regular BOE mode
     if (branchFilterEl) branchFilterEl.classList.add('hidden');
+    if (outOfStockBtn) outOfStockBtn.style.display = 'none';
     inv = appData.inventory;
     txns = appData.transactions;
   }
