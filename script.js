@@ -1146,7 +1146,20 @@ function exportOutOfStockToExcel() {
 
   allBranches.forEach(branch => {
     const inv = computeBranchInventory(branch);
-    const outItems = inv.filter(i => i.qty <= 0 && adminData.entries.some(e => e.item_name === i.name && e.location === branch));
+    const outItems = inv.filter(i => i.qty <= 0);
+
+    if (outItems.length === 0) {
+      combinedRows.push({
+        'Branch': branch,
+        'Item Name': '(No items out of stock)',
+        'Category': '',
+        'Quantity': '',
+        'Unit': '',
+        'Reorder Level': '',
+        'Status': '',
+      });
+      return;
+    }
 
     outItems.forEach(item => {
       combinedRows.push({
@@ -1164,7 +1177,7 @@ function exportOutOfStockToExcel() {
   const wb = XLSX.utils.book_new();
 
   if (combinedRows.length === 0) {
-    const ws = XLSX.utils.json_to_sheet([{ 'Info': 'No out-of-stock items found' }]);
+    const ws = XLSX.utils.json_to_sheet([{ 'Info': 'No branches found' }]);
     XLSX.utils.book_append_sheet(wb, ws, 'Out of Stock');
   } else {
     const ws = XLSX.utils.json_to_sheet(combinedRows);
