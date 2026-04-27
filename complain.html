@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Raise Complaint · Navachetana Hub</title>
+<title>Complaints · Navachetana Hub</title>
 <link rel="icon" href="data:," />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -27,30 +27,24 @@
     --warn-bg: #fff4dc;
     --warn-line: #f1d99a;
 
-    --green: #1f8a52;
-    --green-bg: #e3f6ec;
-    --red: #b3343a;
+    --green: #1f8a52; --green-bg: #e3f6ec;
+    --amber: #a06400; --amber-bg: #fdefcf;
+    --blue: #1d5ed4; --blue-bg: #e2ecff;
+    --purple: #6e3bb3; --purple-bg: #efe5ff;
+    --red: #b3343a; --red-bg: #fde4e6;
 
-    --r-sm: 10px;
-    --r-md: 14px;
-    --r-lg: 20px;
-    --r-xl: 28px;
-    --r-pill: 999px;
+    --r-sm: 10px; --r-md: 14px; --r-lg: 20px; --r-xl: 28px; --r-pill: 999px;
 
     --shadow-sm: 0 1px 2px rgba(20,18,38,0.04), 0 1px 1px rgba(20,18,38,0.03);
     --shadow-md: 0 6px 24px -8px rgba(40,35,70,0.12), 0 2px 6px rgba(40,35,70,0.05);
 
-    --space-3: 14px;
-    --space-4: 18px;
-    --space-5: 24px;
-    --space-6: 32px;
+    --space-3: 14px; --space-4: 18px; --space-5: 24px; --space-6: 32px;
   }
 
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; height: 100%; }
   body {
-    background: var(--bg);
-    color: var(--ink);
+    background: var(--bg); color: var(--ink);
     font-family: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
     font-size: 15px; line-height: 1.5;
     -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
@@ -97,10 +91,11 @@
   }
   .back-btn:hover { background: var(--line); }
 
-  .page { padding: 32px; max-width: 920px; width: 100%; margin: 0 auto; }
-  .page-head { margin-bottom: var(--space-5); }
+  .page { padding: 32px; max-width: 1200px; width: 100%; margin: 0 auto; }
+  .page-head { margin-bottom: var(--space-5); display: flex; align-items: flex-end; gap: var(--space-4); flex-wrap: wrap; }
   .page-head h1 { font-size: 30px; font-weight: 700; letter-spacing: -0.02em; margin: 0 0 4px; }
   .page-head .subtitle { color: var(--ink-3); font-size: 14px; }
+  .page-head .head-actions { margin-left: auto; display: flex; gap: 10px; }
 
   .card { background: var(--card); border-radius: var(--r-xl); border: 1px solid var(--line); box-shadow: var(--shadow-sm); }
   .card-pad { padding: var(--space-6); }
@@ -194,20 +189,186 @@
   .btn-accent:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
   .btn-ghost { background: transparent; color: var(--ink-2); }
   .btn-ghost:hover { background: var(--line-2); }
+  .btn-soft { background: var(--line-2); color: var(--ink); }
+  .btn-soft:hover { background: var(--line); }
+  .btn-sm { padding: 8px 14px; font-size: 13px; }
 
   .actions-bar {
     display: flex; align-items: center; gap: var(--space-3);
     padding: var(--space-4) var(--space-6);
     border-top: 1px solid var(--line-2);
     background: #fdfcf8;
-    border-bottom-left-radius: var(--r-xl);
-    border-bottom-right-radius: var(--r-xl);
+    border-bottom-left-radius: var(--r-xl); border-bottom-right-radius: var(--r-xl);
   }
   .actions-bar .right { margin-left: auto; display: flex; gap: 8px; }
 
   .section-label {
     font-size: 12px; font-weight: 700; letter-spacing: 0.06em;
     text-transform: uppercase; color: var(--ink-3); margin-bottom: 12px;
+  }
+
+  .pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 10px; border-radius: var(--r-pill);
+    font-size: 12px; font-weight: 600; letter-spacing: 0.01em;
+  }
+  .pill .dot { width: 6px; height: 6px; border-radius: 50%; }
+  .pill-amber { background: var(--amber-bg); color: var(--amber); } .pill-amber .dot { background: var(--amber); }
+  .pill-blue { background: var(--blue-bg); color: var(--blue); } .pill-blue .dot { background: var(--blue); }
+  .pill-green { background: var(--green-bg); color: var(--green); } .pill-green .dot { background: var(--green); }
+  .pill-purple { background: var(--purple-bg); color: var(--purple); } .pill-purple .dot { background: var(--purple); }
+  .pill-red { background: var(--red-bg); color: var(--red); } .pill-red .dot { background: var(--red); }
+
+  .dept-tag {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 2px 8px; border-radius: var(--r-pill);
+    font-size: 11px; font-weight: 600;
+    background: var(--line-2); color: var(--ink-2);
+  }
+  .dept-tag.admin { background: #fff1e3; color: #a35a00; }
+  .dept-tag.it    { background: #e6effe; color: #1a4ec4; }
+
+  .stat-row {
+    display: grid; grid-template-columns: repeat(5, 1fr);
+    gap: 12px; margin-bottom: var(--space-5);
+  }
+  .stat {
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: var(--r-lg); padding: var(--space-4);
+  }
+  .stat .num { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; }
+  .stat .label {
+    font-size: 12px; color: var(--ink-3);
+    text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600;
+    margin-top: 2px;
+  }
+
+  .toolbar { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: var(--space-4); align-items: center; }
+  .search {
+    flex: 1; min-width: 220px;
+    display: flex; align-items: center; gap: 8px;
+    background: white; border: 1.5px solid var(--line);
+    border-radius: var(--r-pill); padding: 8px 16px;
+  }
+  .search input { border: 0; background: transparent; flex: 1; }
+  .filter-chip {
+    padding: 8px 14px; border-radius: var(--r-pill);
+    border: 1.5px solid var(--line); background: white;
+    font-size: 13px; font-weight: 500; color: var(--ink-2);
+    display: flex; align-items: center; gap: 6px;
+  }
+  .filter-chip.active { background: var(--ink); color: white; border-color: var(--ink); }
+
+  table.admin-table { width: 100%; border-collapse: separate; border-spacing: 0; }
+  .admin-table th {
+    text-align: left; font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--ink-3);
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--line);
+    background: #faf8f3;
+  }
+  .admin-table td {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--line-2);
+    font-size: 14px; vertical-align: middle;
+  }
+  .admin-table tbody tr { transition: background 0.1s; }
+  .admin-table tbody tr:hover { background: #fdfcf8; cursor: pointer; }
+  .admin-table .id {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 12px; color: var(--ink-3);
+  }
+  .admin-table .branch-cell { font-weight: 500; }
+  .admin-table .branch-cell .small { font-size: 11px; color: var(--ink-3); display: block; }
+
+  .complaint-list { display: flex; flex-direction: column; gap: 12px; margin-top: 12px; }
+  .complaint-row {
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+    padding: var(--space-4) var(--space-5);
+    display: grid; grid-template-columns: 110px 1fr auto;
+    gap: var(--space-4); align-items: center;
+    cursor: pointer; transition: border-color 0.15s, box-shadow 0.15s, transform 0.1s;
+  }
+  .complaint-row:hover { border-color: #d8d3c7; box-shadow: var(--shadow-sm); transform: translateY(-1px); }
+  .complaint-id { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 12px; color: var(--ink-3); }
+  .complaint-row .subject { font-weight: 600; font-size: 15px; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+  .complaint-row .meta { font-size: 12px; color: var(--ink-3); display: flex; gap: 14px; flex-wrap: wrap; }
+  .complaint-row .meta b { color: var(--ink-2); font-weight: 600; }
+
+  .empty { text-align: center; padding: 40px; color: var(--ink-3); font-size: 14px; }
+
+  .drawer-scrim {
+    position: fixed; inset: 0;
+    background: rgba(20,18,38,0.35); backdrop-filter: blur(2px);
+    z-index: 50; animation: fadeIn 0.18s ease;
+  }
+  .drawer {
+    position: fixed; right: 0; top: 0; height: 100vh;
+    width: min(640px, 100vw);
+    background: var(--bg); z-index: 51;
+    display: flex; flex-direction: column;
+    box-shadow: -24px 0 48px rgba(20,18,38,0.18);
+    animation: slideIn 0.22s cubic-bezier(0.2,0.8,0.2,1);
+  }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes slideIn { from { transform: translateX(20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+  .drawer-head {
+    padding: 20px 28px;
+    display: flex; align-items: flex-start; gap: 14px;
+    border-bottom: 1px solid var(--line); background: white;
+  }
+  .drawer-head .id-row {
+    display: flex; align-items: center; gap: 10px;
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 12px; color: var(--ink-3);
+  }
+  .drawer-head h2 { font-size: 22px; font-weight: 700; letter-spacing: -0.01em; margin: 6px 0 0; }
+  .drawer-close {
+    border: 0; background: var(--line-2);
+    width: 36px; height: 36px; border-radius: 50%;
+    font-size: 18px; line-height: 1; margin-left: auto; color: var(--ink-2);
+  }
+  .drawer-close:hover { background: var(--line); }
+  .drawer-body { padding: 24px 28px; overflow-y: auto; flex: 1; }
+  .drawer-meta {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 12px 20px;
+    background: white; border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+    padding: 18px 22px; margin-bottom: 20px;
+  }
+  .drawer-meta .k { font-size: 11px; color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+  .drawer-meta .v { font-size: 14px; font-weight: 500; margin-top: 2px; }
+  .drawer-section-title {
+    font-size: 11px; color: var(--ink-3);
+    text-transform: uppercase; letter-spacing: 0.06em;
+    font-weight: 700; margin: 0 0 10px;
+  }
+  .complaint-body {
+    background: white; border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+    padding: 18px 22px;
+    font-size: 14px; line-height: 1.6; color: var(--ink-2);
+    margin-bottom: 24px; white-space: pre-wrap;
+  }
+  .timeline { display: flex; flex-direction: column; gap: 14px; margin-bottom: 24px; }
+  .timeline-item { display: flex; gap: 14px; }
+  .timeline-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--accent); flex-shrink: 0; margin-top: 6px;
+    position: relative;
+  }
+  .timeline-item:not(:last-child) .timeline-dot::after {
+    content: ""; position: absolute; left: 50%; top: 14px; bottom: -22px;
+    width: 1.5px; background: var(--line); transform: translateX(-50%);
+  }
+  .timeline-content .who { font-size: 13px; font-weight: 600; }
+  .timeline-content .when { font-size: 11px; color: var(--ink-3); }
+  .timeline-content .what { font-size: 13px; color: var(--ink-2); margin-top: 4px; }
+  .drawer-footer {
+    padding: 16px 28px; border-top: 1px solid var(--line);
+    background: white; display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
   }
 
   .confirm-card { text-align: center; padding: 48px 32px; }
@@ -239,6 +400,12 @@
     .actions-bar { padding: 14px 18px; flex-direction: column-reverse; align-items: stretch; }
     .actions-bar .right { width: 100%; flex-direction: column; }
     .actions-bar .btn { width: 100%; justify-content: center; }
+    .stat-row { grid-template-columns: repeat(2, 1fr); }
+    .complaint-row { grid-template-columns: 1fr; gap: 6px; }
+    .drawer { width: 100vw; }
+    .admin-table { font-size: 12px; }
+    .admin-table th, .admin-table td { padding: 10px 8px; }
+    .admin-table .hide-mobile { display: none; }
   }
 </style>
 </head>
@@ -249,7 +416,7 @@
     <div class="brand-mark">N</div>
     <div>
       <div class="brand-name">Navachetana Hub</div>
-      <div class="brand-sub">Raise Complaint</div>
+      <div class="brand-sub" id="brandSub">Complaints</div>
     </div>
   </div>
   <div class="topbar-right">
@@ -268,10 +435,60 @@
 </div>
 
 <main class="page">
+
+<!-- ========== ADMIN VIEW ========== -->
+<div id="adminView" style="display:none">
+  <div class="page-head">
+    <div>
+      <h1>Complaints Overview</h1>
+      <div class="subtitle">All complaints across branches — review, search, and update status.</div>
+    </div>
+    <div class="head-actions">
+      <button class="btn btn-soft btn-sm" onclick="loadAdmin()">
+        <span class="material-symbols-outlined" style="font-size:16px">refresh</span> Refresh
+      </button>
+    </div>
+  </div>
+
+  <div class="stat-row" id="statRow"></div>
+
+  <div class="toolbar">
+    <div class="search">
+      <span class="material-symbols-outlined" style="font-size:18px;color:var(--ink-3)">search</span>
+      <input id="searchInput" placeholder="Search subject, branch, raiser…" />
+    </div>
+    <div id="filterChips" style="display:flex; gap:8px; flex-wrap:wrap"></div>
+  </div>
+
+  <div class="card">
+    <div style="overflow-x:auto">
+      <table class="admin-table" id="adminTable">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Branch</th>
+            <th class="hide-mobile">Department</th>
+            <th>Subject</th>
+            <th class="hide-mobile">Raised By</th>
+            <th class="hide-mobile">Date</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="adminTbody"></tbody>
+      </table>
+    </div>
+    <div id="adminEmpty" class="empty" style="display:none">No complaints match your filters.</div>
+  </div>
+</div>
+
+<!-- ========== BRANCH VIEW ========== -->
+<div id="branchView" style="display:none">
   <div id="formView">
     <div class="page-head">
-      <h1>Raise a Complaint</h1>
-      <div class="subtitle">Tell us what's broken or blocked — we'll route it to the right team.</div>
+      <div>
+        <h1>Raise a Complaint</h1>
+        <div class="subtitle">Tell us what's broken or blocked — we'll route it to the right team.</div>
+      </div>
     </div>
 
     <form class="card" id="complaintForm" autocomplete="off">
@@ -356,6 +573,11 @@
         </div>
       </div>
     </form>
+
+    <div style="margin-top:32px">
+      <div class="section-label" style="margin-bottom:6px">Your branch's recent complaints</div>
+      <div id="branchList" class="complaint-list"></div>
+    </div>
   </div>
 
   <div id="confirmView" style="display:none">
@@ -363,48 +585,79 @@
       <div class="confirm-icon"><span class="material-symbols-outlined" style="font-size:36px">check</span></div>
       <h2>Complaint Sent</h2>
       <p>Thanks — your complaint is in the queue. You'll see status updates here.</p>
-      <div class="ticket" id="ticketId">CMP-2026-0000</div>
+      <div class="ticket" id="ticketId">CMP-0000-0000</div>
       <div class="confirm-actions">
         <button class="btn btn-ghost" onclick="goHome()">Back to Hub</button>
         <button class="btn btn-accent" onclick="raiseAnother()">Raise Another</button>
       </div>
     </div>
   </div>
+</div>
+
 </main>
 
+<!-- Drawer (admin only) -->
+<div id="drawerScrim" class="drawer-scrim" style="display:none" onclick="closeDrawer()"></div>
+<div id="drawer" class="drawer" style="display:none" role="dialog" aria-modal="true">
+  <div class="drawer-head">
+    <div>
+      <div class="id-row">
+        <span id="drawerId">CMP-0000-0000</span>
+        <span id="drawerStatus"></span>
+      </div>
+      <h2 id="drawerSubject">—</h2>
+    </div>
+    <button class="drawer-close" onclick="closeDrawer()">×</button>
+  </div>
+  <div class="drawer-body">
+    <div class="drawer-meta" id="drawerMeta"></div>
+    <div class="drawer-section-title">Complaint</div>
+    <div class="complaint-body" id="drawerContent"></div>
+    <div class="drawer-section-title">Activity</div>
+    <div class="timeline" id="drawerTimeline"></div>
+  </div>
+  <div class="drawer-footer" id="drawerFooter"></div>
+</div>
+
 <script>
+  const SB = 'https://zovnmmdfthpbubrorsgh.supabase.co';
+  const SK = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpvdm5tbWRmdGhwYnVicm9yc2doIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE1NzE3ODgsImV4cCI6MjA3NzE0Nzc4OH0.92BH2sjUOgkw6iSRj1_4gt0p3eThg3QT4VK-Q4EdmBE';
+  const H = { 'apikey': SK, 'Authorization': 'Bearer ' + SK, 'Content-Type': 'application/json' };
+
   const DEPARTMENTS = [
     {
-      id: "admin",
-      name: "Administration Department",
-      icon: "Admin",
+      id: "admin", name: "Administration Department", icon: "Admin",
       problems: [
-        "Stationary Requirements",
-        "Asset Requirements",
-        "Change of premises",
-        "Electricity issues",
-        "Internet payment issues",
-        "Essential Items",
-        "House Keeping Items",
-        "Asset Repair",
-        "Others",
+        "Stationary Requirements","Asset Requirements","Change of premises",
+        "Electricity issues","Internet payment issues","Essential Items",
+        "House Keeping Items","Asset Repair","Others",
       ],
     },
     {
-      id: "it",
-      name: "IT Hardware",
-      icon: "IT",
-      problems: ["Desktop", "Printer", "Close Circuit Camera", "DVR", "UPS and Batteries", "TABs", "Others"],
+      id: "it", name: "IT Hardware", icon: "IT",
+      problems: ["Desktop","Printer","Close Circuit Camera","DVR","UPS and Batteries","TABs","Others"],
     },
   ];
-
-  const STORAGE_KEY = "nc_complaints";
+  const STATUSES = [
+    { id: "pending", label: "Pending", tone: "amber" },
+    { id: "in_progress", label: "In Progress", tone: "blue" },
+    { id: "resolved", label: "Resolved", tone: "green" },
+    { id: "escalated", label: "Escalated", tone: "purple" },
+    { id: "rejected", label: "Rejected", tone: "red" },
+  ];
 
   let state = {
+    isAdmin: false,
     deptId: "admin",
     problem: "",
     otherSubject: "",
     userMissing: false,
+    user: null,
+    branch: "",
+    rows: [],
+    filterStatus: "all",
+    search: "",
+    selected: null,
   };
 
   function getInitials(n) {
@@ -414,30 +667,96 @@
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
   }
-  function newComplaintId() {
-    const yr = new Date().getFullYear();
-    const n = 1000 + Math.floor(Math.random() * 9000);
-    return `CMP-${yr}-${n}`;
+  function ticketIdFor(row) {
+    if (!row) return "";
+    const yr = (row.raised_at || new Date().toISOString()).slice(0, 4);
+    return `CMP-${yr}-${String(row.id).padStart(4, "0")}`;
+  }
+  function fmtDate(iso) {
+    if (!iso) return "";
+    try {
+      const d = new Date(iso);
+      return d.toLocaleDateString("en-IN", { day:"2-digit", month:"short", year:"numeric" });
+    } catch { return iso; }
+  }
+  function fmtDateTime(iso) {
+    if (!iso) return "";
+    try {
+      const d = new Date(iso);
+      return d.toLocaleString("en-IN", { day:"2-digit", month:"short", year:"numeric", hour:"2-digit", minute:"2-digit" });
+    } catch { return iso; }
+  }
+  function deptName(id) {
+    return DEPARTMENTS.find(d => d.id === id)?.name || id;
   }
   function loadSession() {
     try {
       const empRaw = sessionStorage.getItem("sr_employee") || localStorage.getItem("sr_employee");
       const loc = sessionStorage.getItem("sr_location") || localStorage.getItem("sr_location") || "";
+      const isAdmin = (sessionStorage.getItem("sr_headoffice") || localStorage.getItem("sr_headoffice")) === "true";
       const emp = empRaw ? JSON.parse(empRaw) : null;
-      return { emp, loc };
-    } catch { return { emp: null, loc: "" }; }
+      return { emp, loc, isAdmin };
+    } catch { return { emp: null, loc: "", isAdmin: false }; }
   }
   function goHome() { window.location.href = "index.html"; }
+  function statusPill(id) {
+    const s = STATUSES.find(x => x.id === id);
+    if (!s) return '';
+    return `<span class="pill pill-${s.tone}"><span class="dot"></span>${s.label}</span>`;
+  }
 
-  function renderUserChip(emp) {
+  // ---------- Supabase ----------
+  async function sbInsert(row) {
+    const res = await fetch(`${SB}/rest/v1/complaint_records`, {
+      method: 'POST',
+      headers: { ...H, 'Prefer': 'return=representation' },
+      body: JSON.stringify(row),
+    });
+    if (!res.ok) throw new Error('insert failed: ' + res.status);
+    const data = await res.json();
+    return Array.isArray(data) ? data[0] : data;
+  }
+  async function sbInsertLog(complaintId, action, byUser, extra = {}) {
+    try {
+      await fetch(`${SB}/rest/v1/complaint_log`, {
+        method: 'POST', headers: H,
+        body: JSON.stringify({ complaint_id: complaintId, action, by_user: byUser, ...extra }),
+      });
+    } catch {}
+  }
+  async function sbList(branch) {
+    const params = new URLSearchParams({ select: '*', order: 'raised_at.desc' });
+    if (branch) params.set('branch', 'eq.' + branch);
+    const res = await fetch(`${SB}/rest/v1/complaint_records?${params}`, { headers: H });
+    if (!res.ok) return [];
+    return res.json();
+  }
+  async function sbListLog(complaintId) {
+    const params = new URLSearchParams({ select: '*', complaint_id: 'eq.' + complaintId, order: 'at.asc' });
+    const res = await fetch(`${SB}/rest/v1/complaint_log?${params}`, { headers: H });
+    if (!res.ok) return [];
+    return res.json();
+  }
+  async function sbPatchStatus(id, status, byUser, fromStatus) {
+    const res = await fetch(`${SB}/rest/v1/complaint_records?id=eq.${id}`, {
+      method: 'PATCH', headers: H,
+      body: JSON.stringify({ status, updated_at: new Date().toISOString() }),
+    });
+    if (res.ok) {
+      sbInsertLog(id, 'status_change', byUser, { from_status: fromStatus, to_status: status });
+    }
+    return res.ok;
+  }
+
+  // ---------- Form ----------
+  function renderUserChip(emp, isAdmin) {
     if (!emp) return;
     const chip = document.getElementById("userChip");
     chip.style.display = "flex";
     document.getElementById("userAvatar").textContent = getInitials(emp.name);
     document.getElementById("userChipName").textContent = emp.name || "—";
-    document.getElementById("userChipRole").textContent = emp.role || "";
+    document.getElementById("userChipRole").textContent = isAdmin ? "Admin · " + (emp.location || "") : (emp.role || "");
   }
-
   function renderDepts() {
     const host = document.getElementById("deptGrid");
     host.innerHTML = DEPARTMENTS.map(d => `
@@ -451,17 +770,13 @@
     host.querySelectorAll(".dept-card").forEach(el => {
       el.addEventListener("click", () => {
         state.deptId = el.dataset.id;
-        state.problem = "";
-        state.otherSubject = "";
+        state.problem = ""; state.otherSubject = "";
         document.getElementById("otherSubject").value = "";
         document.getElementById("otherSubject").style.display = "none";
-        renderDepts();
-        renderProblems();
-        updateReady();
+        renderDepts(); renderProblems(); updateReady();
       });
     });
   }
-
   function renderProblems() {
     const dept = DEPARTMENTS.find(d => d.id === state.deptId);
     const host = document.getElementById("problemList");
@@ -481,16 +796,13 @@
         } else {
           otherInput.style.display = "none";
         }
-        renderProblems();
-        updateReady();
+        renderProblems(); updateReady();
       });
     });
   }
-
   function getSubject() {
     return state.problem === "__other__" ? state.otherSubject.trim() : state.problem;
   }
-
   function updateReady() {
     const branch = document.getElementById("branch").value.trim();
     const date = document.getElementById("date").value;
@@ -498,26 +810,22 @@
     const content = document.getElementById("content").value.trim();
     const name = document.getElementById("name").value.trim();
     const phone = document.getElementById("phone").value.trim();
-
     const ready = !!(branch && date && state.deptId && subject && content.length >= 10 && name && phone);
     const btn = document.getElementById("submitBtn");
     btn.disabled = !ready;
     document.getElementById("readyDot").style.background = ready ? "var(--green)" : "var(--ink-3)";
     document.getElementById("readyText").textContent = ready ? "Ready to send" : "Fill all required fields to enable Send";
   }
-
   function applyMissingState() {
     const nameEl = document.getElementById("name");
     const phoneEl = document.getElementById("phone");
     const branchEl = document.getElementById("branch");
     const warn = document.getElementById("missingWarn");
-
     if (state.userMissing) {
       warn.style.display = "flex";
       document.getElementById("nameBadge").style.display = "none";
       document.getElementById("phoneBadge").style.display = "none";
-      nameEl.classList.remove("auto");
-      phoneEl.classList.remove("auto");
+      nameEl.classList.remove("auto"); phoneEl.classList.remove("auto");
       if (!nameEl.value) nameEl.classList.add("warn");
       if (!phoneEl.value) phoneEl.classList.add("warn");
       nameEl.placeholder = "Enter your full name";
@@ -537,74 +845,230 @@
       branchEl.classList.add("auto");
     }
   }
-
-  function persistComplaint(c) {
-    let arr = [];
-    try { arr = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"); } catch {}
-    arr.unshift(c);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(arr.slice(0, 200)));
-  }
-
   function showConfirm(id) {
     document.getElementById("formView").style.display = "none";
-    const cv = document.getElementById("confirmView");
-    cv.style.display = "block";
+    document.getElementById("confirmView").style.display = "block";
     document.getElementById("ticketId").textContent = id;
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
-
   function raiseAnother() {
     document.getElementById("complaintForm").reset();
-    state.problem = "";
-    state.otherSubject = "";
+    state.problem = ""; state.otherSubject = "";
     document.getElementById("otherSubject").value = "";
     document.getElementById("otherSubject").style.display = "none";
     document.getElementById("charCount").textContent = "0/800";
     document.getElementById("date").value = todayISO();
-    init(true);
+    initBranchView(true);
     document.getElementById("confirmView").style.display = "none";
     document.getElementById("formView").style.display = "block";
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  function init(skipSession) {
+  async function loadBranchList() {
+    const host = document.getElementById("branchList");
+    host.innerHTML = `<div class="empty">Loading…</div>`;
+    const rows = await sbList(state.branch);
+    if (!rows.length) {
+      host.innerHTML = `<div class="empty">No complaints raised from this branch yet.</div>`;
+      return;
+    }
+    host.innerHTML = rows.slice(0, 20).map(r => `
+      <div class="complaint-row" data-id="${r.id}">
+        <div class="complaint-id">${ticketIdFor(r)}</div>
+        <div>
+          <div class="subject">${escapeHtml(r.subject)} <span class="dept-tag ${r.department_id}">${deptName(r.department_id).replace(' Department','')}</span></div>
+          <div class="meta">
+            <span><b>Date</b> ${fmtDate(r.date)}</span>
+            <span><b>By</b> ${escapeHtml(r.raised_by)}</span>
+          </div>
+        </div>
+        <div>${statusPill(r.status)}</div>
+      </div>
+    `).join("");
+    host.querySelectorAll('.complaint-row').forEach(el => {
+      el.addEventListener('click', () => openDrawer(rows.find(r => r.id == el.dataset.id), false));
+    });
+  }
+
+  // ---------- Admin ----------
+  function renderStats() {
+    const counts = STATUSES.map(s => ({ ...s, n: state.rows.filter(r => r.status === s.id).length }));
+    document.getElementById("statRow").innerHTML = counts.map(s => `
+      <div class="stat">
+        <div class="num" style="color:var(--${s.tone})">${s.n}</div>
+        <div class="label">${s.label}</div>
+      </div>
+    `).join("");
+  }
+  function renderFilterChips() {
+    const host = document.getElementById("filterChips");
+    const all = state.rows.length;
+    const items = [{ id: 'all', label: 'All', n: all }, ...STATUSES.map(s => ({
+      id: s.id, label: s.label, n: state.rows.filter(r => r.status === s.id).length
+    }))];
+    host.innerHTML = items.map(it => `
+      <button class="filter-chip ${state.filterStatus === it.id ? "active" : ""}" data-id="${it.id}">${it.label} <span style="opacity:.6">${it.n}</span></button>
+    `).join('');
+    host.querySelectorAll('.filter-chip').forEach(btn => {
+      btn.addEventListener('click', () => { state.filterStatus = btn.dataset.id; renderFilterChips(); renderAdminTable(); });
+    });
+  }
+  function renderAdminTable() {
+    const q = state.search.trim().toLowerCase();
+    let rows = state.rows;
+    if (state.filterStatus !== 'all') rows = rows.filter(r => r.status === state.filterStatus);
+    if (q) rows = rows.filter(r =>
+      (r.subject || '').toLowerCase().includes(q) ||
+      (r.branch || '').toLowerCase().includes(q) ||
+      (r.raised_by || '').toLowerCase().includes(q) ||
+      ticketIdFor(r).toLowerCase().includes(q)
+    );
+    const tb = document.getElementById("adminTbody");
+    document.getElementById("adminEmpty").style.display = rows.length ? "none" : "block";
+    tb.innerHTML = rows.map(r => `
+      <tr data-id="${r.id}">
+        <td><span class="id">${ticketIdFor(r)}</span></td>
+        <td class="branch-cell">${escapeHtml(r.branch)}</td>
+        <td class="hide-mobile"><span class="dept-tag ${r.department_id}">${deptName(r.department_id).replace(' Department','')}</span></td>
+        <td>${escapeHtml(r.subject)}</td>
+        <td class="hide-mobile">${escapeHtml(r.raised_by)}</td>
+        <td class="hide-mobile">${fmtDate(r.date)}</td>
+        <td>${statusPill(r.status)}</td>
+      </tr>
+    `).join('');
+    tb.querySelectorAll('tr').forEach(tr => {
+      tr.addEventListener('click', () => openDrawer(state.rows.find(r => r.id == tr.dataset.id), true));
+    });
+  }
+  async function loadAdmin() {
+    document.getElementById("adminTbody").innerHTML = `<tr><td colspan="7" class="empty">Loading…</td></tr>`;
+    state.rows = await sbList();
+    renderStats(); renderFilterChips(); renderAdminTable();
+  }
+
+  // ---------- Drawer ----------
+  async function openDrawer(row, adminMode) {
+    if (!row) return;
+    state.selected = row;
+    document.getElementById("drawerId").textContent = ticketIdFor(row);
+    document.getElementById("drawerStatus").innerHTML = statusPill(row.status);
+    document.getElementById("drawerSubject").textContent = row.subject;
+    document.getElementById("drawerContent").textContent = row.content;
+    document.getElementById("drawerMeta").innerHTML = `
+      <div><div class="k">Branch</div><div class="v">${escapeHtml(row.branch)}</div></div>
+      <div><div class="k">Department</div><div class="v">${deptName(row.department_id)}</div></div>
+      <div><div class="k">Date</div><div class="v">${fmtDate(row.date)}</div></div>
+      <div><div class="k">Raised by</div><div class="v">${escapeHtml(row.raised_by)}</div></div>
+      <div><div class="k">Phone</div><div class="v">${escapeHtml(row.phone)}</div></div>
+      <div><div class="k">Raised at</div><div class="v">${fmtDateTime(row.raised_at)}</div></div>
+    `;
+    document.getElementById("drawerTimeline").innerHTML = `<div class="empty" style="padding:8px">Loading…</div>`;
+    document.getElementById("drawerFooter").innerHTML = adminMode ? renderAdminActions(row) : '';
+    document.getElementById("drawerScrim").style.display = "block";
+    document.getElementById("drawer").style.display = "flex";
+
+    const logs = await sbListLog(row.id);
+    const created = `<div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-content"><div class="who">${escapeHtml(row.raised_by)}</div><div class="when">${fmtDateTime(row.raised_at)}</div><div class="what">Raised complaint</div></div></div>`;
+    const logHtml = logs.map(l => `
+      <div class="timeline-item">
+        <div class="timeline-dot" style="background:var(--${STATUSES.find(s => s.id === l.to_status)?.tone || 'accent'})"></div>
+        <div class="timeline-content">
+          <div class="who">${escapeHtml(l.by_user)}</div>
+          <div class="when">${fmtDateTime(l.at)}</div>
+          <div class="what">${l.action === 'status_change' ? `Status: ${STATUSES.find(s=>s.id===l.from_status)?.label || l.from_status || '—'} → ${STATUSES.find(s=>s.id===l.to_status)?.label || l.to_status}` : escapeHtml(l.note || l.action)}</div>
+        </div>
+      </div>
+    `).join('');
+    document.getElementById("drawerTimeline").innerHTML = created + logHtml;
+    if (adminMode) wireAdminActions();
+  }
+  function renderAdminActions(row) {
+    return STATUSES.filter(s => s.id !== row.status).map(s => `
+      <button class="btn btn-soft btn-sm" data-act="set" data-status="${s.id}">Mark ${s.label}</button>
+    `).join('');
+  }
+  function wireAdminActions() {
+    document.getElementById("drawerFooter").querySelectorAll('button[data-act="set"]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const newStatus = btn.dataset.status;
+        const row = state.selected;
+        if (!row) return;
+        btn.disabled = true; btn.textContent = "Updating…";
+        const ok = await sbPatchStatus(row.id, newStatus, state.user?.name || 'Admin', row.status);
+        if (ok) {
+          row.status = newStatus; row.updated_at = new Date().toISOString();
+          state.rows = state.rows.map(r => r.id === row.id ? row : r);
+          renderStats(); renderFilterChips(); renderAdminTable();
+          openDrawer(row, true);
+        } else {
+          btn.disabled = false; btn.textContent = `Mark ${STATUSES.find(s=>s.id===newStatus).label}`;
+          alert('Failed to update status. Try again.');
+        }
+      });
+    });
+  }
+  function closeDrawer() {
+    document.getElementById("drawerScrim").style.display = "none";
+    document.getElementById("drawer").style.display = "none";
+    state.selected = null;
+  }
+
+  function escapeHtml(s) {
+    return String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+  }
+
+  // ---------- Init ----------
+  function initBranchView(skipSession) {
     if (!skipSession) {
-      const { emp, loc } = loadSession();
-      if (emp) renderUserChip(emp);
-      const name = emp?.name || "";
-      const phone = emp?.mobile || emp?.phone || "";
-      const branch = loc || emp?.location || "";
+      const name = state.user?.name || "";
+      const phone = state.user?.mobile || state.user?.phone || "";
       state.userMissing = !name || !phone;
       document.getElementById("name").value = name;
       document.getElementById("phone").value = phone;
-      document.getElementById("branch").value = branch;
+      document.getElementById("branch").value = state.branch;
     }
     document.getElementById("date").value = todayISO();
-    renderDepts();
-    renderProblems();
-    applyMissingState();
-    updateReady();
+    renderDepts(); renderProblems(); applyMissingState(); updateReady();
+  }
+
+  function initAdminView() {
+    document.getElementById("brandSub").textContent = "Complaints · Admin";
+    document.getElementById("searchInput").addEventListener('input', e => {
+      state.search = e.target.value; renderAdminTable();
+    });
+    loadAdmin();
   }
 
   document.addEventListener("DOMContentLoaded", () => {
-    init();
+    const { emp, loc, isAdmin } = loadSession();
+    state.user = emp;
+    state.branch = loc || emp?.location || "";
+    state.isAdmin = isAdmin;
+    if (emp) renderUserChip(emp, isAdmin);
+
+    if (isAdmin) {
+      document.getElementById("adminView").style.display = "block";
+      initAdminView();
+      return;
+    }
+
+    // Branch user
+    document.getElementById("branchView").style.display = "block";
+    initBranchView();
+    loadBranchList();
 
     document.getElementById("content").addEventListener("input", e => {
       document.getElementById("charCount").textContent = `${e.target.value.length}/800`;
       updateReady();
     });
     ["branch","date","name","phone"].forEach(id => {
-      document.getElementById(id).addEventListener("input", () => {
-        applyMissingState();
-        updateReady();
-      });
+      document.getElementById(id).addEventListener("input", () => { applyMissingState(); updateReady(); });
     });
     document.getElementById("otherSubject").addEventListener("input", e => {
-      state.otherSubject = e.target.value;
-      updateReady();
+      state.otherSubject = e.target.value; updateReady();
     });
 
-    document.getElementById("complaintForm").addEventListener("submit", e => {
+    document.getElementById("complaintForm").addEventListener("submit", async e => {
       e.preventDefault();
       const subject = getSubject();
       const branch = document.getElementById("branch").value.trim();
@@ -614,14 +1078,23 @@
       const phone = document.getElementById("phone").value.trim();
       if (!branch || !date || !subject || content.length < 10 || !name || !phone) return;
 
-      const id = newComplaintId();
-      const complaint = {
-        id, branch, date, departmentId: state.deptId, subject, content,
-        raisedBy: name, phone, status: "pending",
-        raisedAt: new Date().toISOString(),
-      };
-      persistComplaint(complaint);
-      showConfirm(id);
+      const btn = document.getElementById("submitBtn");
+      btn.disabled = true; btn.textContent = "Sending…";
+      try {
+        const row = await sbInsert({
+          branch, date, department_id: state.deptId,
+          subject, content, raised_by: name, phone,
+          emp_id: state.user?.emp_id || null, status: 'pending',
+          raised_at: new Date().toISOString(),
+        });
+        await sbInsertLog(row.id, 'created', name);
+        showConfirm(ticketIdFor(row));
+        loadBranchList();
+      } catch (err) {
+        console.error(err);
+        alert('Could not send complaint. Check connection and try again.');
+        btn.disabled = false; btn.textContent = "Send Complaint →";
+      }
     });
   });
 </script>
