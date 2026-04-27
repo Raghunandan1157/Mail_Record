@@ -182,15 +182,19 @@
   .module-card:hover { transform: translateY(-6px); box-shadow: 0 12px 36px rgba(0,0,0,0.1); }
   .module-card.stationary:hover { border-color: #137fec; }
   .module-card.mail:hover { border-color: #0f3460; }
+  .module-card.complain:hover { border-color: #d9480f; }
   .module-card .icon-wrap { width: 72px; height: 72px; border-radius: 18px; display: flex; align-items: center; justify-content: center; margin: 0 auto 18px; }
   .module-card.stationary .icon-wrap { background: rgba(19,127,236,0.1); }
   .module-card.mail .icon-wrap { background: rgba(15,52,96,0.1); }
+  .module-card.complain .icon-wrap { background: rgba(217,72,15,0.1); }
   .module-card .icon-wrap .material-symbols-outlined { font-size: 2rem; }
   .module-card.stationary .icon-wrap .material-symbols-outlined { color: #137fec; }
   .module-card.mail .icon-wrap .material-symbols-outlined { color: #0f3460; }
+  .module-card.complain .icon-wrap .material-symbols-outlined { color: #d9480f; }
   .module-card h2 { font-size: 1.15rem; font-weight: 700; margin-bottom: 6px; }
   .module-card.stationary h2 { color: #137fec; }
   .module-card.mail h2 { color: #0f3460; }
+  .module-card.complain h2 { color: #d9480f; }
   .module-card p { font-size: 0.82rem; color: #888; line-height: 1.4; }
 
   @media (max-width: 650px) {
@@ -313,6 +317,11 @@
       <div class="icon-wrap"><span class="material-symbols-outlined">mail</span></div>
       <h2>Mail Record</h2>
       <p>Inward & outward mail tracking with daily reports</p>
+    </div>
+    <div class="module-card complain" onclick="openModule('complain')">
+      <div class="icon-wrap"><span class="material-symbols-outlined">report</span></div>
+      <h2>Raise Complain</h2>
+      <p>Coming soon</p>
     </div>
   </div>
 </div>
@@ -499,7 +508,11 @@
     document.getElementById('modLoc').textContent = selectedLocation;
   }
 
-  function openModule(mod) { window.location.href = mod === 'stationary' ? 'stationary.html' : 'mailrecord.html'; }
+  function openModule(mod) {
+    if (mod === 'stationary') window.location.href = 'stationary.html';
+    else if (mod === 'mail') window.location.href = 'mailrecord.html';
+    else if (mod === 'complain') return;
+  }
 
   function logout() {
     ['sr_employee','sr_location','sr_headoffice','sr_login_time','mr_session'].forEach(k=>{sessionStorage.removeItem(k);localStorage.removeItem(k);});
