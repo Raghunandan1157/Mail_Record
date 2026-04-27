@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Raise Complaint · Navachetana Hub</title>
+<link rel="icon" href="data:," />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL@20..48,100..700,0..1" rel="stylesheet" />
+<style>
+  :root {
+    --accent: #6c63ff;
+    --accent-soft: #efeeff;
+    --accent-strong: #5a52e0;
+
+    --bg: #fbf8f3;
+    --card: #ffffff;
+    --ink: #1f1d2b;
+    --ink-2: #4a4860;
+    --ink-3: #8a87a0;
+    --line: #ece8df;
+    --line-2: #f4f1ea;
+
+    --warn: #b06b00;
+    --warn-bg: #fff4dc;
+    --warn-line: #f1d99a;
+
+    --green: #1f8a52;
+    --green-bg: #e3f6ec;
+    --red: #b3343a;
+
+    --r-sm: 10px;
+    --r-md: 14px;
+    --r-lg: 20px;
+    --r-xl: 28px;
+    --r-pill: 999px;
+
+    --shadow-sm: 0 1px 2px rgba(20,18,38,0.04), 0 1px 1px rgba(20,18,38,0.03);
+    --shadow-md: 0 6px 24px -8px rgba(40,35,70,0.12), 0 2px 6px rgba(40,35,70,0.05);
+
+    --space-3: 14px;
+    --space-4: 18px;
+    --space-5: 24px;
+    --space-6: 32px;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    font-size: 15px; line-height: 1.5;
+    -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
+  }
+  button { font-family: inherit; cursor: pointer; }
+  input, textarea, select { font-family: inherit; font-size: inherit; color: inherit; }
+  input:focus, textarea:focus, select:focus { outline: none; }
+
+  .topbar {
+    display: flex; align-items: center; gap: var(--space-4);
+    padding: 14px 28px;
+    background: rgba(255,255,255,0.85);
+    backdrop-filter: saturate(140%) blur(10px);
+    border-bottom: 1px solid var(--line);
+    position: sticky; top: 0; z-index: 10;
+  }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; letter-spacing: -0.01em; }
+  .brand-mark {
+    width: 32px; height: 32px; border-radius: 10px;
+    background: linear-gradient(135deg, var(--accent), #8a82ff);
+    display: grid; place-items: center; color: white; font-weight: 800; font-size: 15px;
+    box-shadow: var(--shadow-sm);
+  }
+  .brand-name { font-size: 16px; }
+  .brand-sub { color: var(--ink-3); font-size: 12px; font-weight: 500; }
+
+  .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+  .user-chip {
+    display: flex; align-items: center; gap: 10px;
+    padding: 4px 14px 4px 4px; border-radius: var(--r-pill); background: var(--line-2);
+  }
+  .avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    display: grid; place-items: center; font-size: 12px; font-weight: 700;
+    background: var(--accent-soft); color: var(--accent-strong);
+  }
+  .user-chip-name { font-size: 13px; font-weight: 600; }
+  .user-chip-role { font-size: 11px; color: var(--ink-3); }
+  .back-btn {
+    border: 0; background: var(--line-2); color: var(--ink-2);
+    padding: 8px 14px; border-radius: var(--r-pill);
+    font-size: 13px; font-weight: 600;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .back-btn:hover { background: var(--line); }
+
+  .page { padding: 32px; max-width: 920px; width: 100%; margin: 0 auto; }
+  .page-head { margin-bottom: var(--space-5); }
+  .page-head h1 { font-size: 30px; font-weight: 700; letter-spacing: -0.02em; margin: 0 0 4px; }
+  .page-head .subtitle { color: var(--ink-3); font-size: 14px; }
+
+  .card { background: var(--card); border-radius: var(--r-xl); border: 1px solid var(--line); box-shadow: var(--shadow-sm); }
+  .card-pad { padding: var(--space-6); }
+  .card-head {
+    padding: var(--space-5) var(--space-6);
+    border-bottom: 1px solid var(--line-2);
+    display: flex; align-items: center; gap: var(--space-3);
+  }
+  .card-head h2 { margin: 0; font-size: 17px; font-weight: 700; letter-spacing: -0.01em; }
+  .card-head .hint { color: var(--ink-3); font-size: 13px; margin-left: auto; }
+
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4) var(--space-5); }
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field label {
+    font-size: 12px; font-weight: 600; color: var(--ink-2);
+    letter-spacing: 0.02em; text-transform: uppercase;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .field .req { color: var(--red); }
+  .field .auto-badge {
+    font-size: 10px; font-weight: 700;
+    padding: 2px 7px; border-radius: var(--r-pill);
+    background: var(--accent-soft); color: var(--accent-strong);
+    letter-spacing: 0.04em; text-transform: uppercase; margin-left: auto;
+  }
+
+  .input, .textarea, .select {
+    background: white; border: 1.5px solid var(--line);
+    border-radius: var(--r-md); padding: 12px 14px; font-size: 14px;
+    transition: border-color 0.15s, box-shadow 0.15s; width: 100%;
+  }
+  .input:hover, .textarea:hover, .select:hover { border-color: #d8d3c7; }
+  .input:focus, .textarea:focus, .select:focus { border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
+  .input.auto, .select.auto { background: #faf8f3; }
+  .input.warn { border-color: var(--warn-line); background: var(--warn-bg); }
+  .textarea { resize: vertical; min-height: 140px; line-height: 1.55; }
+
+  .helper { font-size: 12px; color: var(--ink-3); }
+  .warn-text {
+    display: flex; align-items: flex-start; gap: 8px;
+    font-size: 12px; color: var(--warn);
+    background: var(--warn-bg);
+    border: 1px solid var(--warn-line);
+    border-radius: var(--r-sm);
+    padding: 10px 12px;
+  }
+  .warn-text .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--warn); flex-shrink: 0; margin-top: 6px; }
+
+  .dept-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
+  .dept-card {
+    border: 1.5px solid var(--line); border-radius: var(--r-lg);
+    padding: var(--space-4); background: white; cursor: pointer;
+    transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s;
+    display: flex; align-items: center; gap: 14px;
+  }
+  .dept-card:hover { border-color: #d8d3c7; transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+  .dept-card.active {
+    border-color: var(--accent); background: var(--accent-soft);
+    box-shadow: 0 0 0 4px #efeeff;
+  }
+  .dept-icon {
+    width: 44px; height: 44px; border-radius: 14px;
+    background: var(--line-2);
+    display: grid; place-items: center;
+    font-weight: 700; font-size: 13px; color: var(--ink-2);
+  }
+  .dept-card.active .dept-icon { background: white; color: var(--accent); }
+  .dept-name { font-weight: 600; font-size: 14px; }
+  .dept-count { font-size: 12px; color: var(--ink-3); }
+
+  .problem-list { display: flex; flex-wrap: wrap; gap: 8px; }
+  .problem-chip {
+    padding: 9px 14px; border-radius: var(--r-pill);
+    border: 1.5px solid var(--line); background: white;
+    font-size: 13px; font-weight: 500; color: var(--ink-2);
+    cursor: pointer; transition: all 0.12s;
+  }
+  .problem-chip:hover { border-color: #d8d3c7; color: var(--ink); }
+  .problem-chip.active { background: var(--ink); color: white; border-color: var(--ink); }
+  .problem-chip.other { border-style: dashed; }
+
+  .btn {
+    border: 0; padding: 12px 20px; font-size: 14px; font-weight: 600;
+    border-radius: var(--r-pill);
+    display: inline-flex; align-items: center; gap: 8px;
+    transition: transform 0.1s, box-shadow 0.15s, background 0.15s;
+  }
+  .btn:active { transform: translateY(1px); }
+  .btn-accent { background: var(--accent); color: white; box-shadow: 0 6px 16px -6px var(--accent); }
+  .btn-accent:hover:not(:disabled) { background: var(--accent-strong); }
+  .btn-accent:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
+  .btn-ghost { background: transparent; color: var(--ink-2); }
+  .btn-ghost:hover { background: var(--line-2); }
+
+  .actions-bar {
+    display: flex; align-items: center; gap: var(--space-3);
+    padding: var(--space-4) var(--space-6);
+    border-top: 1px solid var(--line-2);
+    background: #fdfcf8;
+    border-bottom-left-radius: var(--r-xl);
+    border-bottom-right-radius: var(--r-xl);
+  }
+  .actions-bar .right { margin-left: auto; display: flex; gap: 8px; }
+
+  .section-label {
+    font-size: 12px; font-weight: 700; letter-spacing: 0.06em;
+    text-transform: uppercase; color: var(--ink-3); margin-bottom: 12px;
+  }
+
+  .confirm-card { text-align: center; padding: 48px 32px; }
+  .confirm-icon {
+    width: 72px; height: 72px; margin: 0 auto 20px;
+    border-radius: 50%; background: var(--green-bg); color: var(--green);
+    display: grid; place-items: center;
+    font-size: 36px; font-weight: 700;
+  }
+  .confirm-card h2 { font-size: 24px; margin: 0 0 6px; letter-spacing: -0.01em; }
+  .confirm-card .ticket {
+    display: inline-block; margin-top: 16px;
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 14px; background: var(--line-2);
+    padding: 8px 14px; border-radius: var(--r-md); color: var(--ink);
+  }
+  .confirm-card p { color: var(--ink-3); font-size: 14px; }
+  .confirm-actions { margin-top: 28px; display: flex; gap: 10px; justify-content: center; }
+
+  @media (max-width: 720px) {
+    .topbar { padding: 12px 16px; gap: 10px; flex-wrap: wrap; }
+    .user-chip-role { display: none; }
+    .page { padding: 18px; }
+    .page-head h1 { font-size: 22px; }
+    .form-grid { grid-template-columns: 1fr; }
+    .dept-grid { grid-template-columns: 1fr; }
+    .card-pad { padding: 18px; }
+    .card-head { padding: 16px 18px; }
+    .actions-bar { padding: 14px 18px; flex-direction: column-reverse; align-items: stretch; }
+    .actions-bar .right { width: 100%; flex-direction: column; }
+    .actions-bar .btn { width: 100%; justify-content: center; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-mark">N</div>
+    <div>
+      <div class="brand-name">Navachetana Hub</div>
+      <div class="brand-sub">Raise Complaint</div>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <button class="back-btn" onclick="goHome()">
+      <span class="material-symbols-outlined" style="font-size:16px">arrow_back</span>
+      Back to Hub
+    </button>
+    <div class="user-chip" id="userChip" style="display:none">
+      <div class="avatar" id="userAvatar">?</div>
+      <div>
+        <div class="user-chip-name" id="userChipName">—</div>
+        <div class="user-chip-role" id="userChipRole">—</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<main class="page">
+  <div id="formView">
+    <div class="page-head">
+      <h1>Raise a Complaint</h1>
+      <div class="subtitle">Tell us what's broken or blocked — we'll route it to the right team.</div>
+    </div>
+
+    <form class="card" id="complaintForm" autocomplete="off">
+      <div class="card-head">
+        <h2>New Complaint</h2>
+        <span class="hint">Required fields marked with <span style="color:var(--red)">*</span></span>
+      </div>
+
+      <div class="card-pad" style="display:flex; flex-direction:column; gap:22px">
+        <div class="form-grid">
+          <div class="field">
+            <label>
+              Branch <span class="req">*</span>
+              <span class="auto-badge" id="branchBadge">Auto</span>
+            </label>
+            <input id="branch" class="input auto" type="text" placeholder="Your branch / location" />
+            <div class="helper">Detected from your login session — change if needed.</div>
+          </div>
+          <div class="field">
+            <label>Date <span class="req">*</span></label>
+            <input id="date" class="input" type="date" />
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Department <span class="req">*</span></label>
+          <div class="dept-grid" id="deptGrid"></div>
+        </div>
+
+        <div class="field">
+          <label>
+            Problem <span class="req">*</span>
+            <span class="helper" style="margin-left:auto; text-transform:none; letter-spacing:0; font-weight:500">Pick a common one or choose "Other"</span>
+          </label>
+          <div class="problem-list" id="problemList"></div>
+          <input id="otherSubject" class="input" style="margin-top:10px; display:none" placeholder="Type your own subject…" maxlength="80" />
+        </div>
+
+        <div class="field">
+          <label>
+            Describe the issue <span class="req">*</span>
+            <span class="helper" id="charCount" style="margin-left:auto; text-transform:none; letter-spacing:0; font-weight:500">0/800</span>
+          </label>
+          <textarea id="content" class="textarea" maxlength="800" placeholder="Give as much detail as you can — when it started, what's affected, anything you've already tried…"></textarea>
+        </div>
+
+        <div>
+          <div class="section-label">Your Contact Details</div>
+          <div class="warn-text" id="missingWarn" style="display:none; margin-bottom:12px">
+            <span class="dot"></span>
+            <div>
+              <b>We couldn't auto-load your details</b> — please enter your name and phone manually before sending. They will be saved for next time.
+            </div>
+          </div>
+          <div class="form-grid">
+            <div class="field">
+              <label>
+                Name <span class="req">*</span>
+                <span class="auto-badge" id="nameBadge">Auto</span>
+              </label>
+              <input id="name" class="input auto" type="text" />
+            </div>
+            <div class="field">
+              <label>
+                Phone <span class="req">*</span>
+                <span class="auto-badge" id="phoneBadge">Auto</span>
+              </label>
+              <input id="phone" class="input auto" type="tel" inputmode="tel" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="actions-bar">
+        <span class="helper" style="display:flex; align-items:center; gap:8px">
+          <span id="readyDot" style="width:7px; height:7px; border-radius:50%; background:var(--ink-3); display:inline-block"></span>
+          <span id="readyText">Fill all required fields to enable Send</span>
+        </span>
+        <div class="right">
+          <button type="button" class="btn btn-ghost" onclick="goHome()">Cancel</button>
+          <button type="submit" id="submitBtn" class="btn btn-accent" disabled>Send Complaint →</button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <div id="confirmView" style="display:none">
+    <div class="card confirm-card">
+      <div class="confirm-icon"><span class="material-symbols-outlined" style="font-size:36px">check</span></div>
+      <h2>Complaint Sent</h2>
+      <p>Thanks — your complaint is in the queue. You'll see status updates here.</p>
+      <div class="ticket" id="ticketId">CMP-2026-0000</div>
+      <div class="confirm-actions">
+        <button class="btn btn-ghost" onclick="goHome()">Back to Hub</button>
+        <button class="btn btn-accent" onclick="raiseAnother()">Raise Another</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+  const DEPARTMENTS = [
+    {
+      id: "admin",
+      name: "Administration Department",
+      icon: "Admin",
+      problems: [
+        "Stationary Requirements",
+        "Asset Requirements",
+        "Change of premises",
+        "Electricity issues",
+        "Internet payment issues",
+        "Essential Items",
+        "House Keeping Items",
+        "Asset Repair",
+        "Others",
+      ],
+    },
+    {
+      id: "it",
+      name: "IT Hardware",
+      icon: "IT",
+      problems: ["Desktop", "Printer", "Close Circuit Camera", "DVR", "UPS and Batteries", "TABs", "Others"],
+    },
+  ];
+
+  const STORAGE_KEY = "nc_complaints";
+
+  let state = {
+    deptId: "admin",
+    problem: "",
+    otherSubject: "",
+    userMissing: false,
+  };
+
+  function getInitials(n) {
+    return (n || "?").split(" ").map(p => p[0]).slice(0,2).join("").toUpperCase();
+  }
+  function todayISO() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+  }
+  function newComplaintId() {
+    const yr = new Date().getFullYear();
+    const n = 1000 + Math.floor(Math.random() * 9000);
+    return `CMP-${yr}-${n}`;
+  }
+  function loadSession() {
+    try {
+      const empRaw = sessionStorage.getItem("sr_employee") || localStorage.getItem("sr_employee");
+      const loc = sessionStorage.getItem("sr_location") || localStorage.getItem("sr_location") || "";
+      const emp = empRaw ? JSON.parse(empRaw) : null;
+      return { emp, loc };
+    } catch { return { emp: null, loc: "" }; }
+  }
+  function goHome() { window.location.href = "index.html"; }
+
+  function renderUserChip(emp) {
+    if (!emp) return;
+    const chip = document.getElementById("userChip");
+    chip.style.display = "flex";
+    document.getElementById("userAvatar").textContent = getInitials(emp.name);
+    document.getElementById("userChipName").textContent = emp.name || "—";
+    document.getElementById("userChipRole").textContent = emp.role || "";
+  }
+
+  function renderDepts() {
+    const host = document.getElementById("deptGrid");
+    host.innerHTML = DEPARTMENTS.map(d => `
+      <div class="dept-card ${state.deptId === d.id ? "active" : ""}" data-id="${d.id}">
+        <div class="dept-icon">${d.icon}</div>
+        <div>
+          <div class="dept-name">${d.name}</div>
+          <div class="dept-count">${d.problems.length} common issues</div>
+        </div>
+      </div>`).join("");
+    host.querySelectorAll(".dept-card").forEach(el => {
+      el.addEventListener("click", () => {
+        state.deptId = el.dataset.id;
+        state.problem = "";
+        state.otherSubject = "";
+        document.getElementById("otherSubject").value = "";
+        document.getElementById("otherSubject").style.display = "none";
+        renderDepts();
+        renderProblems();
+        updateReady();
+      });
+    });
+  }
+
+  function renderProblems() {
+    const dept = DEPARTMENTS.find(d => d.id === state.deptId);
+    const host = document.getElementById("problemList");
+    const visible = dept.problems.filter(p => p !== "Others");
+    host.innerHTML = visible.map(p => `
+      <button type="button" class="problem-chip ${state.problem === p ? "active" : ""}" data-p="${p}">${p}</button>
+    `).join("") + `
+      <button type="button" class="problem-chip other ${state.problem === "__other__" ? "active" : ""}" data-p="__other__">+ Other</button>
+    `;
+    host.querySelectorAll(".problem-chip").forEach(btn => {
+      btn.addEventListener("click", () => {
+        state.problem = btn.dataset.p;
+        const otherInput = document.getElementById("otherSubject");
+        if (state.problem === "__other__") {
+          otherInput.style.display = "block";
+          setTimeout(() => otherInput.focus(), 0);
+        } else {
+          otherInput.style.display = "none";
+        }
+        renderProblems();
+        updateReady();
+      });
+    });
+  }
+
+  function getSubject() {
+    return state.problem === "__other__" ? state.otherSubject.trim() : state.problem;
+  }
+
+  function updateReady() {
+    const branch = document.getElementById("branch").value.trim();
+    const date = document.getElementById("date").value;
+    const subject = getSubject();
+    const content = document.getElementById("content").value.trim();
+    const name = document.getElementById("name").value.trim();
+    const phone = document.getElementById("phone").value.trim();
+
+    const ready = !!(branch && date && state.deptId && subject && content.length >= 10 && name && phone);
+    const btn = document.getElementById("submitBtn");
+    btn.disabled = !ready;
+    document.getElementById("readyDot").style.background = ready ? "var(--green)" : "var(--ink-3)";
+    document.getElementById("readyText").textContent = ready ? "Ready to send" : "Fill all required fields to enable Send";
+  }
+
+  function applyMissingState() {
+    const nameEl = document.getElementById("name");
+    const phoneEl = document.getElementById("phone");
+    const branchEl = document.getElementById("branch");
+    const warn = document.getElementById("missingWarn");
+
+    if (state.userMissing) {
+      warn.style.display = "flex";
+      document.getElementById("nameBadge").style.display = "none";
+      document.getElementById("phoneBadge").style.display = "none";
+      nameEl.classList.remove("auto");
+      phoneEl.classList.remove("auto");
+      if (!nameEl.value) nameEl.classList.add("warn");
+      if (!phoneEl.value) phoneEl.classList.add("warn");
+      nameEl.placeholder = "Enter your full name";
+      phoneEl.placeholder = "+91 …";
+    } else {
+      warn.style.display = "none";
+      document.getElementById("nameBadge").style.display = "inline-flex";
+      document.getElementById("phoneBadge").style.display = "inline-flex";
+      nameEl.classList.add("auto"); phoneEl.classList.add("auto");
+      nameEl.classList.remove("warn"); phoneEl.classList.remove("warn");
+    }
+    if (!branchEl.value) {
+      document.getElementById("branchBadge").style.display = "none";
+      branchEl.classList.remove("auto");
+    } else {
+      document.getElementById("branchBadge").style.display = "inline-flex";
+      branchEl.classList.add("auto");
+    }
+  }
+
+  function persistComplaint(c) {
+    let arr = [];
+    try { arr = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"); } catch {}
+    arr.unshift(c);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(arr.slice(0, 200)));
+  }
+
+  function showConfirm(id) {
+    document.getElementById("formView").style.display = "none";
+    const cv = document.getElementById("confirmView");
+    cv.style.display = "block";
+    document.getElementById("ticketId").textContent = id;
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function raiseAnother() {
+    document.getElementById("complaintForm").reset();
+    state.problem = "";
+    state.otherSubject = "";
+    document.getElementById("otherSubject").value = "";
+    document.getElementById("otherSubject").style.display = "none";
+    document.getElementById("charCount").textContent = "0/800";
+    document.getElementById("date").value = todayISO();
+    init(true);
+    document.getElementById("confirmView").style.display = "none";
+    document.getElementById("formView").style.display = "block";
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function init(skipSession) {
+    if (!skipSession) {
+      const { emp, loc } = loadSession();
+      if (emp) renderUserChip(emp);
+      const name = emp?.name || "";
+      const phone = emp?.mobile || emp?.phone || "";
+      const branch = loc || emp?.location || "";
+      state.userMissing = !name || !phone;
+      document.getElementById("name").value = name;
+      document.getElementById("phone").value = phone;
+      document.getElementById("branch").value = branch;
+    }
+    document.getElementById("date").value = todayISO();
+    renderDepts();
+    renderProblems();
+    applyMissingState();
+    updateReady();
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    init();
+
+    document.getElementById("content").addEventListener("input", e => {
+      document.getElementById("charCount").textContent = `${e.target.value.length}/800`;
+      updateReady();
+    });
+    ["branch","date","name","phone"].forEach(id => {
+      document.getElementById(id).addEventListener("input", () => {
+        applyMissingState();
+        updateReady();
+      });
+    });
+    document.getElementById("otherSubject").addEventListener("input", e => {
+      state.otherSubject = e.target.value;
+      updateReady();
+    });
+
+    document.getElementById("complaintForm").addEventListener("submit", e => {
+      e.preventDefault();
+      const subject = getSubject();
+      const branch = document.getElementById("branch").value.trim();
+      const date = document.getElementById("date").value;
+      const content = document.getElementById("content").value.trim();
+      const name = document.getElementById("name").value.trim();
+      const phone = document.getElementById("phone").value.trim();
+      if (!branch || !date || !subject || content.length < 10 || !name || !phone) return;
+
+      const id = newComplaintId();
+      const complaint = {
+        id, branch, date, departmentId: state.deptId, subject, content,
+        raisedBy: name, phone, status: "pending",
+        raisedAt: new Date().toISOString(),
+      };
+      persistComplaint(complaint);
+      showConfirm(id);
+    });
+  });
+</script>
+
+</body>
+</html>
