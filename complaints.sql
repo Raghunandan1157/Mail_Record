@@ -41,3 +41,32 @@ ALTER TABLE complaint_log ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Allow all on complaint_records" ON complaint_records FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow all on complaint_log" ON complaint_log FOR ALL USING (true) WITH CHECK (true);
+
+-- Department config (admin-managed via Manage Departments UI)
+CREATE TABLE IF NOT EXISTS complaint_dept_config (
+  id BIGSERIAL PRIMARY KEY,
+  dept_key TEXT UNIQUE NOT NULL,
+  name TEXT NOT NULL,
+  icon TEXT NOT NULL DEFAULT '',
+  problems JSONB NOT NULL DEFAULT '[]'::jsonb,
+  sort_order INT NOT NULL DEFAULT 0,
+  active BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_complaint_dept_config_active ON complaint_dept_config(active);
+CREATE INDEX IF NOT EXISTS idx_complaint_dept_config_sort ON complaint_dept_config(sort_order);
+
+ALTER TABLE complaint_dept_config ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow all on complaint_dept_config" ON complaint_dept_config FOR ALL USING (true) WITH CHECK (true);
+
+INSERT INTO complaint_dept_config (dept_key, name, icon, sort_order, problems) VALUES
+  ('admin', 'Administration Department', 'Admin', 1,
+   '["Stationary Requirements","Asset Requirements","Change of premises","Electricity issues","Internet payment issues","Essential Items","House Keeping Items","Asset Repair"]'::jsonb),
+  ('it', 'IT Hardware', 'IT', 2,
+   '["Desktop","Printer","Close Circuit Camera","DVR","UPS and Batteries","TABs"]'::jsonb)
+ON CONFLICT (dept_key) DO NOTHING;
+
+-- Drop hardcoded check on complaint_records.department_id so admin can add new depts
+ALTER TABLE complaint_records DROP CONSTRAINT IF EXISTS complaint_records_department_id_check;

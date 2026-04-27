@@ -444,6 +444,9 @@
       <div class="subtitle">All complaints across branches — review, search, and update status.</div>
     </div>
     <div class="head-actions">
+      <button class="btn btn-soft btn-sm" onclick="openDeptEditor()">
+        <span class="material-symbols-outlined" style="font-size:16px">tune</span> Manage Departments
+      </button>
       <button class="btn btn-soft btn-sm" onclick="loadAdmin()">
         <span class="material-symbols-outlined" style="font-size:16px">refresh</span> Refresh
       </button>
@@ -596,6 +599,34 @@
 
 </main>
 
+<!-- Dept editor (admin only) -->
+<div id="deptScrim" class="drawer-scrim" style="display:none" onclick="closeDeptEditor()"></div>
+<div id="deptDrawer" class="drawer" style="display:none" role="dialog" aria-modal="true">
+  <div class="drawer-head">
+    <div>
+      <div class="id-row"><span>Settings</span></div>
+      <h2>Manage Departments</h2>
+    </div>
+    <button class="drawer-close" onclick="closeDeptEditor()">×</button>
+  </div>
+  <div class="drawer-body">
+    <div class="helper" style="margin-bottom:14px">
+      Add departments and their problem subjects. These are used by the Raise Complaint form for branch users.
+      "Other" is always available as a free-text option — no need to add it.
+    </div>
+    <div id="deptEditorList" style="display:flex; flex-direction:column; gap:14px"></div>
+    <button id="addDeptBtn" class="btn btn-soft btn-sm" style="margin-top:16px">
+      <span class="material-symbols-outlined" style="font-size:16px">add</span> Add Department
+    </button>
+  </div>
+  <div class="drawer-footer">
+    <span class="helper" id="deptSaveHint">Changes save automatically.</span>
+    <div style="margin-left:auto">
+      <button class="btn btn-accent btn-sm" onclick="closeDeptEditor()">Done</button>
+    </div>
+  </div>
+</div>
+
 <!-- Drawer (admin only) -->
 <div id="drawerScrim" class="drawer-scrim" style="display:none" onclick="closeDrawer()"></div>
 <div id="drawer" class="drawer" style="display:none" role="dialog" aria-modal="true">
@@ -624,20 +655,8 @@
   const SK = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpvdm5tbWRmdGhwYnVicm9yc2doIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE1NzE3ODgsImV4cCI6MjA3NzE0Nzc4OH0.92BH2sjUOgkw6iSRj1_4gt0p3eThg3QT4VK-Q4EdmBE';
   const H = { 'apikey': SK, 'Authorization': 'Bearer ' + SK, 'Content-Type': 'application/json' };
 
-  const DEPARTMENTS = [
-    {
-      id: "admin", name: "Administration Department", icon: "Admin",
-      problems: [
-        "Stationary Requirements","Asset Requirements","Change of premises",
-        "Electricity issues","Internet payment issues","Essential Items",
-        "House Keeping Items","Asset Repair","Others",
-      ],
-    },
-    {
-      id: "it", name: "IT Hardware", icon: "IT",
-      problems: ["Desktop","Printer","Close Circuit Camera","DVR","UPS and Batteries","TABs","Others"],
-    },
-  ];
+  // DEPARTMENTS loaded from complaint_dept_config table at runtime.
+  let DEPARTMENTS = [];
   const STATUSES = [
     { id: "pending", label: "Pending", tone: "amber" },
     { id: "in_progress", label: "In Progress", tone: "blue" },
@@ -706,6 +725,41 @@
   }
 
   // ---------- Supabase ----------
+  async function sbLoadDepts() {
+    const params = new URLSearchParams({
+      select: '*', active: 'eq.true', order: 'sort_order.asc',
+    });
+    const res = await fetch(`${SB}/rest/v1/complaint_dept_config?${params}`, { headers: H });
+    if (!res.ok) return [];
+    const rows = await res.json();
+    return rows.map(r => ({
+      id: r.dept_key, _row_id: r.id, name: r.name, icon: r.icon || '',
+      problems: Array.isArray(r.problems) ? r.problems : [],
+      sort_order: r.sort_order, active: r.active,
+    }));
+  }
+  async function sbInsertDept(row) {
+    const res = await fetch(`${SB}/rest/v1/complaint_dept_config`, {
+      method: 'POST', headers: { ...H, 'Prefer': 'return=representation' },
+      body: JSON.stringify(row),
+    });
+    if (!res.ok) throw new Error('dept insert failed: ' + res.status);
+    return (await res.json())[0];
+  }
+  async function sbUpdateDept(id, patch) {
+    const res = await fetch(`${SB}/rest/v1/complaint_dept_config?id=eq.${id}`, {
+      method: 'PATCH', headers: H,
+      body: JSON.stringify({ ...patch, updated_at: new Date().toISOString() }),
+    });
+    return res.ok;
+  }
+  async function sbDeleteDept(id) {
+    const res = await fetch(`${SB}/rest/v1/complaint_dept_config?id=eq.${id}`, {
+      method: 'DELETE', headers: H,
+    });
+    return res.ok;
+  }
+
   async function sbInsert(row) {
     const res = await fetch(`${SB}/rest/v1/complaint_records`, {
       method: 'POST',
@@ -1013,6 +1067,152 @@
     state.selected = null;
   }
 
+  // ---------- Dept editor ----------
+  let deptDirty = false;
+  function openDeptEditor() {
+    document.getElementById("deptScrim").style.display = "block";
+    document.getElementById("deptDrawer").style.display = "flex";
+    renderDeptEditor();
+  }
+  async function closeDeptEditor() {
+    document.getElementById("deptScrim").style.display = "none";
+    document.getElementById("deptDrawer").style.display = "none";
+    if (deptDirty) {
+      DEPARTMENTS = await sbLoadDepts();
+      if (!state.isAdmin) {
+        renderDepts(); renderProblems();
+      }
+      deptDirty = false;
+    }
+  }
+  function renderDeptEditor() {
+    const host = document.getElementById("deptEditorList");
+    host.innerHTML = DEPARTMENTS.map((d, i) => `
+      <div class="card" data-key="${d.id}" data-rid="${d._row_id}" style="padding:16px">
+        <div style="display:flex; gap:10px; align-items:center; margin-bottom:10px">
+          <input class="input dept-name-input" style="flex:1; padding:8px 10px; font-size:14px" value="${escapeHtml(d.name)}" placeholder="Department name" />
+          <input class="input dept-icon-input" style="width:90px; padding:8px 10px; font-size:13px; text-align:center" value="${escapeHtml(d.icon)}" placeholder="Icon" maxlength="4" />
+          <button class="btn btn-ghost btn-sm dept-delete" title="Delete department">
+            <span class="material-symbols-outlined" style="font-size:18px">delete</span>
+          </button>
+        </div>
+        <div class="helper" style="margin-bottom:6px">Problems / subjects</div>
+        <div class="problem-edit-list" style="display:flex; flex-direction:column; gap:6px">
+          ${d.problems.map((p, j) => `
+            <div style="display:flex; gap:8px; align-items:center">
+              <input class="input problem-input" style="flex:1; padding:8px 10px; font-size:13px" value="${escapeHtml(p)}" data-idx="${j}" />
+              <button class="btn btn-ghost btn-sm problem-remove" data-idx="${j}" title="Remove">
+                <span class="material-symbols-outlined" style="font-size:18px">close</span>
+              </button>
+            </div>
+          `).join('')}
+        </div>
+        <button class="btn btn-soft btn-sm problem-add" style="margin-top:8px">
+          <span class="material-symbols-outlined" style="font-size:16px">add</span> Add problem
+        </button>
+      </div>
+    `).join('');
+
+    host.querySelectorAll('.card').forEach(card => wireDeptCard(card));
+    document.getElementById("addDeptBtn").onclick = onAddDept;
+  }
+
+  function wireDeptCard(card) {
+    const rid = card.dataset.rid;
+    const key = card.dataset.key;
+
+    const nameInput = card.querySelector('.dept-name-input');
+    const iconInput = card.querySelector('.dept-icon-input');
+
+    let saveTimer;
+    const queueSave = () => {
+      clearTimeout(saveTimer);
+      const hint = document.getElementById("deptSaveHint");
+      hint.textContent = "Saving…";
+      saveTimer = setTimeout(async () => {
+        const problems = Array.from(card.querySelectorAll('.problem-input'))
+          .map(i => i.value.trim()).filter(Boolean);
+        const ok = await sbUpdateDept(rid, {
+          name: nameInput.value.trim() || 'Untitled',
+          icon: iconInput.value.trim(),
+          problems,
+        });
+        const local = DEPARTMENTS.find(d => d._row_id == rid);
+        if (local && ok) {
+          local.name = nameInput.value.trim() || 'Untitled';
+          local.icon = iconInput.value.trim();
+          local.problems = problems;
+        }
+        deptDirty = true;
+        hint.textContent = ok ? "Saved" : "Save failed";
+      }, 600);
+    };
+
+    nameInput.addEventListener('input', queueSave);
+    iconInput.addEventListener('input', queueSave);
+    card.querySelectorAll('.problem-input').forEach(inp => inp.addEventListener('input', queueSave));
+
+    card.querySelectorAll('.problem-remove').forEach(btn => {
+      btn.addEventListener('click', () => {
+        btn.parentElement.remove();
+        queueSave();
+      });
+    });
+
+    card.querySelector('.problem-add').addEventListener('click', () => {
+      const list = card.querySelector('.problem-edit-list');
+      const idx = list.children.length;
+      const div = document.createElement('div');
+      div.style.cssText = "display:flex; gap:8px; align-items:center";
+      div.innerHTML = `
+        <input class="input problem-input" style="flex:1; padding:8px 10px; font-size:13px" placeholder="Problem name" data-idx="${idx}" />
+        <button class="btn btn-ghost btn-sm problem-remove" title="Remove">
+          <span class="material-symbols-outlined" style="font-size:18px">close</span>
+        </button>`;
+      list.appendChild(div);
+      const newInput = div.querySelector('.problem-input');
+      newInput.focus();
+      newInput.addEventListener('input', queueSave);
+      div.querySelector('.problem-remove').addEventListener('click', () => {
+        div.remove(); queueSave();
+      });
+    });
+
+    card.querySelector('.dept-delete').addEventListener('click', async () => {
+      if (!confirm(`Delete "${nameInput.value}"? Existing complaints under this department will keep their tag.`)) return;
+      const ok = await sbDeleteDept(rid);
+      if (ok) {
+        DEPARTMENTS = DEPARTMENTS.filter(d => d._row_id != rid);
+        deptDirty = true;
+        renderDeptEditor();
+      } else {
+        alert('Could not delete. Try again.');
+      }
+    });
+  }
+
+  async function onAddDept() {
+    const baseKey = (prompt('Short key (lowercase, no spaces, e.g. "ops"):') || '').trim().toLowerCase();
+    if (!baseKey) return;
+    const key = baseKey.replace(/[^a-z0-9_]/g, '_');
+    if (DEPARTMENTS.some(d => d.id === key)) { alert('Key already in use.'); return; }
+    const name = (prompt('Department name:') || '').trim() || 'New Department';
+    const icon = (prompt('Short icon label (max 4 chars):') || '').trim().slice(0, 4) || key.slice(0, 3).toUpperCase();
+    try {
+      const next = (DEPARTMENTS.reduce((m, d) => Math.max(m, d.sort_order || 0), 0) + 1);
+      const row = await sbInsertDept({ dept_key: key, name, icon, sort_order: next, problems: [] });
+      DEPARTMENTS.push({
+        id: row.dept_key, _row_id: row.id, name: row.name, icon: row.icon,
+        problems: [], sort_order: row.sort_order, active: true,
+      });
+      deptDirty = true;
+      renderDeptEditor();
+    } catch (e) {
+      alert('Could not create department.');
+    }
+  }
+
+
   function escapeHtml(s) {
     return String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
   }
@@ -1039,12 +1239,22 @@
     loadAdmin();
   }
 
-  document.addEventListener("DOMContentLoaded", () => {
+  document.addEventListener("DOMContentLoaded", async () => {
     const { emp, loc, isAdmin } = loadSession();
     state.user = emp;
     state.branch = loc || emp?.location || "";
     state.isAdmin = isAdmin;
     if (emp) renderUserChip(emp, isAdmin);
+
+    DEPARTMENTS = await sbLoadDepts();
+    if (DEPARTMENTS.length === 0) {
+      DEPARTMENTS = [
+        { id: "admin", _row_id: null, name: "Administration Department", icon: "Admin", problems: [], sort_order: 1, active: true },
+      ];
+    }
+    if (!state.deptId || !DEPARTMENTS.some(d => d.id === state.deptId)) {
+      state.deptId = DEPARTMENTS[0].id;
+    }
 
     if (isAdmin) {
       document.getElementById("adminView").style.display = "block";
