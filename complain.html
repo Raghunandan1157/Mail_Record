@@ -599,6 +599,31 @@
 
 </main>
 
+<!-- Comment modal (admin status change) -->
+<div id="commentScrim" class="drawer-scrim" style="display:none; z-index:60" onclick="closeCommentModal()"></div>
+<div id="commentModal" style="display:none; position:fixed; inset:0; z-index:61; align-items:center; justify-content:center; padding:20px; pointer-events:none">
+  <div class="card" style="width:min(480px, 100%); pointer-events:auto; animation: slideIn 0.18s ease">
+    <div class="card-head" style="border-bottom:1px solid var(--line-2)">
+      <h2 id="commentTitle">Update Status</h2>
+      <button class="drawer-close" style="margin-left:auto" onclick="closeCommentModal()">×</button>
+    </div>
+    <div class="card-pad" style="display:flex; flex-direction:column; gap:14px">
+      <div id="commentTransition" style="display:flex; align-items:center; gap:8px"></div>
+      <div class="field">
+        <label>Reason / short summary <span class="req">*</span></label>
+        <textarea id="commentText" class="textarea" maxlength="400" placeholder="Why is this status changing? (e.g. 'Vendor confirmed dispatch on 28th', 'Already resolved by IT yesterday')" style="min-height:100px"></textarea>
+        <div class="helper">This will be saved to the activity log so others can see the why.</div>
+      </div>
+    </div>
+    <div class="actions-bar">
+      <div class="right" style="margin-left:auto">
+        <button class="btn btn-ghost btn-sm" onclick="closeCommentModal()">Close</button>
+        <button id="commentSave" class="btn btn-accent btn-sm">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Dept editor (admin only) -->
 <div id="deptScrim" class="drawer-scrim" style="display:none" onclick="closeDeptEditor()"></div>
 <div id="deptDrawer" class="drawer" style="display:none" role="dialog" aria-modal="true">
@@ -791,13 +816,13 @@
     if (!res.ok) return [];
     return res.json();
   }
-  async function sbPatchStatus(id, status, byUser, fromStatus) {
+  async function sbPatchStatus(id, status, byUser, fromStatus, note) {
     const res = await fetch(`${SB}/rest/v1/complaint_records?id=eq.${id}`, {
       method: 'PATCH', headers: H,
-      body: JSON.stringify({ status, updated_at: new Date().toISOString() }),
+      body: JSON.stringify({ status, resolution_note: note || null, resolved_by: byUser, updated_at: new Date().toISOString() }),
     });
     if (res.ok) {
-      sbInsertLog(id, 'status_change', byUser, { from_status: fromStatus, to_status: status });
+      sbInsertLog(id, 'status_change', byUser, { from_status: fromStatus, to_status: status, note: note || null });
     }
     return res.ok;
   }
@@ -1023,16 +1048,24 @@
 
     const logs = await sbListLog(row.id);
     const created = `<div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-content"><div class="who">${escapeHtml(row.raised_by)}</div><div class="when">${fmtDateTime(row.raised_at)}</div><div class="what">Raised complaint</div></div></div>`;
-    const logHtml = logs.map(l => `
+    const logHtml = logs.map(l => {
+      const what = l.action === 'status_change'
+        ? `Status: ${STATUSES.find(s=>s.id===l.from_status)?.label || l.from_status || '—'} → ${STATUSES.find(s=>s.id===l.to_status)?.label || l.to_status}`
+        : escapeHtml(l.note || l.action);
+      const noteRow = (l.action === 'status_change' && l.note)
+        ? `<div class="what" style="margin-top:6px; padding:8px 10px; background:var(--line-2); border-radius:8px; color:var(--ink)">${escapeHtml(l.note)}</div>`
+        : '';
+      return `
       <div class="timeline-item">
         <div class="timeline-dot" style="background:var(--${STATUSES.find(s => s.id === l.to_status)?.tone || 'accent'})"></div>
         <div class="timeline-content">
           <div class="who">${escapeHtml(l.by_user)}</div>
           <div class="when">${fmtDateTime(l.at)}</div>
-          <div class="what">${l.action === 'status_change' ? `Status: ${STATUSES.find(s=>s.id===l.from_status)?.label || l.from_status || '—'} → ${STATUSES.find(s=>s.id===l.to_status)?.label || l.to_status}` : escapeHtml(l.note || l.action)}</div>
+          <div class="what">${what}</div>
+          ${noteRow}
         </div>
-      </div>
-    `).join('');
+      </div>`;
+    }).join('');
     document.getElementById("drawerTimeline").innerHTML = created + logHtml;
     if (adminMode) wireAdminActions();
   }
@@ -1043,24 +1076,55 @@
   }
   function wireAdminActions() {
     document.getElementById("drawerFooter").querySelectorAll('button[data-act="set"]').forEach(btn => {
-      btn.addEventListener('click', async () => {
-        const newStatus = btn.dataset.status;
+      btn.addEventListener('click', () => {
         const row = state.selected;
         if (!row) return;
-        btn.disabled = true; btn.textContent = "Updating…";
-        const ok = await sbPatchStatus(row.id, newStatus, state.user?.name || 'Admin', row.status);
-        if (ok) {
-          row.status = newStatus; row.updated_at = new Date().toISOString();
-          state.rows = state.rows.map(r => r.id === row.id ? row : r);
-          renderStats(); renderFilterChips(); renderAdminTable();
-          openDrawer(row, true);
-        } else {
-          btn.disabled = false; btn.textContent = `Mark ${STATUSES.find(s=>s.id===newStatus).label}`;
-          alert('Failed to update status. Try again.');
-        }
+        openCommentModal(row, btn.dataset.status);
       });
     });
   }
+
+  function openCommentModal(row, newStatus) {
+    const fromLabel = STATUSES.find(s => s.id === row.status)?.label || row.status;
+    const toLabel = STATUSES.find(s => s.id === newStatus)?.label || newStatus;
+    document.getElementById("commentTransition").innerHTML =
+      `${statusPill(row.status)} <span class="material-symbols-outlined" style="font-size:18px;color:var(--ink-3);vertical-align:middle">arrow_forward</span> ${statusPill(newStatus)}`;
+    document.getElementById("commentTitle").textContent = `Mark as ${toLabel}`;
+    const ta = document.getElementById("commentText");
+    ta.value = "";
+    document.getElementById("commentScrim").style.display = "block";
+    const modal = document.getElementById("commentModal");
+    modal.style.display = "flex";
+    setTimeout(() => ta.focus(), 50);
+
+    const saveBtn = document.getElementById("commentSave");
+    saveBtn.disabled = false;
+    saveBtn.textContent = "Save";
+    saveBtn.onclick = async () => {
+      const note = ta.value.trim();
+      if (!note) { ta.classList.add('warn'); ta.focus(); return; }
+      saveBtn.disabled = true; saveBtn.textContent = "Saving…";
+      const ok = await sbPatchStatus(row.id, newStatus, state.user?.name || 'Admin', row.status, note);
+      if (ok) {
+        row.status = newStatus;
+        row.resolution_note = note;
+        row.resolved_by = state.user?.name || 'Admin';
+        row.updated_at = new Date().toISOString();
+        state.rows = state.rows.map(r => r.id === row.id ? row : r);
+        renderStats(); renderFilterChips(); renderAdminTable();
+        closeCommentModal();
+        openDrawer(row, true);
+      } else {
+        saveBtn.disabled = false; saveBtn.textContent = "Save";
+        alert('Could not update. Try again.');
+      }
+    };
+  }
+  function closeCommentModal() {
+    document.getElementById("commentScrim").style.display = "none";
+    document.getElementById("commentModal").style.display = "none";
+  }
+
   function closeDrawer() {
     document.getElementById("drawerScrim").style.display = "none";
     document.getElementById("drawer").style.display = "none";
