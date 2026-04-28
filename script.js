@@ -514,9 +514,11 @@ function logout() {
   sessionStorage.removeItem('sr_employee');
   sessionStorage.removeItem('sr_location');
   sessionStorage.removeItem('sr_headoffice');
+  sessionStorage.removeItem('sr_dept_admin');
   localStorage.removeItem('sr_employee');
   localStorage.removeItem('sr_location');
   localStorage.removeItem('sr_headoffice');
+  localStorage.removeItem('sr_dept_admin');
   // FIX #7: Clear login timestamp
   sessionStorage.removeItem('sr_login_time');
   localStorage.removeItem('sr_login_time');

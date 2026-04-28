@@ -413,8 +413,29 @@
     if (otp.length<4) { showLoginError(3,'Enter all 4 digits'); return; }
     try {
       const c = await sbGet('app_config','select=value&key=eq.admin_otp');
-      if (c.length && c[0].value === otp) { isAdmin = true; showStep(4); }
-      else showLoginError(3,'Invalid OTP');
+      if (c.length && c[0].value === otp) { isAdmin = true; showStep(4); return; }
+
+      // Dept-scoped admin login: 4-digit code matches a dept_code
+      const depts = await sbGet('complaint_dept_config', `select=dept_key,name&active=eq.true&dept_code=eq.${encodeURIComponent(otp)}`);
+      if (depts.length) {
+        const dept = depts[0];
+        currentEmployee = { id: 0, emp_id: 'DEPT-'+dept.dept_key.toUpperCase(), name: dept.name+' Admin', role: 'Department Admin', mobile: '', location: 'Departments' };
+        selectedLocation = 'Departments';
+        isAdmin = false;
+        const t = Date.now().toString();
+        sessionStorage.setItem('sr_employee', JSON.stringify(currentEmployee));
+        sessionStorage.setItem('sr_location', selectedLocation);
+        sessionStorage.setItem('sr_login_time', t);
+        sessionStorage.setItem('sr_dept_admin', dept.dept_key);
+        localStorage.setItem('sr_employee', JSON.stringify(currentEmployee));
+        localStorage.setItem('sr_location', selectedLocation);
+        localStorage.setItem('sr_login_time', t);
+        localStorage.setItem('sr_dept_admin', dept.dept_key);
+        window.location.href = 'complain.html';
+        return;
+      }
+
+      showLoginError(3,'Invalid OTP');
     } catch(e) { showLoginError(3,'Verification failed'); }
   }
 
@@ -515,7 +536,7 @@
   }
 
   function logout() {
-    ['sr_employee','sr_location','sr_headoffice','sr_login_time','mr_session'].forEach(k=>{sessionStorage.removeItem(k);localStorage.removeItem(k);});
+    ['sr_employee','sr_location','sr_headoffice','sr_login_time','sr_dept_admin','mr_session'].forEach(k=>{sessionStorage.removeItem(k);localStorage.removeItem(k);});
     currentEmployee=null; selectedLocation=null; isAdmin=false;
     document.getElementById('moduleScreen').style.display = 'none';
     document.getElementById('doorScreen').style.display = 'none';
@@ -525,8 +546,12 @@
 
   // ===== INIT =====
   if (checkSession()) {
-    // Reload — skip door, go straight to modules with name on top
-    showModuleScreen();
+    const deptScope = sessionStorage.getItem('sr_dept_admin') || localStorage.getItem('sr_dept_admin');
+    if (deptScope) { window.location.href = 'complain.html'; }
+    else {
+      // Reload — skip door, go straight to modules with name on top
+      showModuleScreen();
+    }
   } else {
     initLogin();
   }

@@ -682,6 +682,15 @@
 
   // DEPARTMENTS loaded from complaint_dept_config table at runtime.
   let DEPARTMENTS = [];
+  let ADMIN_OTP_VALUE = '';
+  async function sbLoadAdminOtp() {
+    try {
+      const res = await fetch(`${SB}/rest/v1/app_config?select=value&key=eq.admin_otp`, { headers: H });
+      if (!res.ok) return '';
+      const rows = await res.json();
+      return rows[0]?.value || '';
+    } catch { return ''; }
+  }
   const STATUSES = [
     { id: "pending", label: "Pending", tone: "amber" },
     { id: "in_progress", label: "In Progress", tone: "blue" },
@@ -692,6 +701,7 @@
 
   let state = {
     isAdmin: false,
+    deptScopeKey: null,
     deptId: "admin",
     problem: "",
     otherSubject: "",
@@ -738,11 +748,19 @@
       const empRaw = sessionStorage.getItem("sr_employee") || localStorage.getItem("sr_employee");
       const loc = sessionStorage.getItem("sr_location") || localStorage.getItem("sr_location") || "";
       const isAdmin = (sessionStorage.getItem("sr_headoffice") || localStorage.getItem("sr_headoffice")) === "true";
+      const deptScopeKey = sessionStorage.getItem("sr_dept_admin") || localStorage.getItem("sr_dept_admin") || null;
       const emp = empRaw ? JSON.parse(empRaw) : null;
-      return { emp, loc, isAdmin };
-    } catch { return { emp: null, loc: "", isAdmin: false }; }
+      return { emp, loc, isAdmin, deptScopeKey };
+    } catch { return { emp: null, loc: "", isAdmin: false, deptScopeKey: null }; }
   }
-  function goHome() { window.location.href = "index.html"; }
+  function goHome() {
+    if (sessionStorage.getItem("sr_dept_admin") || localStorage.getItem("sr_dept_admin")) {
+      ['sr_employee','sr_location','sr_headoffice','sr_login_time','sr_dept_admin','mr_session'].forEach(k => {
+        sessionStorage.removeItem(k); localStorage.removeItem(k);
+      });
+    }
+    window.location.href = "index.html";
+  }
   function statusPill(id) {
     const s = STATUSES.find(x => x.id === id);
     if (!s) return '';
@@ -761,6 +779,7 @@
       id: r.dept_key, _row_id: r.id, name: r.name, icon: r.icon || '',
       problems: Array.isArray(r.problems) ? r.problems : [],
       sort_order: r.sort_order, active: r.active,
+      dept_code: r.dept_code || '',
     }));
   }
   async function sbInsertDept(row) {
@@ -1021,7 +1040,9 @@
   }
   async function loadAdmin() {
     document.getElementById("adminTbody").innerHTML = `<tr><td colspan="7" class="empty">Loading…</td></tr>`;
-    state.rows = await sbList();
+    let rows = await sbList();
+    if (state.deptScopeKey) rows = rows.filter(r => r.department_id === state.deptScopeKey);
+    state.rows = rows;
     renderStats(); renderFilterChips(); renderAdminTable();
   }
 
@@ -1153,13 +1174,15 @@
     const host = document.getElementById("deptEditorList");
     host.innerHTML = DEPARTMENTS.map((d, i) => `
       <div class="card" data-key="${d.id}" data-rid="${d._row_id}" style="padding:16px">
-        <div style="display:flex; gap:10px; align-items:center; margin-bottom:10px">
-          <input class="input dept-name-input" style="flex:1; padding:8px 10px; font-size:14px" value="${escapeHtml(d.name)}" placeholder="Department name" />
+        <div style="display:flex; gap:10px; align-items:center; margin-bottom:10px; flex-wrap:wrap">
+          <input class="input dept-name-input" style="flex:1; min-width:160px; padding:8px 10px; font-size:14px" value="${escapeHtml(d.name)}" placeholder="Department name" />
           <input class="input dept-icon-input" style="width:90px; padding:8px 10px; font-size:13px; text-align:center" value="${escapeHtml(d.icon)}" placeholder="Icon" maxlength="4" />
+          <input class="input dept-code-input" style="width:110px; padding:8px 10px; font-size:13px; text-align:center; letter-spacing:2px" value="${escapeHtml(d.dept_code || '')}" placeholder="4-digit code" maxlength="4" inputmode="numeric" pattern="[0-9]{4}" />
           <button class="btn btn-ghost btn-sm dept-delete" title="Delete department">
             <span class="material-symbols-outlined" style="font-size:18px">delete</span>
           </button>
         </div>
+        <div class="helper dept-code-hint" data-rid="${d._row_id}" style="margin-bottom:6px; color:var(--ink-3); font-size:11px">4-digit code lets you log in straight to this department's complaints. Leave blank to disable.</div>
         <div class="helper" style="margin-bottom:6px">Problems / subjects</div>
         <div class="problem-edit-list" style="display:flex; flex-direction:column; gap:6px">
           ${d.problems.map((p, j) => `
@@ -1187,6 +1210,22 @@
 
     const nameInput = card.querySelector('.dept-name-input');
     const iconInput = card.querySelector('.dept-icon-input');
+    const codeInput = card.querySelector('.dept-code-input');
+    const codeHint  = card.querySelector('.dept-code-hint');
+
+    codeInput.addEventListener('input', () => {
+      codeInput.value = codeInput.value.replace(/\D/g, '').slice(0, 4);
+    });
+
+    function validateCode() {
+      const v = codeInput.value.trim();
+      if (!v) return { ok: true, value: null };
+      if (!/^[0-9]{4}$/.test(v)) return { ok: false, msg: 'Code must be 4 digits.' };
+      if (v === ADMIN_OTP_VALUE) return { ok: false, msg: 'This code is reserved for the master admin OTP.' };
+      const dup = DEPARTMENTS.find(d => d._row_id != rid && (d.dept_code || '') === v);
+      if (dup) return { ok: false, msg: `Code already used by "${dup.name}".` };
+      return { ok: true, value: v };
+    }
 
     let saveTimer;
     const queueSave = () => {
@@ -1196,24 +1235,40 @@
       saveTimer = setTimeout(async () => {
         const problems = Array.from(card.querySelectorAll('.problem-input'))
           .map(i => i.value.trim()).filter(Boolean);
+        const codeRes = validateCode();
+        if (!codeRes.ok) {
+          codeHint.textContent = codeRes.msg;
+          codeHint.style.color = '#c0392b';
+          hint.textContent = 'Save blocked';
+          return;
+        }
+        codeHint.textContent = "4-digit code lets you log in straight to this department's complaints. Leave blank to disable.";
+        codeHint.style.color = '';
         const ok = await sbUpdateDept(rid, {
           name: nameInput.value.trim() || 'Untitled',
           icon: iconInput.value.trim(),
           problems,
+          dept_code: codeRes.value,
         });
         const local = DEPARTMENTS.find(d => d._row_id == rid);
         if (local && ok) {
           local.name = nameInput.value.trim() || 'Untitled';
           local.icon = iconInput.value.trim();
           local.problems = problems;
+          local.dept_code = codeRes.value || '';
         }
         deptDirty = true;
         hint.textContent = ok ? "Saved" : "Save failed";
+        if (!ok) {
+          codeHint.textContent = 'Could not save. Code may already be in use.';
+          codeHint.style.color = '#c0392b';
+        }
       }, 600);
     };
 
     nameInput.addEventListener('input', queueSave);
     iconInput.addEventListener('input', queueSave);
+    codeInput.addEventListener('input', queueSave);
     card.querySelectorAll('.problem-input').forEach(inp => inp.addEventListener('input', queueSave));
 
     card.querySelectorAll('.problem-remove').forEach(btn => {
@@ -1296,7 +1351,17 @@
   }
 
   function initAdminView() {
-    document.getElementById("brandSub").textContent = "Complaints · Admin";
+    if (state.deptScopeKey) {
+      const dept = DEPARTMENTS.find(d => d.id === state.deptScopeKey);
+      const label = dept?.name || state.deptScopeKey;
+      document.getElementById("brandSub").textContent = `Complaints · ${label}`;
+      document.querySelector('#adminView h1').textContent = `${label} — Complaints`;
+      document.querySelector('#adminView .subtitle').textContent = `Showing only "${label}" complaints across all branches.`;
+      const manageBtn = document.querySelector('#adminView [onclick="openDeptEditor()"]');
+      if (manageBtn) manageBtn.style.display = 'none';
+    } else {
+      document.getElementById("brandSub").textContent = "Complaints · Admin";
+    }
     document.getElementById("searchInput").addEventListener('input', e => {
       state.search = e.target.value; renderAdminTable();
     });
@@ -1304,13 +1369,14 @@
   }
 
   document.addEventListener("DOMContentLoaded", async () => {
-    const { emp, loc, isAdmin } = loadSession();
+    const { emp, loc, isAdmin, deptScopeKey } = loadSession();
     state.user = emp;
     state.branch = loc || emp?.location || "";
-    state.isAdmin = isAdmin;
-    if (emp) renderUserChip(emp, isAdmin);
+    state.isAdmin = isAdmin || !!deptScopeKey;
+    state.deptScopeKey = deptScopeKey;
+    if (emp) renderUserChip(emp, state.isAdmin);
 
-    DEPARTMENTS = await sbLoadDepts();
+    [DEPARTMENTS, ADMIN_OTP_VALUE] = await Promise.all([sbLoadDepts(), sbLoadAdminOtp()]);
     if (DEPARTMENTS.length === 0) {
       DEPARTMENTS = [
         { id: "admin", _row_id: null, name: "Administration Department", icon: "Admin", problems: [], sort_order: 1, active: true },
@@ -1320,7 +1386,7 @@
       state.deptId = DEPARTMENTS[0].id;
     }
 
-    if (isAdmin) {
+    if (state.isAdmin) {
       document.getElementById("adminView").style.display = "block";
       initAdminView();
       return;

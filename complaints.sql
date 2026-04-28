@@ -70,3 +70,17 @@ ON CONFLICT (dept_key) DO NOTHING;
 
 -- Drop hardcoded check on complaint_records.department_id so admin can add new depts
 ALTER TABLE complaint_records DROP CONSTRAINT IF EXISTS complaint_records_department_id_check;
+
+-- Per-department 4-digit access code (used as alternate admin login scoped to one dept)
+ALTER TABLE complaint_dept_config
+  ADD COLUMN IF NOT EXISTS dept_code TEXT;
+
+ALTER TABLE complaint_dept_config
+  DROP CONSTRAINT IF EXISTS complaint_dept_config_dept_code_format_chk;
+ALTER TABLE complaint_dept_config
+  ADD CONSTRAINT complaint_dept_config_dept_code_format_chk
+  CHECK (dept_code IS NULL OR dept_code ~ '^[0-9]{4}$');
+
+CREATE UNIQUE INDEX IF NOT EXISTS complaint_dept_config_dept_code_uniq
+  ON complaint_dept_config(dept_code)
+  WHERE dept_code IS NOT NULL;
