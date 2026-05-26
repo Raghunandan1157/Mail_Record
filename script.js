@@ -548,65 +548,27 @@ function logout() {
 // --- ADMIN MODE SWITCHING ---
 
 function switchToAdminMode() {
-  const navReg = document.getElementById('nav-regular');
-  const navAdm = document.getElementById('nav-admin');
-  if (isAdminUser) {
-    // Admin user: keep both navs visible so they can cross-context click
-    navReg.classList.remove('hidden');
-    navReg.classList.remove('flex-1');
-    navAdm.classList.remove('hidden');
-    navAdm.classList.remove('flex-1');
-  } else {
-    navReg.classList.add('hidden');
-    navReg.classList.remove('flex-1');
-    navAdm.classList.remove('hidden');
-    navAdm.classList.add('flex-1');
-  }
+  document.getElementById('nav-regular').classList.add('hidden');
+  document.getElementById('nav-regular').classList.remove('flex-1');
+  document.getElementById('nav-admin').classList.remove('hidden');
+  document.getElementById('nav-admin').classList.add('flex-1');
   const teamSection = document.querySelector('#sidebar > .px-4.pb-3');
   if (teamSection) teamSection.classList.add('hidden');
   document.getElementById('new-entry-btn').classList.add('hidden');
-  updateNavContextHighlight();
 }
 
 function switchToRegularMode() {
-  const navReg = document.getElementById('nav-regular');
-  const navAdm = document.getElementById('nav-admin');
-  if (isAdminUser) {
-    navReg.classList.remove('hidden');
-    navReg.classList.remove('flex-1');
-    navAdm.classList.remove('hidden');
-    navAdm.classList.remove('flex-1');
-  } else {
-    navAdm.classList.add('hidden');
-    navAdm.classList.remove('flex-1');
-    navReg.classList.remove('hidden');
-    navReg.classList.add('flex-1');
-  }
+  document.getElementById('nav-admin').classList.add('hidden');
+  document.getElementById('nav-admin').classList.remove('flex-1');
+  document.getElementById('nav-regular').classList.remove('hidden');
+  document.getElementById('nav-regular').classList.add('flex-1');
   const teamSection = document.querySelector('#sidebar > .px-4.pb-3');
   if (teamSection) teamSection.classList.remove('hidden');
   document.getElementById('new-entry-btn').classList.remove('hidden');
-  updateNavContextHighlight();
-}
-
-function updateNavContextHighlight() {
-  if (!isAdminUser) return;
-  const navReg = document.getElementById('nav-regular');
-  const navAdm = document.getElementById('nav-admin');
-  if (!navReg || !navAdm) return;
-  // Dim the inactive context's nav
-  if (isHeadOffice) {
-    navReg.style.opacity = '0.55';
-    navAdm.style.opacity = '1';
-  } else {
-    navReg.style.opacity = '1';
-    navAdm.style.opacity = '0.55';
-  }
 }
 
 function updateViewSwitchBtn() {
-  // Button removed — nav-tab clicks drive context switch.
-  // Kept as alias for highlight update.
-  updateNavContextHighlight();
+  // Button removed — Tab key drives context switch. No-op kept for legacy calls.
 }
 
 let viewSwitchInProgress = false;
@@ -685,22 +647,9 @@ function toggleAdminView(targetPage) {
       switchToRegularMode();
       navigateTo(targetPage || 'dashboard');
     }
-    updateNavContextHighlight();
     hideViewSwitchOverlay();
     viewSwitchInProgress = false;
   }, DURATION);
-}
-
-const ADMIN_PAGES = new Set(['admin', 'editlog', 'deletelog', 'branches', 'branchdetail', 'closingstock']);
-
-function handleNavClick(page, isAdminNav) {
-  // For admin user crossing contexts, trigger view switch with overlay
-  if (isAdminUser) {
-    const wantAdmin = isAdminNav || ADMIN_PAGES.has(page);
-    if (wantAdmin && !isHeadOffice) { toggleAdminView(page); return; }
-    if (!wantAdmin && isHeadOffice) { toggleAdminView(page); return; }
-  }
-  navigateTo(page);
 }
 
 // Initialize login on load
@@ -724,7 +673,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.nav-link-admin').forEach(link => {
     link.addEventListener('click', (e) => {
       e.preventDefault();
-      handleNavClick(link.dataset.page, true);
+      navigateTo(link.dataset.page);
     });
   });
 
@@ -2115,8 +2064,21 @@ function navigateTo(page) {
 document.querySelectorAll('.nav-link').forEach(link => {
   link.addEventListener('click', (e) => {
     e.preventDefault();
-    handleNavClick(link.dataset.page, false);
+    navigateTo(link.dataset.page);
   });
+});
+
+// Keyboard shortcut: Tab key toggles between Admin and Branch view (admin users only)
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Tab') return;
+  if (!isAdminUser) return;
+  // Skip if user is typing in a form field
+  const tag = (e.target && e.target.tagName) || '';
+  const isTyping = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || (e.target && e.target.isContentEditable);
+  if (isTyping) return;
+  if (viewSwitchInProgress) { e.preventDefault(); return; }
+  e.preventDefault();
+  toggleAdminView();
 });
 
 // --- RENDER FUNCTIONS ---
