@@ -189,6 +189,10 @@
     background: var(--accent); color: white;
     border-radius: var(--r-lg) 4px var(--r-lg) var(--r-lg);
   }
+  .msg.error .msg-bubble {
+    background: var(--red-bg); border-color: #f5c2c4; color: var(--red);
+  }
+  .msg.error .msg-av { background: var(--red-bg); color: var(--red); }
   /* Markdown in assistant bubble */
   .msg-bubble h1, .msg-bubble h2, .msg-bubble h3 { margin: 10px 0 5px; font-weight: 700; }
   .msg-bubble h1 { font-size: 16px; }
@@ -448,6 +452,8 @@
   let currentSessionId = null;
   let isSending = false;
   let mediaRecorder = null, audioChunks = [], recInterval = null, recSeconds = 0;
+  // Cached reference — getElementById can't find detached nodes, so hold this permanently
+  let emptyEl = null;
 
   // ===== HELPERS =====
   function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
@@ -455,6 +461,7 @@
 
   // ===== AUTH GATE =====
   function init() {
+    emptyEl = document.getElementById('threadEmpty'); // cache before any DOM manipulation
     adminToken = sessionStorage.getItem('ai_admin_token') || localStorage.getItem('ai_admin_token') || '';
     if (!adminToken) { window.location.href = 'index.html'; return; }
 
@@ -535,17 +542,15 @@
   // ===== THREAD =====
   function renderThread() {
     const thread = document.getElementById('chatThread');
-    const empty = document.getElementById('threadEmpty');
     removeTyping();
     if (!messages.length) {
       thread.innerHTML = '';
-      thread.appendChild(empty);
-      empty.style.display = 'flex';
+      if (emptyEl) { thread.appendChild(emptyEl); emptyEl.style.display = 'flex'; }
       return;
     }
-    empty.style.display = 'none';
-    // Detach empty so innerHTML clear doesn't remove it from DOM
-    if (empty.parentNode === thread) thread.removeChild(empty);
+    if (emptyEl) { emptyEl.style.display = 'none'; }
+    // Detach emptyEl BEFORE innerHTML clear so we keep the reference alive
+    if (emptyEl?.parentNode === thread) thread.removeChild(emptyEl);
     thread.innerHTML = '';
     messages.forEach(m => { const el = makeMsgEl(m); thread.appendChild(el); });
     thread.scrollTop = thread.scrollHeight;
@@ -553,12 +558,13 @@
 
   function makeMsgEl(m) {
     const isUser = m.role === 'user';
-    const initials = isUser ? getInitials(adminName) : 'AI';
+    const isError = !!m.isError;
+    const initials = isUser ? getInitials(adminName) : isError ? '!' : 'AI';
     const bubble = isUser
       ? `<p style="margin:0">${esc(m.content)}</p>`
       : renderMarkdown(m.content || '');
     const div = document.createElement('div');
-    div.className = `msg ${m.role}`;
+    div.className = `msg ${m.role}${isError ? ' error' : ''}`;
     div.innerHTML = `
       <div class="msg-av">${initials}</div>
       <div class="msg-bubble">${bubble}</div>`;
@@ -567,10 +573,10 @@
 
   function appendMsg(m) {
     const thread = document.getElementById('chatThread');
-    const empty = document.getElementById('threadEmpty');
-    if (empty.parentNode === thread) {
-      thread.removeChild(empty);
-      empty.style.display = 'none';
+    // Use cached emptyEl — getElementById can't find detached nodes
+    if (emptyEl?.parentNode === thread) {
+      thread.removeChild(emptyEl);
+      emptyEl.style.display = 'none';
     }
     const el = makeMsgEl(m);
     thread.appendChild(el);
@@ -673,12 +679,11 @@
         loadSessions();
       }
     } catch(err) {
-      removeTyping();
+      removeTyping(); // idempotent — uses ?.remove() internally
       showError(err.message);
-      // Still push an error message into thread for context continuity
-      const errMsg = { role: 'assistant', content: `⚠️ ${err.message}` };
+      const errMsg = { role: 'assistant', isError: true, content: `Failed: ${err.message}` };
       messages.push(errMsg);
-      appendMsg(errMsg);
+      appendMsg(errMsg); // null-safe — emptyEl cached, guarded with ?.
     }
 
     setSending(false);
