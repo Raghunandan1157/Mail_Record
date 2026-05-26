@@ -74,61 +74,14 @@
     window.location.href = 'index.html';
   }
 
-  // Tab key: flip view + redirect to home
-  let vswInProgress = false;
-  function vswShow(toMode, ms) {
-    let ov = document.getElementById('vswOverlay');
-    if (!ov) {
-      ov = document.createElement('div');
-      ov.id = 'vswOverlay';
-      ov.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;font-family:Inter,sans-serif;';
-      ov.innerHTML = `
-        <div id="vswBg" style="position:absolute;inset:0;background:linear-gradient(135deg,#0f172a,#1e293b 50%,#1d4ed8);opacity:0;transition:opacity .5s;"></div>
-        <div id="vswCard" style="position:relative;text-align:center;opacity:0;transform:scale(.9);transition:all .5s;">
-          <div style="display:inline-flex;align-items:center;justify-content:center;margin-bottom:24px;">
-            <div style="width:80px;height:80px;border-radius:50%;border:4px solid rgba(255,255,255,.2);border-top-color:#fff;animation:vswSpin 1s linear infinite;"></div>
-          </div>
-          <div style="font-size:11px;font-weight:700;letter-spacing:.3em;text-transform:uppercase;color:rgba(255,255,255,.6);margin-bottom:8px;">Switching context</div>
-          <h2 id="vswTitle" style="font-size:32px;font-weight:700;color:#fff;margin:0 0 12px;"></h2>
-          <p id="vswSub" style="font-size:14px;color:rgba(255,255,255,.7);max-width:400px;margin:0 auto;"></p>
-          <div style="margin-top:32px;width:256px;height:4px;background:rgba(255,255,255,.1);border-radius:9999px;overflow:hidden;margin-left:auto;margin-right:auto;">
-            <div id="vswBar" style="height:100%;background:#fff;width:0;border-radius:9999px;"></div>
-          </div>
-        </div>`;
-      document.body.appendChild(ov);
-      const style = document.createElement('style');
-      style.textContent = '@keyframes vswSpin{to{transform:rotate(360deg);}}';
-      document.head.appendChild(style);
-    }
-    const title = document.getElementById('vswTitle');
-    const sub = document.getElementById('vswSub');
-    const bg = document.getElementById('vswBg');
-    const card = document.getElementById('vswCard');
-    const bar = document.getElementById('vswBar');
-    if (toMode === 'admin') { title.textContent = 'Entering Admin View'; sub.textContent = 'Manage records, edit logs, and reports...'; }
-    else if (toMode === 'corporate') { title.textContent = 'Entering Corporate Office'; sub.textContent = 'Loading all branches, reports, and edit logs...'; }
-    else { title.textContent = 'Entering Head Office'; sub.textContent = 'AI Assistant disabled in this view. Returning home...'; }
-    bar.style.transition = 'none'; bar.style.width = '0%';
-    requestAnimationFrame(() => {
-      bg.style.opacity = '1'; card.style.opacity = '1'; card.style.transform = 'scale(1)';
-      requestAnimationFrame(() => { bar.style.transition = `width ${ms}ms linear`; bar.style.width = '100%'; });
-    });
-  }
+  // Tab key: go to hub view picker
   document.addEventListener('keydown', (e) => {
     if (e.key !== 'Tab') return;
     if (!isAdminFlag) return;
     const tag = (e.target && e.target.tagName) || '';
     if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || (e.target && e.target.isContentEditable)) return;
-    if (vswInProgress) { e.preventDefault(); return; }
     e.preventDefault();
-    vswInProgress = true;
-    const cur = sessionStorage.getItem('sr_view_mode') || localStorage.getItem('sr_view_mode') || 'corporate';
-    const next = cur === 'corporate' ? 'admin' : (cur === 'admin' ? 'branch' : 'corporate');
-    sessionStorage.setItem('sr_view_mode', next);
-    localStorage.setItem('sr_view_mode', next);
-    vswShow(next, 3000);
-    // AI is admin-only — always redirect to home
-    setTimeout(() => { window.location.href = 'index.html'; }, 3000);
+    window.location.href = 'index.html#pick';
   });
 
   const chat = document.getElementById('chat');

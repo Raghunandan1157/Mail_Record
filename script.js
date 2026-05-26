@@ -2072,7 +2072,7 @@ document.querySelectorAll('.nav-link').forEach(link => {
   });
 });
 
-// Keyboard shortcut: Tab key toggles between Admin and Branch view (admin users only)
+// Keyboard shortcut: Tab key opens view picker (admin users only)
 document.addEventListener('keydown', (e) => {
   if (e.key !== 'Tab') return;
   if (!isAdminUser) return;
@@ -2082,7 +2082,8 @@ document.addEventListener('keydown', (e) => {
   if (isTyping) return;
   if (viewSwitchInProgress) { e.preventDefault(); return; }
   e.preventDefault();
-  toggleAdminView();
+  // Redirect to hub — it will show the 3-option view picker
+  window.location.href = 'index.html#pick';
 });
 
 // --- RENDER FUNCTIONS ---

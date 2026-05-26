@@ -666,6 +666,11 @@
       }
       // Reload — skip door, go straight to modules with name on top
       showModuleScreen();
+      // Auto-open view picker if redirected from a sub-page via Tab
+      if (window.location.hash === '#pick' && isAdmin) {
+        history.replaceState(null, '', window.location.pathname); // clean URL
+        setTimeout(openViewPicker, 100);
+      }
     }
   } else {
     initLogin();
