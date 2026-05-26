@@ -28,11 +28,11 @@ async function buildContext(): Promise<string> {
   const since = new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
 
   const [complaints, mail, stock, employees, depts] = await Promise.all([
-    db.from("complaint_records").select("id, branch, date, department_id, subject, status, raised_by").order("raised_at", { ascending: false }).limit(100),
-    db.from("mail_records").select("id, mail_type, date, name, department, location, particular").order("date", { ascending: false }).limit(100),
-    db.from("stock_entries").select("item_name, category, unit, entry_type, quantity, location, created_at").order("created_at", { ascending: false }).limit(200),
-    db.from("employees").select("emp_id, name, role, location").limit(200),
-    db.from("complaint_dept_config").select("dept_key, name, problems, active").limit(50),
+    db.from("complaint_records").select("id, branch, date, department_id, subject, status").order("raised_at", { ascending: false }).limit(50),
+    db.from("mail_records").select("id, mail_type, date, name, department, location").order("date", { ascending: false }).limit(50),
+    db.from("stock_entries").select("item_name, entry_type, quantity, location").limit(500),
+    db.from("employees").select("emp_id, name, role, location").limit(100),
+    db.from("complaint_dept_config").select("dept_key, name, active").limit(20),
   ]);
 
   const stockRows = stock.data ?? [];
@@ -44,22 +44,24 @@ async function buildContext(): Promise<string> {
     a.net += (r.entry_type === "in" ? 1 : -1) * (r.quantity ?? 0);
   }
 
-  return `Today: ${today}. Data snapshot (last 30 days where applicable):
+  const stockList = Array.from(stockAgg.values()).filter(s => s.net !== 0).slice(0, 100);
 
-COMPLAINTS (${complaints.data?.length ?? 0} rows):
-${JSON.stringify(complaints.data ?? [], null, 0)}
+  return `Today: ${today}
 
-MAIL (${mail.data?.length ?? 0} rows):
-${JSON.stringify(mail.data ?? [], null, 0)}
+RECENT COMPLAINTS (${complaints.data?.length ?? 0}):
+${JSON.stringify(complaints.data ?? [])}
 
-STOCK NET BY BRANCH+ITEM (${stockAgg.size} pairs):
-${JSON.stringify(Array.from(stockAgg.values()), null, 0)}
+RECENT MAIL (${mail.data?.length ?? 0}):
+${JSON.stringify(mail.data ?? [])}
+
+STOCK NET BY BRANCH+ITEM (${stockList.length}):
+${JSON.stringify(stockList)}
 
 EMPLOYEES (${employees.data?.length ?? 0}):
-${JSON.stringify(employees.data ?? [], null, 0)}
+${JSON.stringify(employees.data ?? [])}
 
 COMPLAINT DEPARTMENTS:
-${JSON.stringify(depts.data ?? [], null, 0)}`;
+${JSON.stringify(depts.data ?? [])}`;
 }
 
 export default async function handler(req: Request): Promise<Response> {
@@ -84,7 +86,9 @@ export default async function handler(req: Request): Promise<Response> {
 
   const deepseekKey = process.env.DEEPSEEK_KEY;
   if (!deepseekKey) return json({ error: "DEEPSEEK_KEY not configured" }, 500);
-  const model = process.env.DEEPSEEK_MODEL ?? "deepseek-chat";
+  const VALID_MODELS = ["deepseek-chat", "deepseek-reasoner"];
+  const envModel = process.env.DEEPSEEK_MODEL ?? "deepseek-chat";
+  const model = VALID_MODELS.includes(envModel) ? envModel : "deepseek-chat";
 
   let context: string;
   try {
