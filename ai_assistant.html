@@ -65,7 +65,7 @@
   // Access control: AI Assistant is restricted to Admin context only.
   const otp = sessionStorage.getItem('ai_otp') || localStorage.getItem('ai_otp');
   const isAdminFlag = (sessionStorage.getItem('sr_headoffice') || localStorage.getItem('sr_headoffice')) === 'true';
-  const viewMode = sessionStorage.getItem('sr_view_mode') || localStorage.getItem('sr_view_mode') || 'admin';
+  const viewMode = sessionStorage.getItem('sr_view_mode') || localStorage.getItem('sr_view_mode') || 'corporate';
   if (!otp || !isAdminFlag) {
     alert('Login required. Redirecting...');
     window.location.href = 'index.html';
@@ -105,8 +105,9 @@
     const bg = document.getElementById('vswBg');
     const card = document.getElementById('vswCard');
     const bar = document.getElementById('vswBar');
-    if (toMode === 'admin') { title.textContent = 'Entering Admin View'; sub.textContent = 'Returning to Head Office home...'; }
-    else { title.textContent = 'Entering Head Office View'; sub.textContent = 'AI Assistant disabled in this view. Returning home...'; }
+    if (toMode === 'admin') { title.textContent = 'Entering Admin View'; sub.textContent = 'Manage records, edit logs, and reports...'; }
+    else if (toMode === 'corporate') { title.textContent = 'Entering Corporate Office'; sub.textContent = 'Loading all branches, reports, and edit logs...'; }
+    else { title.textContent = 'Entering Head Office'; sub.textContent = 'AI Assistant disabled in this view. Returning home...'; }
     bar.style.transition = 'none'; bar.style.width = '0%';
     requestAnimationFrame(() => {
       bg.style.opacity = '1'; card.style.opacity = '1'; card.style.transform = 'scale(1)';
@@ -121,8 +122,8 @@
     if (vswInProgress) { e.preventDefault(); return; }
     e.preventDefault();
     vswInProgress = true;
-    const cur = sessionStorage.getItem('sr_view_mode') || localStorage.getItem('sr_view_mode') || 'admin';
-    const next = cur === 'admin' ? 'branch' : 'admin';
+    const cur = sessionStorage.getItem('sr_view_mode') || localStorage.getItem('sr_view_mode') || 'corporate';
+    const next = cur === 'corporate' ? 'admin' : (cur === 'admin' ? 'branch' : 'corporate');
     sessionStorage.setItem('sr_view_mode', next);
     localStorage.setItem('sr_view_mode', next);
     vswShow(next, 3000);

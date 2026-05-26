@@ -1472,8 +1472,9 @@
       const bg = document.getElementById('vswBg');
       const card = document.getElementById('vswCard');
       const bar = document.getElementById('vswBar');
-      if (toMode === 'admin') { title.textContent = 'Entering Admin View'; sub.textContent = 'Returning to Head Office home...'; }
-      else { title.textContent = 'Entering Head Office View'; sub.textContent = 'Switching to branch operations...'; }
+      if (toMode === 'admin') { title.textContent = 'Entering Admin View'; sub.textContent = 'Manage records, edit logs, and reports...'; }
+      else if (toMode === 'corporate') { title.textContent = 'Entering Corporate Office'; sub.textContent = 'Loading all branches, complaints, and admin tools...'; }
+      else { title.textContent = 'Entering Head Office'; sub.textContent = 'Switching to branch operations...'; }
       bar.style.transition = 'none'; bar.style.width = '0%';
       requestAnimationFrame(() => {
         bg.style.opacity = '1'; card.style.opacity = '1'; card.style.transform = 'scale(1)';
@@ -1487,8 +1488,8 @@
       if (vswInProgress) { e.preventDefault(); return; }
       e.preventDefault();
       vswInProgress = true;
-      const cur = sessionStorage.getItem('sr_view_mode') || localStorage.getItem('sr_view_mode') || 'admin';
-      const next = cur === 'admin' ? 'branch' : 'admin';
+      const cur = sessionStorage.getItem('sr_view_mode') || localStorage.getItem('sr_view_mode') || 'corporate';
+      const next = cur === 'corporate' ? 'admin' : (cur === 'admin' ? 'branch' : 'corporate');
       sessionStorage.setItem('sr_view_mode', next);
       localStorage.setItem('sr_view_mode', next);
       vswShow(next, 3000);

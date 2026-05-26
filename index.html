@@ -341,16 +341,21 @@
       <div style="font-size:11px;font-weight:700;letter-spacing:.3em;text-transform:uppercase;color:#64748b;margin-bottom:8px;">Switch Context</div>
       <h2 style="font-size:22px;font-weight:700;color:#0f172a;margin:0;">Choose View</h2>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;">
       <button onclick="pickView('branch')" style="padding:24px 16px;border:2px solid #e2e8f0;border-radius:12px;background:#fff;cursor:pointer;text-align:center;transition:all .2s;" onmouseover="this.style.borderColor='#3b82f6';this.style.background='#eff6ff'" onmouseout="this.style.borderColor='#e2e8f0';this.style.background='#fff'">
         <div style="font-size:32px;margin-bottom:8px;">🏢</div>
         <div style="font-size:15px;font-weight:700;color:#0f172a;">Head Office</div>
         <div style="font-size:12px;color:#64748b;margin-top:4px;">Branch operations view</div>
       </button>
-      <button onclick="pickView('admin')" style="padding:24px 16px;border:2px solid #e2e8f0;border-radius:12px;background:#fff;cursor:pointer;text-align:center;transition:all .2s;" onmouseover="this.style.borderColor='#3b82f6';this.style.background='#eff6ff'" onmouseout="this.style.borderColor='#e2e8f0';this.style.background='#fff'">
+      <button onclick="pickView('corporate')" style="padding:24px 16px;border:2px solid #e2e8f0;border-radius:12px;background:#fff;cursor:pointer;text-align:center;transition:all .2s;" onmouseover="this.style.borderColor='#3b82f6';this.style.background='#eff6ff'" onmouseout="this.style.borderColor='#e2e8f0';this.style.background='#fff'">
         <div style="font-size:32px;margin-bottom:8px;">🏛️</div>
         <div style="font-size:15px;font-weight:700;color:#0f172a;">Corporate Office</div>
         <div style="font-size:12px;color:#64748b;margin-top:4px;">All branches + admin tools</div>
+      </button>
+      <button onclick="pickView('admin')" style="padding:24px 16px;border:2px solid #e2e8f0;border-radius:12px;background:#fff;cursor:pointer;text-align:center;transition:all .2s;" onmouseover="this.style.borderColor='#3b82f6';this.style.background='#eff6ff'" onmouseout="this.style.borderColor='#e2e8f0';this.style.background='#fff'">
+        <div style="font-size:32px;margin-bottom:8px;">⚙️</div>
+        <div style="font-size:15px;font-weight:700;color:#0f172a;">Admin</div>
+        <div style="font-size:12px;color:#64748b;margin-top:4px;">Manage records, edit logs & reports</div>
       </button>
     </div>
     <div style="text-align:center;margin-top:20px;">
@@ -536,17 +541,19 @@
     document.getElementById('doorScreen').style.display = 'none';
     document.getElementById('loginScreen').style.display = 'none';
     document.getElementById('moduleScreen').style.display = 'flex';
-    const curView = sessionStorage.getItem('sr_view_mode') || localStorage.getItem('sr_view_mode') || 'admin';
+    const curView = sessionStorage.getItem('sr_view_mode') || localStorage.getItem('sr_view_mode') || 'corporate';
     const showAsBranch = isAdmin && curView === 'branch';
-    document.getElementById('modAvatar').textContent = showAsBranch ? 'H' : (isAdmin ? 'C' : getInitials(currentEmployee.name));
-    document.getElementById('modName').textContent = showAsBranch ? 'HEAD OFFICE' : (isAdmin ? 'CORPORATE OFFICE' : currentEmployee.name);
-    document.getElementById('modLoc').textContent = showAsBranch ? 'Branch Operations' : (isAdmin ? 'All Branches · Admin' : selectedLocation);
-    // AI Assistant tile — admin context only (hidden in branch view even for admin user)
+    const showAsAdmin = isAdmin && curView === 'admin';
+    const showAsCorporate = isAdmin && curView === 'corporate';
+    document.getElementById('modAvatar').textContent = showAsBranch ? 'H' : (showAsAdmin ? 'A' : 'C');
+    document.getElementById('modName').textContent = showAsBranch ? 'HEAD OFFICE' : (showAsAdmin ? 'ADMIN' : 'CORPORATE OFFICE');
+    document.getElementById('modLoc').textContent = showAsBranch ? 'Branch Operations' : (showAsAdmin ? 'Manage Records & Logs' : 'All Branches · Admin');
+    // AI Assistant tile — admin or corporate context only (hidden in branch view even for admin user)
     const aiTile = document.getElementById('aiAssistantTile');
-    if (aiTile) aiTile.style.display = (isAdmin && curView === 'admin') ? '' : 'none';
+    if (aiTile) aiTile.style.display = (isAdmin && (curView === 'corporate' || curView === 'admin')) ? '' : 'none';
     // View-mode hint for admin users
     if (isAdmin) {
-      const cur = sessionStorage.getItem('sr_view_mode') || localStorage.getItem('sr_view_mode') || 'admin';
+      const cur = sessionStorage.getItem('sr_view_mode') || localStorage.getItem('sr_view_mode') || 'corporate';
       let hint = document.getElementById('viewModeHint');
       if (!hint) {
         hint = document.createElement('div');
@@ -554,15 +561,16 @@
         hint.style.cssText = 'position:fixed;bottom:16px;left:50%;transform:translateX(-50%);padding:8px 16px;border-radius:9999px;font-size:12px;font-weight:600;background:rgba(15,23,42,.85);color:#fff;backdrop-filter:blur(8px);z-index:50;display:flex;align-items:center;gap:8px;';
         document.body.appendChild(hint);
       }
-      const label = cur === 'branch' ? 'Head Office' : 'Corporate Office';
-      hint.innerHTML = `<span style="opacity:.7">Current:</span> <strong>${label}</strong> <span style="opacity:.5;font-size:10px;border-left:1px solid rgba(255,255,255,.2);padding-left:8px;margin-left:4px">Press <kbd style="background:rgba(255,255,255,.15);padding:2px 6px;border-radius:4px;font-family:monospace;">Tab</kbd> to switch</span>`;
+      const labels = { branch: 'Head Office', corporate: 'Corporate Office', admin: 'Admin' };
+      const label = labels[cur] || 'Corporate Office';
+      hint.innerHTML = '<span style="opacity:.7">Current:</span> <strong>' + label + '</strong> <span style="opacity:.5;font-size:10px;border-left:1px solid rgba(255,255,255,.2);padding-left:8px;margin-left:4px">Press <kbd style="background:rgba(255,255,255,.15);padding:2px 6px;border-radius:4px;font-family:monospace;">Tab</kbd> to switch</span>';
     }
   }
 
   function openModule(mod) {
     if (mod === 'ai') {
-      const curView = sessionStorage.getItem('sr_view_mode') || localStorage.getItem('sr_view_mode') || 'admin';
-      if (!isAdmin || curView !== 'admin') { alert('AI Assistant requires Admin view.'); return; }
+      const curView = sessionStorage.getItem('sr_view_mode') || localStorage.getItem('sr_view_mode') || 'corporate';
+      if (!isAdmin || (curView !== 'corporate' && curView !== 'admin')) { alert('AI Assistant requires Corporate Office or Admin view.'); return; }
     }
     if (mod === 'stationary') window.location.href = 'stationary.html';
     else if (mod === 'mail') window.location.href = 'mailrecord.html';
@@ -594,6 +602,9 @@
     const sub = document.getElementById('vswSub');
     const bar = document.getElementById('vswBar');
     if (toMode === 'admin') {
+      title.textContent = 'Entering Admin View';
+      sub.textContent = 'Manage records, edit logs, and reports...';
+    } else if (toMode === 'corporate') {
       title.textContent = 'Entering Corporate Office';
       sub.textContent = 'Loading all branches, reports, and edit logs...';
     } else {
@@ -622,7 +633,7 @@
   }
   function pickView(next) {
     closeViewPicker();
-    const cur = sessionStorage.getItem('sr_view_mode') || localStorage.getItem('sr_view_mode') || 'admin';
+    const cur = sessionStorage.getItem('sr_view_mode') || localStorage.getItem('sr_view_mode') || 'corporate';
     if (cur === next) return;
     vswInProgress = true;
     sessionStorage.setItem('sr_view_mode', next);

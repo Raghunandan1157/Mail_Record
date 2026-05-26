@@ -498,8 +498,8 @@ function checkSession() {
     selectedLocation = savedLoc;
     isAdminUser = savedHO === 'true';
     const savedViewMode = sessionStorage.getItem('sr_view_mode') || localStorage.getItem('sr_view_mode');
-    // Admin user defaults to admin view unless they previously switched to branch view
-    isHeadOffice = isAdminUser && savedViewMode !== 'branch';
+    // Admin user defaults to corporate view unless they previously switched to branch or admin
+    isHeadOffice = isAdminUser && (savedViewMode !== 'branch' && savedViewMode !== 'admin');
     // Keep both in sync
     sessionStorage.setItem('sr_employee', savedEmp);
     sessionStorage.setItem('sr_location', savedLoc);
@@ -584,9 +584,12 @@ function showViewSwitchOverlay(toMode, durationMs) {
 
   if (toMode === 'admin') {
     title.textContent = 'Entering Admin View';
+    sub.textContent = 'Manage records, edit logs, and reports...';
+  } else if (toMode === 'corporate') {
+    title.textContent = 'Entering Corporate Office';
     sub.textContent = 'Loading all branches, reports, and edit logs...';
   } else {
-    title.textContent = 'Entering Head Office View';
+    title.textContent = 'Entering Head Office';
     sub.textContent = 'Switching to branch operations — inventory, stock entries, notifications...';
   }
 
@@ -623,29 +626,30 @@ function hideViewSwitchOverlay() {
 function toggleAdminView(targetPage) {
   if (!isAdminUser || viewSwitchInProgress) return;
   viewSwitchInProgress = true;
-  const goingToAdmin = !isHeadOffice;
+  const cur = sessionStorage.getItem('sr_view_mode') || localStorage.getItem('sr_view_mode') || 'corporate';
+  const next = cur === 'corporate' ? 'admin' : (cur === 'admin' ? 'branch' : 'corporate');
   const DURATION = 3000;
 
-  showViewSwitchOverlay(goingToAdmin ? 'admin' : 'branch', DURATION);
+  showViewSwitchOverlay(next, DURATION);
 
-  if (goingToAdmin) {
-    isHeadOffice = true;
-    sessionStorage.setItem('sr_view_mode', 'admin');
-    localStorage.setItem('sr_view_mode', 'admin');
-    loadAdminData().catch(() => {});
-  } else {
+  if (next === 'branch') {
     isHeadOffice = false;
     sessionStorage.setItem('sr_view_mode', 'branch');
     localStorage.setItem('sr_view_mode', 'branch');
+  } else {
+    isHeadOffice = true;
+    sessionStorage.setItem('sr_view_mode', next);
+    localStorage.setItem('sr_view_mode', next);
+    if (next === 'corporate') loadAdminData().catch(() => {});
   }
 
   setTimeout(() => {
-    if (goingToAdmin) {
-      switchToAdminMode();
-      navigateTo(targetPage || 'admin');
-    } else {
+    if (next === 'branch') {
       switchToRegularMode();
       navigateTo(targetPage || 'dashboard');
+    } else {
+      switchToAdminMode();
+      navigateTo(targetPage || 'admin');
     }
     hideViewSwitchOverlay();
     viewSwitchInProgress = false;
