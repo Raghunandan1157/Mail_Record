@@ -196,6 +196,11 @@
   .module-card.mail h2 { color: #0f3460; }
   .module-card.complain h2 { color: #d9480f; }
   .module-card p { font-size: 0.82rem; color: #888; line-height: 1.4; }
+  .module-card.ai-assistant:hover { border-color: #6c63ff; }
+  .module-card.ai-assistant .icon-wrap { background: rgba(108,99,255,0.1); }
+  .module-card.ai-assistant .icon-wrap .material-symbols-outlined { color: #6c63ff; }
+  .module-card.ai-assistant h2 { color: #6c63ff; }
+  .module-cards { flex-wrap: wrap; justify-content: center; }
 
   @media (max-width: 650px) {
     .scene-wrapper { transform: scale(0.55); transform-origin: center; }
@@ -323,6 +328,11 @@
       <h2>Raise Complain</h2>
       <p>Department-wise complaint raising with auto-loaded contact details</p>
     </div>
+    <div class="module-card ai-assistant" id="aiAssistantTile" style="display:none" onclick="openModule('ai')">
+      <div class="icon-wrap"><span class="material-symbols-outlined">smart_toy</span></div>
+      <h2>AI Assistant</h2>
+      <p>Voice &amp; chat Q&amp;A across all modules — complaints, mail &amp; stock</p>
+    </div>
   </div>
 </div>
 
@@ -413,7 +423,7 @@
     if (otp.length<4) { showLoginError(3,'Enter all 4 digits'); return; }
     try {
       const c = await sbGet('app_config','select=value&key=eq.admin_otp');
-      if (c.length && c[0].value === otp) { isAdmin = true; showStep(4); return; }
+      if (c.length && c[0].value === otp) { isAdmin = true; makeAiToken(otp); showStep(4); return; }
 
       // Dept-scoped admin login: 4-digit code matches a dept_code
       const depts = await sbGet('complaint_dept_config', `select=dept_key,name&active=eq.true&dept_code=eq.${encodeURIComponent(otp)}`);
@@ -527,12 +537,28 @@
     document.getElementById('modAvatar').textContent = getInitials(currentEmployee.name);
     document.getElementById('modName').textContent = currentEmployee.name;
     document.getElementById('modLoc').textContent = selectedLocation;
+    // AI Assistant tile — global admins only
+    const aiTile = document.getElementById('aiAssistantTile');
+    if (aiTile) aiTile.style.display = isAdmin ? '' : 'none';
   }
 
   function openModule(mod) {
     if (mod === 'stationary') window.location.href = 'stationary.html';
     else if (mod === 'mail') window.location.href = 'mailrecord.html';
     else if (mod === 'complain') window.location.href = 'complain.html';
+    else if (mod === 'ai') window.location.href = 'ai_assistant.html';
+  }
+
+  // Token = sha256(admin_otp + YYYYMMDD) — stored in sessionStorage + localStorage
+  async function makeAiToken(otp) {
+    try {
+      const day = new Date().toISOString().slice(0, 10); // "YYYY-MM-DD" — matches edge fn
+      const data = new TextEncoder().encode(otp + day);
+      const hashBuf = await crypto.subtle.digest('SHA-256', data);
+      const token = Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2, '0')).join('');
+      sessionStorage.setItem('ai_admin_token', token);
+      localStorage.setItem('ai_admin_token', token);
+    } catch(e) { console.warn('makeAiToken failed:', e); }
   }
 
   function logout() {
@@ -549,6 +575,11 @@
     const deptScope = sessionStorage.getItem('sr_dept_admin') || localStorage.getItem('sr_dept_admin');
     if (deptScope) { window.location.href = 'complain.html'; }
     else {
+      // Restore AI token if still in localStorage (same-day session reload)
+      if (isAdmin && !sessionStorage.getItem('ai_admin_token')) {
+        const stored = localStorage.getItem('ai_admin_token');
+        if (stored) sessionStorage.setItem('ai_admin_token', stored);
+      }
       // Reload — skip door, go straight to modules with name on top
       showModuleScreen();
     }
