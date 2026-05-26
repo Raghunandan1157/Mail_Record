@@ -582,25 +582,87 @@ function updateViewSwitchBtn() {
   if (label) label.textContent = isHeadOffice ? 'Switch to Branch View' : 'Switch to Admin View';
 }
 
-function toggleAdminView() {
-  if (!isAdminUser) return;
-  if (isHeadOffice) {
-    // Currently admin → flip to branch view
-    isHeadOffice = false;
-    sessionStorage.setItem('sr_view_mode', 'branch');
-    localStorage.setItem('sr_view_mode', 'branch');
-    switchToRegularMode();
-    showToast('Switched to Branch View');
-    navigateTo('dashboard');
+let viewSwitchInProgress = false;
+
+function showViewSwitchOverlay(toMode, durationMs) {
+  const overlay = document.getElementById('view-switch-overlay');
+  const bg = document.getElementById('view-switch-bg');
+  const card = document.getElementById('view-switch-card');
+  const title = document.getElementById('view-switch-title');
+  const sub = document.getElementById('view-switch-sub');
+  const bar = document.getElementById('view-switch-bar');
+  if (!overlay) return;
+
+  if (toMode === 'admin') {
+    title.textContent = 'Entering Admin View';
+    sub.textContent = 'Loading all branches, reports, and edit logs...';
   } else {
+    title.textContent = 'Entering Head Office View';
+    sub.textContent = 'Switching to branch operations — inventory, stock entries, notifications...';
+  }
+
+  overlay.classList.remove('hidden');
+  overlay.classList.add('flex');
+  bar.style.transition = 'none';
+  bar.style.width = '0%';
+
+  requestAnimationFrame(() => {
+    bg.style.opacity = '1';
+    card.style.opacity = '1';
+    card.style.transform = 'scale(1)';
+    requestAnimationFrame(() => {
+      bar.style.transition = `width ${durationMs}ms linear`;
+      bar.style.width = '100%';
+    });
+  });
+}
+
+function hideViewSwitchOverlay() {
+  const overlay = document.getElementById('view-switch-overlay');
+  const bg = document.getElementById('view-switch-bg');
+  const card = document.getElementById('view-switch-card');
+  if (!overlay) return;
+  bg.style.opacity = '0';
+  card.style.opacity = '0';
+  card.style.transform = 'scale(0.9)';
+  setTimeout(() => {
+    overlay.classList.add('hidden');
+    overlay.classList.remove('flex');
+  }, 400);
+}
+
+function toggleAdminView() {
+  if (!isAdminUser || viewSwitchInProgress) return;
+  viewSwitchInProgress = true;
+  const goingToAdmin = !isHeadOffice;
+  const DURATION = 3000;
+
+  showViewSwitchOverlay(goingToAdmin ? 'admin' : 'branch', DURATION);
+
+  if (goingToAdmin) {
     isHeadOffice = true;
     sessionStorage.setItem('sr_view_mode', 'admin');
     localStorage.setItem('sr_view_mode', 'admin');
-    switchToAdminMode();
-    loadAdminData().then(() => { navigateTo('admin'); });
-    showToast('Switched to Admin View');
+    // Preload admin data during overlay so transition feels seamless
+    loadAdminData().catch(() => {});
+  } else {
+    isHeadOffice = false;
+    sessionStorage.setItem('sr_view_mode', 'branch');
+    localStorage.setItem('sr_view_mode', 'branch');
   }
-  updateViewSwitchBtn();
+
+  setTimeout(() => {
+    if (goingToAdmin) {
+      switchToAdminMode();
+      navigateTo('admin');
+    } else {
+      switchToRegularMode();
+      navigateTo('dashboard');
+    }
+    updateViewSwitchBtn();
+    hideViewSwitchOverlay();
+    viewSwitchInProgress = false;
+  }, DURATION);
 }
 
 // Initialize login on load
