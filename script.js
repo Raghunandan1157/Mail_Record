@@ -109,6 +109,7 @@ async function supabaseUpdate(table, id, data) {
 let currentEmployee = null;  // { id, emp_id, name, role, mobile, location }
 let selectedLocation = null;
 let isHeadOffice = false;
+let isAdminUser = false;     // true if logged in with ADMIN credentials (allows admin↔branch view switch)
 
 // --- LOGIN FLOW ---
 
@@ -392,6 +393,7 @@ async function loginHeadOfficeOTP() {
 
   errorEl.classList.add('hidden');
   isHeadOffice = true;
+  isAdminUser = true;
   selectedLocation = 'Head Office';
   currentEmployee = { id: 0, emp_id: 'HO-ADMIN', name: 'Santosh', role: 'Admin', mobile: '', location: 'Head Office' };
 
@@ -494,17 +496,21 @@ function checkSession() {
   if (savedEmp && savedLoc) {
     currentEmployee = JSON.parse(savedEmp);
     selectedLocation = savedLoc;
-    isHeadOffice = savedHO === 'true';
+    isAdminUser = savedHO === 'true';
+    const savedViewMode = sessionStorage.getItem('sr_view_mode') || localStorage.getItem('sr_view_mode');
+    // Admin user defaults to admin view unless they previously switched to branch view
+    isHeadOffice = isAdminUser && savedViewMode !== 'branch';
     // Keep both in sync
     sessionStorage.setItem('sr_employee', savedEmp);
     sessionStorage.setItem('sr_location', savedLoc);
-    if (isHeadOffice) sessionStorage.setItem('sr_headoffice', 'true');
+    if (isAdminUser) sessionStorage.setItem('sr_headoffice', 'true');
     // Update app profile branch from session
     appData.profile.branch = savedLoc;
     saveData(appData);
     document.getElementById('login-screen').classList.add('hidden');
     updateUserUI();
     if (isHeadOffice) switchToAdminMode();
+    updateViewSwitchBtn();
     return true;
   }
   return false;
@@ -515,16 +521,20 @@ function logout() {
   sessionStorage.removeItem('sr_location');
   sessionStorage.removeItem('sr_headoffice');
   sessionStorage.removeItem('sr_dept_admin');
+  sessionStorage.removeItem('sr_view_mode');
   localStorage.removeItem('sr_employee');
   localStorage.removeItem('sr_location');
   localStorage.removeItem('sr_headoffice');
   localStorage.removeItem('sr_dept_admin');
+  localStorage.removeItem('sr_view_mode');
   // FIX #7: Clear login timestamp
   sessionStorage.removeItem('sr_login_time');
   localStorage.removeItem('sr_login_time');
   currentEmployee = null;
   selectedLocation = null;
   isHeadOffice = false;
+  isAdminUser = false;
+  if (typeof updateViewSwitchBtn === 'function') updateViewSwitchBtn();
 
   // Reset to regular nav
   switchToRegularMode();
@@ -556,6 +566,41 @@ function switchToRegularMode() {
   const teamSection = document.querySelector('#sidebar > .px-4.pb-3');
   if (teamSection) teamSection.classList.remove('hidden');
   document.getElementById('new-entry-btn').classList.remove('hidden');
+}
+
+function updateViewSwitchBtn() {
+  const btn = document.getElementById('view-switch-btn');
+  const label = document.getElementById('view-switch-label');
+  if (!btn) return;
+  if (!isAdminUser) {
+    btn.classList.add('hidden');
+    btn.classList.remove('inline-flex');
+    return;
+  }
+  btn.classList.remove('hidden');
+  btn.classList.add('inline-flex');
+  if (label) label.textContent = isHeadOffice ? 'Switch to Branch View' : 'Switch to Admin View';
+}
+
+function toggleAdminView() {
+  if (!isAdminUser) return;
+  if (isHeadOffice) {
+    // Currently admin → flip to branch view
+    isHeadOffice = false;
+    sessionStorage.setItem('sr_view_mode', 'branch');
+    localStorage.setItem('sr_view_mode', 'branch');
+    switchToRegularMode();
+    showToast('Switched to Branch View');
+    navigateTo('dashboard');
+  } else {
+    isHeadOffice = true;
+    sessionStorage.setItem('sr_view_mode', 'admin');
+    localStorage.setItem('sr_view_mode', 'admin');
+    switchToAdminMode();
+    loadAdminData().then(() => { navigateTo('admin'); });
+    showToast('Switched to Admin View');
+  }
+  updateViewSwitchBtn();
 }
 
 // Initialize login on load
