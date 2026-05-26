@@ -432,9 +432,9 @@
     return (await fetch(`${SB}/rest/v1/${t}?${p}`, { headers: HDR })).json();
   }
   async function aiFetch(path, body) {
-    const r = await fetch(`${SB}/functions/v1/${path}`, {
+    const r = await fetch(`/api/${path}`, {
       method: 'POST',
-      headers: { 'Authorization': 'Bearer ' + SK, 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body)
     });
     if (!r.ok) {
@@ -761,9 +761,8 @@
     fd.append('audio', blob, 'recording.webm');
     fd.append('token', adminToken);
     try {
-      const r = await fetch(`${SB}/functions/v1/ai-stt`, {
+      const r = await fetch(`/api/ai-stt`, {
         method: 'POST',
-        headers: { 'Authorization': 'Bearer ' + SK },
         body: fd
       });
       if (!r.ok) throw new Error(await r.text());
