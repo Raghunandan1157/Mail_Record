@@ -515,9 +515,10 @@
     document.getElementById('modAvatar').textContent = getInitials(currentEmployee.name);
     document.getElementById('modName').textContent = currentEmployee.name;
     document.getElementById('modLoc').textContent = selectedLocation;
-    // AI Assistant tile — global admins only
+    // AI Assistant tile — admin context only (hidden in branch view even for admin user)
     const aiTile = document.getElementById('aiAssistantTile');
-    if (aiTile) aiTile.style.display = isAdmin ? '' : 'none';
+    const curView = sessionStorage.getItem('sr_view_mode') || localStorage.getItem('sr_view_mode') || 'admin';
+    if (aiTile) aiTile.style.display = (isAdmin && curView === 'admin') ? '' : 'none';
     // View-mode hint for admin users
     if (isAdmin) {
       const cur = sessionStorage.getItem('sr_view_mode') || localStorage.getItem('sr_view_mode') || 'admin';
@@ -534,6 +535,10 @@
   }
 
   function openModule(mod) {
+    if (mod === 'ai') {
+      const curView = sessionStorage.getItem('sr_view_mode') || localStorage.getItem('sr_view_mode') || 'admin';
+      if (!isAdmin || curView !== 'admin') { alert('AI Assistant requires Admin view.'); return; }
+    }
     if (mod === 'stationary') window.location.href = 'stationary.html';
     else if (mod === 'mail') window.location.href = 'mailrecord.html';
     else if (mod === 'complain') window.location.href = 'complain.html';
