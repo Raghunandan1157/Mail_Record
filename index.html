@@ -512,12 +512,13 @@
     document.getElementById('doorScreen').style.display = 'none';
     document.getElementById('loginScreen').style.display = 'none';
     document.getElementById('moduleScreen').style.display = 'flex';
-    document.getElementById('modAvatar').textContent = getInitials(currentEmployee.name);
-    document.getElementById('modName').textContent = currentEmployee.name;
-    document.getElementById('modLoc').textContent = selectedLocation;
+    const curView = sessionStorage.getItem('sr_view_mode') || localStorage.getItem('sr_view_mode') || 'admin';
+    const showAsBranch = isAdmin && curView === 'branch';
+    document.getElementById('modAvatar').textContent = showAsBranch ? 'B' : getInitials(currentEmployee.name);
+    document.getElementById('modName').textContent = showAsBranch ? 'BRANCH VIEW' : currentEmployee.name;
+    document.getElementById('modLoc').textContent = showAsBranch ? 'All Branches' : selectedLocation;
     // AI Assistant tile — admin context only (hidden in branch view even for admin user)
     const aiTile = document.getElementById('aiAssistantTile');
-    const curView = sessionStorage.getItem('sr_view_mode') || localStorage.getItem('sr_view_mode') || 'admin';
     if (aiTile) aiTile.style.display = (isAdmin && curView === 'admin') ? '' : 'none';
     // View-mode hint for admin users
     if (isAdmin) {
