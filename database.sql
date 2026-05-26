@@ -83,3 +83,18 @@ INSERT INTO app_config (key, value) VALUES ('admin_otp', '1234');
 -- CREATE POLICY "Allow anon read config" ON app_config FOR SELECT USING (true);
 -- CREATE POLICY "Allow anon all mail_records" ON mail_records FOR ALL USING (true);
 -- CREATE POLICY "Allow anon all edit_log" ON edit_log FOR ALL USING (true);
+
+
+-- Branch credentials (added for username/password auth)
+CREATE TABLE IF NOT EXISTS branch_credentials (
+  id BIGSERIAL PRIMARY KEY,
+  branch TEXT UNIQUE NOT NULL,
+  username TEXT UNIQUE NOT NULL,
+  password TEXT NOT NULL,
+  is_admin BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_branch_credentials_username ON branch_credentials(username);
+ALTER TABLE branch_credentials ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow all on branch_credentials" ON branch_credentials;
+CREATE POLICY "Allow all on branch_credentials" ON branch_credentials FOR ALL USING (true) WITH CHECK (true);

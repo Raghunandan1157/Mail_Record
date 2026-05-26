@@ -54,6 +54,17 @@
   }
   .otp-inputs input:focus { border-color: #0f3460; box-shadow: 0 0 0 3px rgba(15,52,96,0.1); }
 
+  .ac-wrap { position: relative; margin-bottom: 18px; }
+  .ac-wrap input { margin-bottom: 0 !important; }
+  .ac-dropdown {
+    position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: #fff;
+    border: 1.5px solid #dde1e7; border-radius: 8px; max-height: 220px; overflow-y: auto;
+    z-index: 50; display: none; box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+  }
+  .ac-dropdown.show { display: block; }
+  .ac-item { padding: 10px 14px; cursor: pointer; font-size: 0.9rem; color: #333; }
+  .ac-item:hover, .ac-item.active { background: #f1f5f9; color: #0f3460; }
+
   /* ===== DOOR SCENE ===== */
   .door-screen { display: none; min-height: 100vh; flex-direction: column; align-items: center; justify-content: center; background: #0a0a0f; position: relative; }
   .door-top-bar {
@@ -217,44 +228,16 @@
   <div class="login-card">
     <div class="login-step active" id="loginStep1">
       <h1>Navachetana Hub</h1>
-      <p class="sub">Select your branch to continue</p>
-      <label>Branch / Location</label>
-      <select id="loginLocation"><option value="">Loading locations...</option></select>
-      <div class="login-error" id="loginError1"></div>
-      <button onclick="loginSelectLocation()" class="btn btn-primary">Continue</button>
-      <div style="text-align:center;margin-top:16px"><a onclick="loginAdminStart()" style="color:#0f3460;font-size:0.82rem;cursor:pointer;text-decoration:underline">Login as Admin</a></div>
-    </div>
-    <div class="login-step" id="loginStep2">
-      <h1>Select Profile</h1>
-      <p class="sub" id="loginStep2Sub">Choose your profile</p>
-      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px;max-height:240px;overflow-y:auto" id="loginProfiles"></div>
-      <div id="nameInputSection" style="display:none"></div>
-      <div class="login-error" id="loginError2"></div>
-      <button id="loginConfirmBtn" onclick="loginConfirm()" class="btn btn-primary">Start Session</button>
-      <button onclick="showStep(1)" class="btn btn-secondary">Back</button>
-    </div>
-    <div class="login-step" id="loginStep3">
-      <h1>Admin Login</h1>
-      <p class="sub">Enter 4-digit OTP to continue</p>
-      <div class="otp-inputs"><input type="password" maxlength="1"><input type="password" maxlength="1"><input type="password" maxlength="1"><input type="password" maxlength="1"></div>
-      <div class="login-error" id="loginError3"></div>
-      <button onclick="loginVerifyOTP()" class="btn btn-primary">Verify</button>
-      <button onclick="showStep(1)" class="btn btn-secondary">Back</button>
-    </div>
-    <div class="login-step" id="loginStep4">
-      <h1>Select Admin Type</h1>
-      <p class="sub">Choose your admin office</p>
-      <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:16px">
-        <div class="profile-card" onclick="loginSelectAdminType('HO')">
-          <div class="avatar" style="background:linear-gradient(135deg,#0f3460,#16213e)">HO</div>
-          <div><div style="font-size:0.9rem;font-weight:600">Admin_HO</div><div style="font-size:0.78rem;color:#888">Head Office — Santosh</div></div>
-        </div>
-        <div class="profile-card" onclick="loginSelectAdminType('CO')">
-          <div class="avatar" style="background:linear-gradient(135deg,#059669,#14b8a6)">CO</div>
-          <div><div style="font-size:0.9rem;font-weight:600">Admin_CO</div><div style="font-size:0.78rem;color:#888">Corporate Office — Chetan</div></div>
-        </div>
+      <p class="sub">Sign in with your branch credentials</p>
+      <label>Username (Branch)</label>
+      <div class="ac-wrap">
+        <input type="text" id="loginUsername" autocomplete="off" placeholder="Type branch name" oninput="onUsernameType()" onfocus="onUsernameType()" onkeydown="onUsernameKey(event)">
+        <div class="ac-dropdown" id="loginUsernameDropdown"></div>
       </div>
-      <button onclick="showStep(3)" class="btn btn-secondary">Back</button>
+      <label style="margin-top:14px">Password</label>
+      <input type="password" id="loginPassword" autocomplete="off" onkeydown="if(event.key==='Enter')loginSubmit()">
+      <div class="login-error" id="loginError1"></div>
+      <button onclick="loginSubmit()" class="btn btn-primary" style="margin-top:14px">Sign in</button>
     </div>
   </div>
 </div>
@@ -350,103 +333,81 @@
   function showStep(n) { document.querySelectorAll('.login-step').forEach(s=>s.classList.remove('active')); document.getElementById('loginStep'+n).classList.add('active'); }
   function showLoginError(step, msg) { const el = document.getElementById('loginError'+step); el.textContent = msg; el.style.display = 'block'; setTimeout(()=>el.style.display='none', 3000); }
 
-  // ===== LOGIN =====
+  // ===== LOGIN (username + password) =====
+  let allUsernames = [];
+  let acIndex = -1;
+
   async function initLogin() {
     try {
-      const emps = await sbGet('employees', 'select=location&location=not.is.null');
-      const locs = [...new Set(emps.map(e=>e.location))].sort();
-      if (!locs.includes('Head Office')) locs.push('Head Office');
-      locs.sort();
-      document.getElementById('loginLocation').innerHTML = '<option value="">-- Select Branch --</option>' + locs.map(l=>`<option value="${esc(l)}">${esc(l)}</option>`).join('');
-    } catch(e) { showLoginError(1, 'Failed to load locations'); }
+      const rows = await sbGet('branch_credentials', 'select=username&order=username.asc');
+      allUsernames = (rows || []).map(r => r.username).filter(Boolean);
+    } catch(e) { console.error('cred load failed', e); }
+    const u = document.getElementById('loginUsername'); if (u) setTimeout(()=>u.focus(), 50);
   }
 
-  async function loginSelectLocation() {
-    const loc = document.getElementById('loginLocation').value;
-    if (!loc) { showLoginError(1, 'Please select a branch'); return; }
-    selectedLocation = loc;
-    if (loc === 'Head Office' || loc === 'Corporate Office') {
-      currentEmployee = { id: 0, emp_id: loc==='Head Office'?'HO-USER':'CO-USER', name: loc==='Head Office'?'Santosh':'Chetan', role:'Admin Executive', mobile:'', location: loc };
-      saveAndShowDoor(); return;
+  function onUsernameType() {
+    const inp = document.getElementById('loginUsername');
+    const before = inp.value;
+    const up = before.toUpperCase();
+    if (up !== before) inp.value = up;
+    const q = inp.value.trim();
+    const dd = document.getElementById('loginUsernameDropdown');
+    acIndex = -1;
+    if (!q) { dd.classList.remove('show'); dd.innerHTML=''; return; }
+    const matches = allUsernames.filter(u => u.indexOf(q) === 0).concat(
+      allUsernames.filter(u => u.indexOf(q) > 0)
+    ).filter((v,i,a)=>a.indexOf(v)===i).slice(0, 12);
+    if (!matches.length) { dd.classList.remove('show'); dd.innerHTML=''; return; }
+    dd.innerHTML = matches.map((u,i) => `<div class="ac-item" data-i="${i}" onclick="pickUsername('${u.replace(/'/g,"\\'")}')">${esc(u)}</div>`).join('');
+    dd.classList.add('show');
+  }
+
+  function onUsernameKey(e) {
+    const dd = document.getElementById('loginUsernameDropdown');
+    const items = dd.querySelectorAll('.ac-item');
+    if (e.key === 'ArrowDown') { if (!items.length) return; e.preventDefault(); acIndex = (acIndex+1) % items.length; items.forEach((el,i)=>el.classList.toggle('active', i===acIndex)); }
+    else if (e.key === 'ArrowUp') { if (!items.length) return; e.preventDefault(); acIndex = (acIndex-1+items.length) % items.length; items.forEach((el,i)=>el.classList.toggle('active', i===acIndex)); }
+    else if (e.key === 'Enter') { if (acIndex >= 0 && items[acIndex]) { e.preventDefault(); pickUsername(items[acIndex].textContent); } else { e.preventDefault(); document.getElementById('loginPassword').focus(); } }
+    else if (e.key === 'Escape') { dd.classList.remove('show'); }
+  }
+
+  function pickUsername(u) {
+    document.getElementById('loginUsername').value = u;
+    const dd = document.getElementById('loginUsernameDropdown');
+    dd.classList.remove('show'); dd.innerHTML='';
+    document.getElementById('loginPassword').focus();
+  }
+
+  document.addEventListener('click', (e) => {
+    const wrap = document.querySelector('.ac-wrap');
+    if (wrap && !wrap.contains(e.target)) {
+      const dd = document.getElementById('loginUsernameDropdown');
+      if (dd) dd.classList.remove('show');
     }
-    try {
-      const data = await sbGet('employees', `select=*&location=eq.${encodeURIComponent(loc)}&role=eq.BOE`);
-      profilesList = data;
-      if (data.length === 0) {
-        const saved = localStorage.getItem('mr_temp_user_' + loc);
-        if (saved) { currentEmployee = JSON.parse(saved); saveAndShowDoor(); return; }
-        document.getElementById('loginStep2Sub').textContent = `Branch: ${loc}`;
-        document.getElementById('loginProfiles').innerHTML = '';
-        document.getElementById('loginConfirmBtn').textContent = 'Continue';
-        const s = document.getElementById('nameInputSection'); s.style.display = 'block';
-        s.innerHTML = `<p style="font-size:0.88rem;color:#888;margin-bottom:12px">No profiles found. Enter your name.</p><label style="display:block;font-size:0.78rem;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:6px">Your Name</label><input type="text" id="newUserName" placeholder="Full name" style="width:100%;padding:11px 14px;border:1.5px solid #dde1e7;border-radius:8px;font-size:0.95rem;font-family:inherit;background:#fafbfc;margin-bottom:4px;outline:none">`;
-        showStep(2); setTimeout(()=>document.getElementById('newUserName').focus(),100); return;
-      }
-      if (data.length === 1) { currentEmployee = data[0]; saveAndShowDoor(); return; }
-      document.getElementById('loginStep2Sub').textContent = `Branch: ${loc}`;
-      document.getElementById('nameInputSection').style.display = 'none';
-      document.getElementById('loginConfirmBtn').textContent = 'Start Session';
-      selectedProfileIdx = -1;
-      document.getElementById('loginProfiles').innerHTML = data.map((p,i)=>`<div class="profile-card" onclick="selectProfile(${i})" id="prof-${i}"><div class="avatar">${getInitials(p.name)}</div><div style="flex:1;min-width:0"><div style="font-weight:600;font-size:0.95rem">${esc(p.name)}</div><div style="font-size:0.78rem;color:#888">${esc(p.emp_id)} · ${esc(p.role||'BOE')}</div></div></div>`).join('');
-      showStep(2);
-    } catch(e) { showLoginError(1, 'Failed to load profiles'); }
-  }
-
-  function selectProfile(i) { selectedProfileIdx = i; document.querySelectorAll('.profile-card').forEach((c,j)=>c.classList.toggle('selected',j===i)); }
-
-  function loginConfirm() {
-    const ns = document.getElementById('nameInputSection');
-    if (ns.style.display !== 'none') {
-      const name = (document.getElementById('newUserName')||{}).value?.trim();
-      if (!name) { showLoginError(2,'Enter your name'); return; }
-      currentEmployee = { id:'temp-'+Date.now(), emp_id:'TEMP-'+Math.floor(Math.random()*10000), name, role:'BOE', mobile:'', location: selectedLocation };
-      localStorage.setItem('mr_temp_user_'+selectedLocation, JSON.stringify(currentEmployee));
-      saveAndShowDoor(); return;
-    }
-    if (selectedProfileIdx < 0) { showLoginError(2,'Select a profile'); return; }
-    currentEmployee = profilesList[selectedProfileIdx]; saveAndShowDoor();
-  }
-
-  function loginAdminStart() { showStep(3); document.querySelectorAll('.otp-inputs input').forEach(i=>{i.value='';}); setTimeout(()=>document.querySelector('.otp-inputs input').focus(),100); }
-  function loginSelectAdminType(type) {
-    if (type === 'HO') { currentEmployee = { id:0, emp_id:'HO-ADMIN', name:'Santosh', role:'Administrator', mobile:'', location:'Head Office' }; selectedLocation = 'Head Office'; }
-    else { currentEmployee = { id:0, emp_id:'CO-ADMIN', name:'Chetan', role:'Administrator', mobile:'', location:'Corporate Office' }; selectedLocation = 'Corporate Office'; }
-    saveAndShowDoor();
-  }
-  document.querySelectorAll('.otp-inputs input').forEach((inp,i,all)=>{
-    inp.addEventListener('input',()=>{ if(inp.value&&i<3)all[i+1].focus(); });
-    inp.addEventListener('keydown',e=>{ if(e.key==='Backspace'&&!inp.value&&i>0)all[i-1].focus(); if(e.key==='Enter')loginVerifyOTP(); });
   });
 
-  async function loginVerifyOTP() {
-    const otp = [...document.querySelectorAll('.otp-inputs input')].map(i=>i.value).join('');
-    if (otp.length<4) { showLoginError(3,'Enter all 4 digits'); return; }
+  async function loginSubmit() {
+    const u = (document.getElementById('loginUsername').value || '').trim().toUpperCase();
+    const p = document.getElementById('loginPassword').value || '';
+    if (!u || !p) { showLoginError(1, 'Username and password required'); return; }
     try {
-      const c = await sbGet('app_config','select=value&key=eq.admin_otp');
-      if (c.length && c[0].value === otp) { isAdmin = true; makeAiToken(otp); showStep(4); return; }
-
-      // Dept-scoped admin login: 4-digit code matches a dept_code
-      const depts = await sbGet('complaint_dept_config', `select=dept_key,name&active=eq.true&dept_code=eq.${encodeURIComponent(otp)}`);
-      if (depts.length) {
-        const dept = depts[0];
-        currentEmployee = { id: 0, emp_id: 'DEPT-'+dept.dept_key.toUpperCase(), name: dept.name+' Admin', role: 'Department Admin', mobile: '', location: 'Departments' };
-        selectedLocation = 'Departments';
-        isAdmin = false;
-        const t = Date.now().toString();
-        sessionStorage.setItem('sr_employee', JSON.stringify(currentEmployee));
-        sessionStorage.setItem('sr_location', selectedLocation);
-        sessionStorage.setItem('sr_login_time', t);
-        sessionStorage.setItem('sr_dept_admin', dept.dept_key);
-        localStorage.setItem('sr_employee', JSON.stringify(currentEmployee));
-        localStorage.setItem('sr_location', selectedLocation);
-        localStorage.setItem('sr_login_time', t);
-        localStorage.setItem('sr_dept_admin', dept.dept_key);
-        window.location.href = 'complain.html';
-        return;
-      }
-
-      showLoginError(3,'Invalid OTP');
-    } catch(e) { showLoginError(3,'Verification failed'); }
+      const rows = await sbGet('branch_credentials', `select=*&username=eq.${encodeURIComponent(u)}&password=eq.${encodeURIComponent(p)}`);
+      if (!rows || !rows.length) { showLoginError(1, 'Invalid credentials'); return; }
+      const row = rows[0];
+      isAdmin = !!row.is_admin;
+      const branch = row.branch;
+      currentEmployee = {
+        id: 0,
+        emp_id: isAdmin ? 'ADMIN' : ('BR-' + branch),
+        name: branch,
+        role: isAdmin ? 'Administrator' : 'Branch User',
+        mobile: '',
+        location: isAdmin ? 'Head Office' : branch
+      };
+      selectedLocation = currentEmployee.location;
+      if (isAdmin) makeAiToken(p);
+      saveAndShowDoor();
+    } catch(e) { showLoginError(1, 'Login failed: ' + (e && e.message || e)); }
   }
 
   // ===== SESSION =====

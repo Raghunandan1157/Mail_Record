@@ -42,3 +42,18 @@ ALTER TABLE mail_edit_log ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Allow all on mail_records" ON mail_records FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow all on mail_edit_log" ON mail_edit_log FOR ALL USING (true) WITH CHECK (true);
+
+
+-- Branch credentials (added for username/password auth)
+CREATE TABLE IF NOT EXISTS branch_credentials (
+  id BIGSERIAL PRIMARY KEY,
+  branch TEXT UNIQUE NOT NULL,
+  username TEXT UNIQUE NOT NULL,
+  password TEXT NOT NULL,
+  is_admin BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_branch_credentials_username ON branch_credentials(username);
+ALTER TABLE branch_credentials ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow all on branch_credentials" ON branch_credentials;
+CREATE POLICY "Allow all on branch_credentials" ON branch_credentials FOR ALL USING (true) WITH CHECK (true);
