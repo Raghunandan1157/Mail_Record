@@ -498,8 +498,8 @@ function checkSession() {
     selectedLocation = savedLoc;
     isAdminUser = savedHO === 'true';
     const savedViewMode = sessionStorage.getItem('sr_view_mode') || localStorage.getItem('sr_view_mode');
-    // Admin user defaults to corporate view unless they previously switched to branch or admin
-    isHeadOffice = isAdminUser && (savedViewMode !== 'branch' && savedViewMode !== 'admin');
+    // Admin user defaults to corporate/admin UI; only Head Office branch view uses the regular UI.
+    isHeadOffice = isAdminUser && (savedViewMode !== 'branch');
     // Keep both in sync
     sessionStorage.setItem('sr_employee', savedEmp);
     sessionStorage.setItem('sr_location', savedLoc);

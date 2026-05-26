@@ -548,9 +548,9 @@
     document.getElementById('modAvatar').textContent = showAsBranch ? 'H' : (showAsAdmin ? 'A' : 'C');
     document.getElementById('modName').textContent = showAsBranch ? 'HEAD OFFICE' : (showAsAdmin ? 'ADMIN' : 'CORPORATE OFFICE');
     document.getElementById('modLoc').textContent = showAsBranch ? 'Branch Operations' : (showAsAdmin ? 'Manage Records & Logs' : 'All Branches · Admin');
-    // AI Assistant tile — admin or corporate context only (hidden in branch view even for admin user)
+    // AI Assistant tile — Admin view only.
     const aiTile = document.getElementById('aiAssistantTile');
-    if (aiTile) aiTile.style.display = (isAdmin && (curView === 'corporate' || curView === 'admin')) ? '' : 'none';
+    if (aiTile) aiTile.style.display = (isAdmin && curView === 'admin') ? '' : 'none';
     // View-mode hint for admin users
     if (isAdmin) {
       const cur = sessionStorage.getItem('sr_view_mode') || localStorage.getItem('sr_view_mode') || 'corporate';
@@ -570,7 +570,7 @@
   function openModule(mod) {
     if (mod === 'ai') {
       const curView = sessionStorage.getItem('sr_view_mode') || localStorage.getItem('sr_view_mode') || 'corporate';
-      if (!isAdmin || (curView !== 'corporate' && curView !== 'admin')) { alert('AI Assistant requires Corporate Office or Admin view.'); return; }
+      if (!isAdmin || curView !== 'admin') { alert('AI Assistant requires Admin view.'); return; }
     }
     if (mod === 'stationary') window.location.href = 'stationary.html';
     else if (mod === 'mail') window.location.href = 'mailrecord.html';

@@ -69,8 +69,8 @@
   if (!otp || !isAdminFlag) {
     alert('Login required. Redirecting...');
     window.location.href = 'index.html';
-  } else if (viewMode === 'branch') {
-    alert('AI Assistant is unavailable in Head Office view. Returning to home.');
+  } else if (viewMode !== 'admin') {
+    alert('AI Assistant is available only in Admin view. Returning to home.');
     window.location.href = 'index.html';
   }
 
