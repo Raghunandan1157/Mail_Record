@@ -98,3 +98,30 @@ CREATE INDEX IF NOT EXISTS idx_branch_credentials_username ON branch_credentials
 ALTER TABLE branch_credentials ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Allow all on branch_credentials" ON branch_credentials;
 CREATE POLICY "Allow all on branch_credentials" ON branch_credentials FOR ALL USING (true) WITH CHECK (true);
+
+
+-- Shipments (Head Office → Branch stock distribution)
+CREATE TABLE IF NOT EXISTS shipments (
+  id BIGSERIAL PRIMARY KEY,
+  batch_id TEXT NOT NULL,
+  from_branch TEXT NOT NULL DEFAULT 'Head Office',
+  to_branch TEXT NOT NULL,
+  item_name TEXT NOT NULL,
+  hsn_code TEXT,
+  category TEXT,
+  quantity INTEGER NOT NULL,
+  received_quantity INTEGER,
+  unit TEXT,
+  rate NUMERIC,
+  gst NUMERIC,
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','shipped','received','dismissed')),
+  created_by TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  received_at TIMESTAMPTZ
+);
+CREATE INDEX IF NOT EXISTS idx_shipments_to_branch ON shipments(to_branch);
+CREATE INDEX IF NOT EXISTS idx_shipments_status ON shipments(status);
+CREATE INDEX IF NOT EXISTS idx_shipments_batch ON shipments(batch_id);
+ALTER TABLE shipments ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow all on shipments" ON shipments;
+CREATE POLICY "Allow all on shipments" ON shipments FOR ALL USING (true) WITH CHECK (true);

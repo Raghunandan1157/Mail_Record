@@ -164,6 +164,11 @@
         <span class="material-symbols-outlined">event_available</span>
         Stock Received
       </a>
+      <a class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" href="javascript:void(0)" data-page="shipnotif">
+        <span class="material-symbols-outlined">notifications_active</span>
+        Notifications
+        <span id="shipnotif-badge" class="ml-auto hidden bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">0</span>
+      </a>
       <a href="index.html" class="flex items-center gap-3 px-4 py-3 rounded-lg text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors w-full mt-2"><span class="material-symbols-outlined">home</span>Home</a>
       <button onclick="logout()" class="flex items-center gap-3 px-4 py-3 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors w-full">
         <span class="material-symbols-outlined">logout</span>
@@ -1132,6 +1137,51 @@
       </div>
 
       <!-- ===== NEW ENTRY PAGE ===== -->
+      <!-- ===== SHIPMENT NOTIFICATIONS PAGE (Branch only) ===== -->
+      <div id="page-shipnotif" class="hidden">
+        <div class="flex items-center justify-between mb-6">
+          <div class="flex items-center gap-4">
+            <button onclick="navigateTo('dashboard')" class="flex items-center gap-2 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors">
+              <span class="material-symbols-outlined">arrow_back</span>
+              <span class="text-sm font-medium">Back</span>
+            </button>
+            <div>
+              <h2 class="text-2xl font-bold text-slate-800 dark:text-white">Shipment Notifications</h2>
+              <p class="text-sm text-slate-500 dark:text-slate-400">Incoming stock from Head Office</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <select id="shipnotif-filter" onchange="renderShipNotifList()" class="px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm">
+              <option value="active">Active</option>
+              <option value="received">Received</option>
+              <option value="dismissed">Dismissed</option>
+              <option value="all">All</option>
+            </select>
+          </div>
+        </div>
+        <div id="shipnotif-list" class="space-y-4"></div>
+      </div>
+
+      <!-- Shipment Edit Modal -->
+      <div id="shipedit-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4" role="dialog" aria-modal="true">
+        <div class="bg-white dark:bg-[#1c2631] rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+          <div class="p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+            <div>
+              <h3 class="text-lg font-bold text-slate-800 dark:text-white">Adjust Received Quantities</h3>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Update qty if you received less/more than sent</p>
+            </div>
+            <button onclick="closeShipEditModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+              <span class="material-symbols-outlined">close</span>
+            </button>
+          </div>
+          <div id="shipedit-body" class="p-6 space-y-3"></div>
+          <div class="p-6 border-t border-slate-200 dark:border-slate-800 flex gap-3">
+            <button onclick="saveShipEdit()" class="flex-1 px-4 py-2.5 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary/90 transition-colors">Save Changes</button>
+            <button onclick="closeShipEditModal()" class="px-4 py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg text-sm font-semibold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">Cancel</button>
+          </div>
+        </div>
+      </div>
+
       <div id="page-newentry" class="hidden">
         <!-- Top Bar: Back + Stock In/Out Toggle -->
         <div class="flex items-center justify-between mb-6">
@@ -1154,6 +1204,9 @@
             </button>
           </div>
         </div>
+
+        <!-- HO Source / Destination Bar -->
+        <div id="ho-context-bar" class="mb-4 hidden"></div>
 
         <!-- Category Filter Tabs -->
         <div class="mb-6 overflow-x-auto scrollbar-hide">

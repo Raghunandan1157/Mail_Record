@@ -1888,7 +1888,46 @@ function toggleBranchContacts(headerEl) {
 let entryCart = {};       // maps itemId → selected quantity
 let entryType = 'in';     // 'in' or 'out'
 let activeCategory = 'All';
+let destBranch = '';      // for HO Stock Out: chosen destination branch
 const CATEGORIES = ['All', 'Writing', 'Paper & Covers', 'Filing', 'Books & Registers', 'Desk Supplies', 'Tapes & Adhesives', 'Machines'];
+
+function isHOContext() {
+  const loc = (selectedLocation || (currentEmployee && currentEmployee.location) || '').trim().toLowerCase();
+  return loc === 'head office' || !!isHeadOffice;
+}
+
+function getAllBranchesList() {
+  const set = new Set();
+  if (Array.isArray(appData.employees)) appData.employees.forEach(e => { if (e.location) set.add(e.location); });
+  if (Array.isArray(appData.entries)) appData.entries.forEach(e => { if (e.location) set.add(e.location); });
+  set.delete('Head Office');
+  return Array.from(set).sort();
+}
+
+function renderHoContextBar() {
+  const bar = document.getElementById('ho-context-bar');
+  if (!bar) return;
+  if (!isHOContext()) { bar.classList.add('hidden'); bar.innerHTML = ''; return; }
+  bar.classList.remove('hidden');
+  if (entryType === 'in') {
+    bar.innerHTML = `
+      <div class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
+        <span class="material-symbols-outlined text-blue-600 dark:text-blue-400 text-base">storefront</span>
+        <span class="text-sm font-semibold text-blue-700 dark:text-blue-300">Source: Shop / Vendor</span>
+      </div>`;
+  } else {
+    const branches = getAllBranchesList();
+    const opts = ['<option value="">— Select destination branch —</option>']
+      .concat(branches.map(b => `<option value="${escHtml(b)}" ${b === destBranch ? 'selected' : ''}>${escHtml(b)}</option>`))
+      .join('');
+    bar.innerHTML = `
+      <div class="flex items-center gap-3 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
+        <span class="material-symbols-outlined text-red-600 dark:text-red-400">local_shipping</span>
+        <label class="text-sm font-semibold text-red-700 dark:text-red-300">Ship to:</label>
+        <select id="dest-branch-select" onchange="destBranch=this.value" class="flex-1 max-w-xs px-3 py-1.5 rounded-md border border-red-200 dark:border-red-700 bg-white dark:bg-slate-800 text-sm text-slate-800 dark:text-slate-200">${opts}</select>
+      </div>`;
+  }
+}
 
 // --- NAVIGATION ---
 
@@ -1955,10 +1994,13 @@ function renderPage(page) {
     case 'branchdetail': renderBranchDetail(); break;
     case 'closingstock': renderClosingStock(); break;
     case 'receiveddate': renderReceivedDate(); break;
+    case 'shipnotif': renderShipNotifPage(); break;
   }
 }
 
 function renderDashboard() {
+  // Refresh shipment notif badge for branch users
+  if (!isHeadOffice) fetchShipNotifs();
   // KPIs
   const totalQty = appData.inventory.reduce((sum, i) => sum + i.qty, 0);
   const lowStock = appData.inventory.filter(i => i.qty <= i.reorder).length;
@@ -3264,6 +3306,7 @@ async function shareReports() {
 function renderNewEntryPage() {
   renderCategoryTabs();
   renderEntryCards();
+  renderHoContextBar();
   updateBottomBar();
 }
 
@@ -3352,7 +3395,7 @@ function renderEntryCards() {
               class="size-8 flex items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors text-lg font-bold ${qty <= 0 ? 'opacity-40 pointer-events-none' : ''}">
               &minus;
             </button>
-            <span id="qty-display-${item.id}" class="qty-display text-lg font-bold text-slate-800 dark:text-white w-8 text-center">${qty}</span>
+            <input id="qty-display-${item.id}" type="number" min="0" value="${qty}" onclick="event.stopPropagation(); this.select()" oninput="event.stopPropagation(); setEntryQty(${item.id}, this.value)" class="qty-display text-lg font-bold text-slate-800 dark:text-white w-16 text-center bg-transparent border-b border-slate-300 dark:border-slate-600 focus:outline-none focus:border-primary"/>
             <button onclick="event.stopPropagation(); updateEntryQty(${item.id}, 1)"
               class="size-8 flex items-center justify-center rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors text-lg font-bold ${isDisabled ? 'opacity-40 pointer-events-none' : ''}">
               +
@@ -3386,6 +3429,31 @@ function setEntryType(type) {
   }
 
   renderEntryCards();
+  renderHoContextBar();
+  updateBottomBar();
+}
+
+function setEntryQty(itemId, raw) {
+  const item = appData.inventory.find(i => i.id === itemId);
+  if (!item) return;
+  let newQty = parseInt(raw, 10);
+  if (!Number.isFinite(newQty) || newQty < 0) newQty = 0;
+  if (entryType === 'out' && newQty > item.qty) newQty = item.qty;
+
+  if (newQty === 0) delete entryCart[itemId];
+  else entryCart[itemId] = newQty;
+
+  const card = document.querySelector(`.entry-card[data-item-id="${itemId}"]`);
+  if (card) {
+    if (newQty > 0) {
+      card.classList.add('selected');
+      card.classList.remove('border-slate-200', 'dark:border-slate-800');
+      card.classList.add('border-primary');
+    } else {
+      card.classList.remove('selected', 'border-primary');
+      card.classList.add('border-slate-200', 'dark:border-slate-800');
+    }
+  }
   updateBottomBar();
 }
 
@@ -3409,7 +3477,8 @@ function updateEntryQty(itemId, delta) {
   // Bump animation on the qty display
   const display = document.getElementById('qty-display-' + itemId);
   if (display) {
-    display.textContent = newQty;
+    if (display.tagName === 'INPUT') display.value = newQty;
+    else display.textContent = newQty;
     display.classList.remove('bump');
     void display.offsetWidth; // force reflow
     display.classList.add('bump');
@@ -3516,8 +3585,15 @@ async function executeEntry(selectedDateISO) {
     return;
   }
 
+  const hoShipping = isHOContext() && entryType === 'out';
+  if (hoShipping && !destBranch) {
+    showToast('Select a destination branch', 'delete');
+    return;
+  }
+
   const now = selectedDateISO;
   const user = currentEmployee ? currentEmployee.name : 'Unknown';
+  const batchId = 'SHP-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8);
 
   // FIX #11: Build Supabase rows WITHOUT modifying local state first
   const supabaseRows = [];
@@ -3551,6 +3627,24 @@ async function executeEntry(selectedDateISO) {
   // Insert to Supabase first, then update local state on success
   try {
     await supabaseInsert('stock_entries', supabaseRows);
+    if (hoShipping) {
+      const shipmentRows = supabaseRows.map(r => ({
+        batch_id: batchId,
+        from_branch: 'Head Office',
+        to_branch: destBranch,
+        item_name: r.item_name,
+        hsn_code: r.hsn_code,
+        category: r.category,
+        quantity: r.quantity,
+        unit: r.unit,
+        rate: r.rate,
+        gst: r.gst,
+        status: 'pending',
+        created_by: user,
+        created_at: r.created_at,
+      }));
+      await supabaseInsert('shipments', shipmentRows);
+    }
   } catch (err) {
     console.error('Supabase save error:', err);
     console.error('Payload that failed:', JSON.stringify(supabaseRows, null, 2));
@@ -3559,13 +3653,257 @@ async function executeEntry(selectedDateISO) {
   }
 
   entryCart = {};
+  const shipNote = hoShipping ? ` → ${destBranch}` : '';
+  if (hoShipping) destBranch = '';
   const typeLabel = entryType === 'in' ? 'Stock In' : 'Stock Out';
-  showToast(`${typeLabel} recorded for ${supabaseRows.length} item${supabaseRows.length !== 1 ? 's' : ''}`);
+  showToast(`${typeLabel} recorded for ${supabaseRows.length} item${supabaseRows.length !== 1 ? 's' : ''}${shipNote}`);
 
   // Reload from Supabase to get authoritative state
   await loadFromSupabase();
   saveData(appData);
   navigateTo('transactions');
+}
+
+// --- SHIPMENT NOTIFICATIONS (Branch) ---
+
+let shipNotifCache = [];   // raw shipment rows for current branch
+let shipEditDraft = null;  // { batch_id, items: [{id, item_name, quantity, received_quantity}] }
+
+async function fetchShipNotifs() {
+  const branch = selectedLocation || (currentEmployee && currentEmployee.location);
+  if (!branch) { shipNotifCache = []; return; }
+  try {
+    const rows = await supabaseFetch('shipments',
+      `select=*&to_branch=eq.${encodeURIComponent(branch)}&order=created_at.desc`);
+    shipNotifCache = rows || [];
+  } catch (e) {
+    console.error('shipnotif fetch failed', e);
+    shipNotifCache = [];
+  }
+  updateShipNotifBadge();
+}
+
+function updateShipNotifBadge() {
+  const badge = document.getElementById('shipnotif-badge');
+  if (!badge) return;
+  const actionable = shipNotifCache.filter(r => r.status === 'pending' || r.status === 'shipped');
+  const batches = new Set(actionable.map(r => r.batch_id));
+  if (batches.size === 0) { badge.classList.add('hidden'); return; }
+  badge.textContent = batches.size;
+  badge.classList.remove('hidden');
+}
+
+async function renderShipNotifPage() {
+  await fetchShipNotifs();
+  renderShipNotifList();
+}
+
+function renderShipNotifList() {
+  const list = document.getElementById('shipnotif-list');
+  if (!list) return;
+  const filter = (document.getElementById('shipnotif-filter') || {}).value || 'active';
+
+  // Group by batch_id
+  const batches = {};
+  shipNotifCache.forEach(r => {
+    if (!batches[r.batch_id]) batches[r.batch_id] = { batch_id: r.batch_id, items: [], status: r.status, from_branch: r.from_branch, created_at: r.created_at, created_by: r.created_by };
+    batches[r.batch_id].items.push(r);
+    // batch status = received if any received, else dismissed if any dismissed, else shipped if any shipped, else pending
+    const cur = batches[r.batch_id].status;
+    const priority = { received: 4, dismissed: 3, shipped: 2, pending: 1 };
+    if ((priority[r.status] || 0) > (priority[cur] || 0)) batches[r.batch_id].status = r.status;
+  });
+
+  let arr = Object.values(batches);
+  if (filter === 'active') arr = arr.filter(b => b.status === 'pending' || b.status === 'shipped');
+  else if (filter === 'received') arr = arr.filter(b => b.status === 'received');
+  else if (filter === 'dismissed') arr = arr.filter(b => b.status === 'dismissed');
+  arr.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+  if (arr.length === 0) {
+    list.innerHTML = `
+      <div class="bg-white dark:bg-[#1c2631] rounded-xl border border-slate-200 dark:border-slate-800 p-12 text-center">
+        <span class="material-symbols-outlined text-5xl text-slate-300 dark:text-slate-600 mb-3">inbox</span>
+        <p class="text-sm font-medium text-slate-500 dark:text-slate-400">No shipments to show</p>
+      </div>`;
+    return;
+  }
+
+  list.innerHTML = arr.map(b => {
+    const totalQty = b.items.reduce((s, i) => s + (i.quantity || 0), 0);
+    const dateStr = new Date(b.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+    const statusBadge = {
+      pending:   '<span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">Pending</span>',
+      shipped:   '<span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">Shipped / In Transit</span>',
+      received:  '<span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">Received</span>',
+      dismissed: '<span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-slate-200 text-slate-500 dark:bg-slate-800 dark:text-slate-400">Dismissed</span>',
+    }[b.status] || '';
+
+    const isFinal = b.status === 'received' || b.status === 'dismissed';
+    const dimClass = isFinal ? 'opacity-60' : '';
+
+    const itemsHtml = b.items.map(i => {
+      const recvDisplay = (i.received_quantity != null && i.received_quantity !== i.quantity)
+        ? ` <span class="text-xs text-slate-500">(received: <strong class="text-slate-700 dark:text-slate-300">${i.received_quantity}</strong>)</span>`
+        : '';
+      return `
+        <div class="flex items-center justify-between py-2 border-b border-slate-100 dark:border-slate-800 last:border-b-0">
+          <div>
+            <span class="text-sm font-medium text-slate-800 dark:text-slate-200">${escHtml(i.item_name)}</span>
+            <span class="text-xs text-slate-400 ml-2">${escHtml(i.category || '')}</span>
+          </div>
+          <span class="text-sm font-semibold text-slate-700 dark:text-slate-300">${i.quantity} ${escHtml(i.unit || '')}${recvDisplay}</span>
+        </div>`;
+    }).join('');
+
+    const actionBtns = isFinal ? '' : `
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-2 pt-3 border-t border-slate-200 dark:border-slate-700">
+        <button onclick="shipAction('${b.batch_id}','pending')" class="px-3 py-2 rounded-lg bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 text-xs font-semibold hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors flex items-center justify-center gap-1">
+          <span class="material-symbols-outlined text-sm">schedule</span>Pending
+        </button>
+        <button onclick="openShipEditModal('${b.batch_id}')" class="px-3 py-2 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 text-xs font-semibold hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors flex items-center justify-center gap-1">
+          <span class="material-symbols-outlined text-sm">edit</span>Edit Qty
+        </button>
+        <button onclick="shipAction('${b.batch_id}','receive')" class="px-3 py-2 rounded-lg bg-green-600 text-white text-xs font-semibold hover:bg-green-700 transition-colors flex items-center justify-center gap-1">
+          <span class="material-symbols-outlined text-sm">check_circle</span>Receive
+        </button>
+        <button onclick="shipAction('${b.batch_id}','dismiss')" class="px-3 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-xs font-semibold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors flex items-center justify-center gap-1">
+          <span class="material-symbols-outlined text-sm">visibility_off</span>Dismiss
+        </button>
+      </div>`;
+
+    return `
+      <div class="bg-white dark:bg-[#1c2631] rounded-xl border border-slate-200 dark:border-slate-800 p-5 ${dimClass}">
+        <div class="flex items-start justify-between mb-3">
+          <div>
+            <div class="flex items-center gap-2 mb-1">
+              <span class="material-symbols-outlined text-primary">local_shipping</span>
+              <h4 class="font-bold text-slate-800 dark:text-white">From ${escHtml(b.from_branch)}</h4>
+              ${statusBadge}
+            </div>
+            <p class="text-xs text-slate-500 dark:text-slate-400">${dateStr} • ${b.items.length} items • ${totalQty} units total • by ${escHtml(b.created_by || '—')}</p>
+          </div>
+        </div>
+        <div class="bg-slate-50 dark:bg-slate-800/50 rounded-lg px-4 py-2 mb-3">${itemsHtml}</div>
+        ${actionBtns}
+      </div>`;
+  }).join('');
+}
+
+async function shipAction(batchId, action) {
+  const branch = selectedLocation || (currentEmployee && currentEmployee.location);
+  const rows = shipNotifCache.filter(r => r.batch_id === batchId);
+  if (!rows.length) return;
+
+  if (action === 'pending') {
+    try {
+      for (const r of rows) {
+        await fetchWithRetry(`${SUPABASE_URL}/rest/v1/shipments?id=eq.${r.id}`, {
+          method: 'PATCH',
+          headers: { 'apikey': SUPABASE_ANON, 'Authorization': 'Bearer ' + SUPABASE_ANON, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+          body: JSON.stringify({ status: 'shipped' }),
+        });
+      }
+      showToast('Marked as Shipped / In Transit');
+    } catch (e) { showToast('Update failed: ' + e.message, 'delete'); return; }
+  } else if (action === 'dismiss') {
+    try {
+      for (const r of rows) {
+        await fetchWithRetry(`${SUPABASE_URL}/rest/v1/shipments?id=eq.${r.id}`, {
+          method: 'PATCH',
+          headers: { 'apikey': SUPABASE_ANON, 'Authorization': 'Bearer ' + SUPABASE_ANON, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+          body: JSON.stringify({ status: 'dismissed' }),
+        });
+      }
+      showToast('Dismissed');
+    } catch (e) { showToast('Update failed: ' + e.message, 'delete'); return; }
+  } else if (action === 'receive') {
+    if (!confirm(`Receive shipment from ${rows[0].from_branch}? This will add items to your inventory.`)) return;
+    const now = new Date().toISOString();
+    const user = currentEmployee ? currentEmployee.name : 'Unknown';
+    const stockRows = rows.map(r => {
+      const qty = (r.received_quantity != null) ? r.received_quantity : r.quantity;
+      return {
+        item_name: r.item_name,
+        hsn_code: r.hsn_code,
+        category: r.category,
+        entry_type: 'in',
+        quantity: qty,
+        unit: r.unit || 'No',
+        rate: r.rate,
+        gst: r.gst,
+        employee_id: (currentEmployee && currentEmployee.id > 0) ? currentEmployee.id : null,
+        emp_name: user,
+        location: branch,
+        created_at: now,
+      };
+    }).filter(r => r.quantity > 0);
+    try {
+      if (stockRows.length) await supabaseInsert('stock_entries', stockRows);
+      for (const r of rows) {
+        await fetchWithRetry(`${SUPABASE_URL}/rest/v1/shipments?id=eq.${r.id}`, {
+          method: 'PATCH',
+          headers: { 'apikey': SUPABASE_ANON, 'Authorization': 'Bearer ' + SUPABASE_ANON, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+          body: JSON.stringify({ status: 'received', received_at: now }),
+        });
+      }
+      showToast(`Received ${stockRows.length} item${stockRows.length !== 1 ? 's' : ''} into inventory`);
+      await loadFromSupabase();
+      saveData(appData);
+    } catch (e) { showToast('Receive failed: ' + e.message, 'delete'); return; }
+  }
+
+  await fetchShipNotifs();
+  renderShipNotifList();
+}
+
+function openShipEditModal(batchId) {
+  const rows = shipNotifCache.filter(r => r.batch_id === batchId);
+  if (!rows.length) return;
+  shipEditDraft = {
+    batch_id: batchId,
+    items: rows.map(r => ({
+      id: r.id,
+      item_name: r.item_name,
+      unit: r.unit || 'No',
+      quantity: r.quantity,
+      received_quantity: (r.received_quantity != null) ? r.received_quantity : r.quantity,
+    })),
+  };
+  const body = document.getElementById('shipedit-body');
+  body.innerHTML = shipEditDraft.items.map((it, idx) => `
+    <div class="flex items-center justify-between gap-3 py-2 border-b border-slate-100 dark:border-slate-800 last:border-b-0">
+      <div class="flex-1">
+        <div class="text-sm font-medium text-slate-800 dark:text-slate-200">${escHtml(it.item_name)}</div>
+        <div class="text-xs text-slate-400">Sent: ${it.quantity} ${escHtml(it.unit)}</div>
+      </div>
+      <input type="number" min="0" value="${it.received_quantity}" data-shipedit-idx="${idx}" oninput="shipEditDraft.items[${idx}].received_quantity = parseInt(this.value,10) || 0"
+        class="w-24 px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-right focus:ring-2 focus:ring-primary focus:border-transparent"/>
+    </div>
+  `).join('');
+  document.getElementById('shipedit-modal').classList.remove('hidden');
+}
+
+function closeShipEditModal() {
+  document.getElementById('shipedit-modal').classList.add('hidden');
+  shipEditDraft = null;
+}
+
+async function saveShipEdit() {
+  if (!shipEditDraft) return;
+  try {
+    for (const it of shipEditDraft.items) {
+      await fetchWithRetry(`${SUPABASE_URL}/rest/v1/shipments?id=eq.${it.id}`, {
+        method: 'PATCH',
+        headers: { 'apikey': SUPABASE_ANON, 'Authorization': 'Bearer ' + SUPABASE_ANON, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ received_quantity: it.received_quantity }),
+      });
+    }
+    showToast('Quantities updated');
+  } catch (e) { showToast('Update failed: ' + e.message, 'delete'); return; }
+  closeShipEditModal();
+  await fetchShipNotifs();
+  renderShipNotifList();
 }
 
 // --- INIT ---
