@@ -1,4 +1,4 @@
-import { validateAdminToken } from "./_lib/tools";
+import { validateAdminTokenDetailed } from "./_lib/tools";
 
 export const config = { runtime: "edge" };
 
@@ -18,7 +18,8 @@ export default async function handler(req: Request): Promise<Response> {
 
   const token = formData.get("token");
   if (!token || typeof token !== "string") return json({ error: "Missing admin token" }, 401);
-  if (!(await validateAdminToken(token))) return json({ error: "Unauthorized" }, 401);
+  const auth = await validateAdminTokenDetailed(token);
+  if (!auth.ok) return json({ error: "Unauthorized", reason: auth.reason }, 401);
 
   const audioFile = formData.get("audio");
   if (!audioFile || !(audioFile instanceof File)) return json({ error: "Missing 'audio' file field" }, 400);

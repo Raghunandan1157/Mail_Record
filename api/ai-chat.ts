@@ -1,4 +1,4 @@
-import { validateAdminToken, TOOL_SCHEMAS, dispatchTool, ToolCall } from "./_lib/tools";
+import { validateAdminTokenDetailed, TOOL_SCHEMAS, dispatchTool, ToolCall } from "./_lib/tools";
 import { persistChatSession } from "./_lib/db";
 
 export const config = { runtime: "edge" };
@@ -66,7 +66,8 @@ export default async function handler(req: Request): Promise<Response> {
 
   const { token, messages: incoming, session_id: clientSessionId } = body;
   if (!token) return json({ error: "Missing admin token" }, 401);
-  if (!(await validateAdminToken(token))) return json({ error: "Unauthorized: invalid or expired admin token" }, 401);
+  const auth = await validateAdminTokenDetailed(token);
+  if (!auth.ok) return json({ error: "Unauthorized: invalid or expired admin token", reason: auth.reason }, 401);
   if (!Array.isArray(incoming) || incoming.length === 0) return json({ error: "messages array required" }, 400);
 
   const deepseekKey = process.env.DEEPSEEK_KEY;

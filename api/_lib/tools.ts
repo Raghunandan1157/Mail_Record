@@ -203,13 +203,20 @@ export async function sha256Hex(input: string): Promise<string> {
 }
 
 export async function validateAdminToken(token: string): Promise<boolean> {
-  if (!token) return false;
+  return (await validateAdminTokenDetailed(token)).ok;
+}
+
+export async function validateAdminTokenDetailed(token: string): Promise<{ ok: boolean; reason?: string }> {
+  if (!token) return { ok: false, reason: "missing_token" };
   try {
     const otp = await fetchAdminOtp();
     const today = new Date().toISOString().slice(0, 10);
     const expected = await sha256Hex(otp + today);
-    return token === expected;
-  } catch {
-    return false;
+    if (token !== expected) {
+      return { ok: false, reason: `token_mismatch (otp_len=${otp.length}, today=${today}, expected_prefix=${expected.slice(0, 8)}, got_prefix=${token.slice(0, 8)})` };
+    }
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, reason: `validate_error: ${String(err)}` };
   }
 }
