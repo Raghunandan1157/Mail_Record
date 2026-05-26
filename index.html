@@ -549,16 +549,9 @@
     else if (mod === 'ai') window.location.href = 'ai_assistant.html';
   }
 
-  // Token = sha256(admin_otp + YYYYMMDD) — stored in sessionStorage + localStorage
-  async function makeAiToken(otp) {
-    try {
-      const day = new Date().toISOString().slice(0, 10); // "YYYY-MM-DD" — matches edge fn
-      const data = new TextEncoder().encode(otp + day);
-      const hashBuf = await crypto.subtle.digest('SHA-256', data);
-      const token = Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2, '0')).join('');
-      sessionStorage.setItem('ai_admin_token', token);
-      localStorage.setItem('ai_admin_token', token);
-    } catch(e) { console.warn('makeAiToken failed:', e); }
+  function makeAiToken(otp) {
+    sessionStorage.setItem('ai_otp', otp);
+    localStorage.setItem('ai_otp', otp);
   }
 
   function logout() {
@@ -576,9 +569,9 @@
     if (deptScope) { window.location.href = 'complain.html'; }
     else {
       // Restore AI token if still in localStorage (same-day session reload)
-      if (isAdmin && !sessionStorage.getItem('ai_admin_token')) {
-        const stored = localStorage.getItem('ai_admin_token');
-        if (stored) sessionStorage.setItem('ai_admin_token', stored);
+      if (isAdmin && !sessionStorage.getItem('ai_otp')) {
+        const stored = localStorage.getItem('ai_otp');
+        if (stored) sessionStorage.setItem('ai_otp', stored);
       }
       // Reload — skip door, go straight to modules with name on top
       showModuleScreen();
