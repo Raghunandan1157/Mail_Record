@@ -2124,6 +2124,18 @@ let entryCart = {};       // maps itemId → selected quantity
 let entryType = 'in';     // 'in' or 'out'
 let activeCategory = 'All';
 let destBranch = '';      // for HO Stock Out: chosen destination branch
+let branchCredsList = null; // cache of branches from branch_credentials table
+
+async function loadBranchCreds() {
+  if (Array.isArray(branchCredsList)) return branchCredsList;
+  try {
+    const rows = await supabaseFetch('branch_credentials', 'select=branch&order=branch.asc');
+    branchCredsList = (rows || []).map(r => r.branch).filter(Boolean);
+  } catch (e) {
+    branchCredsList = [];
+  }
+  return branchCredsList;
+}
 const CATEGORIES = ['All', 'Writing', 'Paper & Covers', 'Filing', 'Books & Registers', 'Desk Supplies', 'Tapes & Adhesives', 'Machines'];
 
 function isHOContext() {
@@ -2138,6 +2150,8 @@ function getAllBranchesList() {
   // FIX: also pull from adminData (available in Head Office context)
   if (Array.isArray(adminData.employees)) adminData.employees.forEach(e => { if (e.location) set.add(e.location); });
   if (Array.isArray(adminData.entries)) adminData.entries.forEach(e => { if (e.location) set.add(e.location); });
+  // FIX: also pull from branch_credentials cache (authoritative branch list)
+  if (Array.isArray(branchCredsList)) branchCredsList.forEach(b => { if (b) set.add(b); });
   set.delete('Head Office');
   return Array.from(set).sort();
 }
@@ -2155,6 +2169,10 @@ function renderHoContextBar() {
       </div>`;
   } else {
     const branches = getAllBranchesList();
+    // Lazy-fetch branch_credentials if not cached, then re-render
+    if (!Array.isArray(branchCredsList)) {
+      loadBranchCreds().then(() => renderHoContextBar());
+    }
     const opts = ['<option value="">— Select destination branch —</option>']
       .concat(branches.map(b => `<option value="${escHtml(b)}" ${b === destBranch ? 'selected' : ''}>${escHtml(b)}</option>`))
       .join('');
