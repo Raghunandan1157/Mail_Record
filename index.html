@@ -537,23 +537,32 @@
   }
 
   // ===== MODULE SCREEN =====
+  function canSwitchView() {
+    return isAdmin || selectedLocation === 'Head Office' || selectedLocation === 'Corporate Office';
+  }
+  function defaultViewForUser() {
+    if (isAdmin) return 'corporate';
+    if (selectedLocation === 'Head Office') return 'branch';
+    if (selectedLocation === 'Corporate Office') return 'corporate';
+    return 'branch';
+  }
   function showModuleScreen() {
     document.getElementById('doorScreen').style.display = 'none';
     document.getElementById('loginScreen').style.display = 'none';
     document.getElementById('moduleScreen').style.display = 'flex';
-    const curView = sessionStorage.getItem('sr_view_mode') || localStorage.getItem('sr_view_mode') || 'corporate';
-    const showAsBranch = isAdmin && curView === 'branch';
-    const showAsAdmin = isAdmin && curView === 'admin';
-    const showAsCorporate = isAdmin && curView === 'corporate';
-    document.getElementById('modAvatar').textContent = showAsBranch ? 'H' : (showAsAdmin ? 'A' : 'C');
-    document.getElementById('modName').textContent = showAsBranch ? 'HEAD OFFICE' : (showAsAdmin ? 'ADMIN' : 'CORPORATE OFFICE');
-    document.getElementById('modLoc').textContent = showAsBranch ? 'Branch Operations' : (showAsAdmin ? 'Manage Records & Logs' : 'All Branches · Admin');
-    // AI Assistant tile — Admin view only.
+    const curView = sessionStorage.getItem('sr_view_mode') || localStorage.getItem('sr_view_mode') || defaultViewForUser();
+    const isBranchView = curView === 'branch';
+    const isAdminView = curView === 'admin';
+    const isCorporateView = curView === 'corporate';
+    document.getElementById('modAvatar').textContent = isBranchView ? 'H' : (isAdminView ? 'A' : 'C');
+    document.getElementById('modName').textContent = isBranchView ? 'HEAD OFFICE' : (isAdminView ? 'ADMIN' : 'CORPORATE OFFICE');
+    document.getElementById('modLoc').textContent = isBranchView ? 'Branch Operations' : (isAdminView ? 'Manage Records & Logs' : 'All Branches · Admin');
+    // AI Assistant tile — Admin view only AND only for real admin (not HO/CO impersonating admin).
     const aiTile = document.getElementById('aiAssistantTile');
     if (aiTile) aiTile.style.display = (isAdmin && curView === 'admin') ? '' : 'none';
-    // View-mode hint for admin users
-    if (isAdmin) {
-      const cur = sessionStorage.getItem('sr_view_mode') || localStorage.getItem('sr_view_mode') || 'corporate';
+    // View-mode hint for users with multi-view access
+    if (canSwitchView()) {
+      const cur = sessionStorage.getItem('sr_view_mode') || localStorage.getItem('sr_view_mode') || defaultViewForUser();
       let hint = document.getElementById('viewModeHint');
       if (!hint) {
         hint = document.createElement('div');
@@ -625,7 +634,7 @@
     });
   }
   function openViewPicker() {
-    if (!isAdmin || vswInProgress) return;
+    if (!canSwitchView() || vswInProgress) return;
     document.getElementById('vpkOverlay').style.display = 'flex';
   }
   function closeViewPicker() {
@@ -633,7 +642,7 @@
   }
   function pickView(next) {
     closeViewPicker();
-    const cur = sessionStorage.getItem('sr_view_mode') || localStorage.getItem('sr_view_mode') || 'corporate';
+    const cur = sessionStorage.getItem('sr_view_mode') || localStorage.getItem('sr_view_mode') || defaultViewForUser();
     if (cur === next) return;
     vswInProgress = true;
     sessionStorage.setItem('sr_view_mode', next);
@@ -646,7 +655,7 @@
       closeViewPicker(); return;
     }
     if (e.key !== 'Tab') return;
-    if (!isAdmin) return;
+    if (!canSwitchView()) return;
     const tag = (e.target && e.target.tagName) || '';
     if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || (e.target && e.target.isContentEditable)) return;
     if (vswInProgress) { e.preventDefault(); return; }
@@ -667,7 +676,7 @@
       // Reload — skip door, go straight to modules with name on top
       showModuleScreen();
       // Auto-open view picker if redirected from a sub-page via Tab
-      if (window.location.hash === '#pick' && isAdmin) {
+      if (window.location.hash === '#pick' && canSwitchView()) {
         history.replaceState(null, '', window.location.pathname); // clean URL
         setTimeout(openViewPicker, 100);
       }

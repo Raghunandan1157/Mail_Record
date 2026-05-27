@@ -1673,7 +1673,9 @@
   // ===== TAB KEY VIEW SWITCH =====
   (function setupViewSwitch() {
     const isAdminFlag = (sessionStorage.getItem('sr_headoffice') || localStorage.getItem('sr_headoffice')) === 'true';
-    if (!isAdminFlag) return;
+    const loc = sessionStorage.getItem('sr_location') || localStorage.getItem('sr_location') || '';
+    const canSwitch = isAdminFlag || loc === 'Head Office' || loc === 'Corporate Office';
+    if (!canSwitch) return;
     document.addEventListener('keydown', (e) => {
       if (e.key !== 'Tab') return;
       const tag = (e.target && e.target.tagName) || '';

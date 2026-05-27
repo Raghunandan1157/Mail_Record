@@ -645,7 +645,26 @@
       if (Date.now() - s.time > 86400000) { logout(); return false; }
       currentEmployee = s.employee; selectedLocation = s.location; isAdmin = s.admin; return true;
     }
+    function canSwitchView() {
+      return isAdmin || selectedLocation === 'Head Office' || selectedLocation === 'Corporate Office';
+    }
+    function applyViewMode() {
+      const stored = sessionStorage.getItem('sr_view_mode') || localStorage.getItem('sr_view_mode');
+      const defaultView = isAdmin ? 'corporate'
+        : (selectedLocation === 'Head Office' ? 'branch'
+        : (selectedLocation === 'Corporate Office' ? 'corporate' : 'branch'));
+      const viewMode = stored || defaultView;
+      // Effective admin: only when view='admin' AND user has access to switch views.
+      const effectiveAdmin = (viewMode === 'admin') && canSwitchView();
+      // Effective branch location for non-admin views.
+      let effectiveLocation = selectedLocation;
+      if (viewMode === 'branch') effectiveLocation = 'Head Office';
+      else if (viewMode === 'corporate') effectiveLocation = 'Corporate Office';
+      isAdmin = effectiveAdmin;
+      selectedLocation = effectiveLocation;
+    }
     function showApp() {
+      applyViewMode();
       document.getElementById('loginScreen').style.display = 'none';
       document.getElementById('appScreen').style.display = 'flex';
       document.getElementById('sidebarAvatar').textContent = getInitials(currentEmployee.name);
@@ -1121,8 +1140,16 @@
 
     // ===== TAB KEY VIEW SWITCH =====
     (function setupViewSwitch() {
-      const isAdminFlag = (sessionStorage.getItem('sr_headoffice') || localStorage.getItem('sr_headoffice')) === 'true';
-      if (!isAdminFlag) return;
+      // Read raw session/storage flags before applyViewMode mutates isAdmin.
+      let raw = sessionStorage.getItem('mr_session') || localStorage.getItem('mr_session');
+      let canSwitch = false;
+      try {
+        const s = raw ? JSON.parse(raw) : null;
+        if (s) {
+          canSwitch = !!s.admin || s.location === 'Head Office' || s.location === 'Corporate Office';
+        }
+      } catch {}
+      if (!canSwitch) return;
       document.addEventListener('keydown', (e) => {
         if (e.key !== 'Tab') return;
         const tag = (e.target && e.target.tagName) || '';
