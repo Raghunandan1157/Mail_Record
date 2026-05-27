@@ -452,7 +452,9 @@
       };
       selectedLocation = currentEmployee.location;
       // Issue AI token for admin + Head Office + Corporate Office accounts (all can switch to Admin view).
-      if (isAdmin || selectedLocation === 'Head Office' || selectedLocation === 'Corporate Office') makeAiToken(p);
+      if (isAdmin || selectedLocation === 'Head Office' || selectedLocation === 'Corporate Office') {
+        await ensureAiToken();
+      }
       saveAndShowDoor();
     } catch(e) { showLoginError(1, 'Login failed: ' + (e && e.message || e)); }
   }
@@ -577,10 +579,16 @@
     }
   }
 
-  function openModule(mod) {
+  async function openModule(mod) {
     if (mod === 'ai') {
       const curView = sessionStorage.getItem('sr_view_mode') || localStorage.getItem('sr_view_mode') || defaultViewForUser();
       if (!canSwitchView() || curView !== 'admin') { alert('AI Assistant requires Admin view.'); return; }
+      try {
+        await ensureAiToken();
+      } catch (e) {
+        alert('AI Assistant login token could not be loaded. Please try again.');
+        return;
+      }
     }
     if (mod === 'stationary') window.location.href = 'stationary.html';
     else if (mod === 'mail') window.location.href = 'mailrecord.html';
@@ -591,6 +599,15 @@
   function makeAiToken(otp) {
     sessionStorage.setItem('ai_otp', otp);
     localStorage.setItem('ai_otp', otp);
+  }
+
+  async function ensureAiToken() {
+    if (!canSwitchView()) return false;
+    const configs = await sbGet('app_config', 'select=value&key=eq.admin_otp');
+    const otp = configs && configs[0] && configs[0].value;
+    if (!otp) throw new Error('admin_otp not found');
+    makeAiToken(String(otp));
+    return true;
   }
 
   function logout() {
@@ -669,11 +686,8 @@
     const deptScope = sessionStorage.getItem('sr_dept_admin') || localStorage.getItem('sr_dept_admin');
     if (deptScope) { window.location.href = 'complain.html'; }
     else {
-      // Restore AI token if still in localStorage (same-day session reload)
-      if (isAdmin && !sessionStorage.getItem('ai_otp')) {
-        const stored = localStorage.getItem('ai_otp');
-        if (stored) sessionStorage.setItem('ai_otp', stored);
-      }
+      // Refresh AI token for existing sessions so stale login passwords do not reach /api/ai-chat.
+      if (canSwitchView()) ensureAiToken().catch(e => console.warn('AI token refresh failed', e));
       // Reload — skip door, go straight to modules with name on top
       showModuleScreen();
       // Auto-open view picker if redirected from a sub-page via Tab

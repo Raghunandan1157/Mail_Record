@@ -19,3 +19,19 @@ assert.equal(shouldShowAiTile(true, 'Head Office', 'branch'), false, 'Head Offic
 assert.equal(shouldShowAiTile(false, 'Branch A', 'admin'), false, 'branch sessions hide AI Assistant');
 assert.equal(shouldShowAiTile(false, 'Head Office', 'admin'), true, 'Head Office can use Admin view');
 assert.equal(shouldShowAiTile(false, 'Corporate Office', 'admin'), true, 'Corporate Office can use Admin view');
+
+assert.match(
+  source,
+  /async function ensureAiToken\(\)/,
+  'index hub must refresh the AI token from Supabase'
+);
+assert.doesNotMatch(
+  source,
+  /makeAiToken\(p\)/,
+  'AI Assistant must not use the branch login password as the backend OTP'
+);
+assert.match(
+  source,
+  /await ensureAiToken\(\);[\s\S]*window\.location\.href = 'ai_assistant\.html'/,
+  'AI Assistant must refresh the backend OTP before navigating'
+);
