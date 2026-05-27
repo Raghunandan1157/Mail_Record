@@ -560,7 +560,7 @@
     document.getElementById('modLoc').textContent = isBranchView ? 'Branch Operations' : (isAdminView ? 'Manage Records & Logs' : 'All Branches · Admin');
     // AI Assistant tile — Admin view only. Visible to real admin + HO + CO accounts.
     const aiTile = document.getElementById('aiAssistantTile');
-    if (aiTile) aiTile.style.display = (canSwitchView() && curView === 'admin') ? '' : 'none';
+    if (aiTile) aiTile.style.display = ((isAdmin || selectedLocation === 'Head Office' || selectedLocation === 'Corporate Office') && curView === 'admin') ? '' : 'none';
     // View-mode hint for users with multi-view access
     if (canSwitchView()) {
       const cur = sessionStorage.getItem('sr_view_mode') || localStorage.getItem('sr_view_mode') || defaultViewForUser();

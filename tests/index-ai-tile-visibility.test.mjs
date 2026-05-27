@@ -8,11 +8,14 @@ assert.ok(match, 'Could not find AI Assistant tile visibility condition');
 
 const shouldShowAiTile = new Function(
   'isAdmin',
+  'selectedLocation',
   'curView',
   `return Boolean(${match[1]});`
 );
 
-assert.equal(shouldShowAiTile(true, 'admin'), true, 'admin view shows AI Assistant');
-assert.equal(shouldShowAiTile(true, 'corporate'), false, 'corporate view hides AI Assistant');
-assert.equal(shouldShowAiTile(true, 'branch'), false, 'Head Office view hides AI Assistant');
-assert.equal(shouldShowAiTile(false, 'admin'), false, 'non-admin sessions hide AI Assistant');
+assert.equal(shouldShowAiTile(true, 'Head Office', 'admin'), true, 'admin view shows AI Assistant');
+assert.equal(shouldShowAiTile(true, 'Head Office', 'corporate'), false, 'corporate view hides AI Assistant');
+assert.equal(shouldShowAiTile(true, 'Head Office', 'branch'), false, 'Head Office view hides AI Assistant');
+assert.equal(shouldShowAiTile(false, 'Branch A', 'admin'), false, 'branch sessions hide AI Assistant');
+assert.equal(shouldShowAiTile(false, 'Head Office', 'admin'), true, 'Head Office can use Admin view');
+assert.equal(shouldShowAiTile(false, 'Corporate Office', 'admin'), true, 'Corporate Office can use Admin view');

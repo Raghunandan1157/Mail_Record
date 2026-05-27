@@ -109,7 +109,23 @@ async function supabaseUpdate(table, id, data) {
 let currentEmployee = null;  // { id, emp_id, name, role, mobile, location }
 let selectedLocation = null;
 let isHeadOffice = false;
-let isAdminUser = false;     // true if logged in with ADMIN credentials (allows admin↔branch view switch)
+let isAdminUser = false;     // true when this session can switch Head Office / Corporate / Admin views
+
+function canSwitchOfficeViews(location, adminFlag) {
+  return adminFlag === true || location === 'Head Office' || location === 'Corporate Office';
+}
+
+function defaultViewModeFor(location, adminFlag) {
+  if (adminFlag === true) return 'admin';
+  if (location === 'Corporate Office') return 'corporate';
+  return 'branch';
+}
+
+function getStoredViewMode(location, adminFlag) {
+  return sessionStorage.getItem('sr_view_mode') ||
+    localStorage.getItem('sr_view_mode') ||
+    defaultViewModeFor(location, adminFlag);
+}
 
 // --- LOGIN FLOW ---
 
@@ -166,11 +182,16 @@ async function loginSelectLocation() {
     currentEmployee = location === 'Head Office'
       ? { id: 0, emp_id: 'HO-USER', name: 'Santosh', role: 'Admin Executive', mobile: '', location: location }
       : { id: 0, emp_id: 'CO-USER', name: 'Chetan', role: 'Admin Executive', mobile: '', location: location };
+    const viewMode = defaultViewModeFor(location, false);
+    isAdminUser = true;
+    isHeadOffice = viewMode !== 'branch';
 
     sessionStorage.setItem('sr_employee', JSON.stringify(currentEmployee));
     sessionStorage.setItem('sr_location', selectedLocation);
+    sessionStorage.setItem('sr_view_mode', viewMode);
     localStorage.setItem('sr_employee', JSON.stringify(currentEmployee));
     localStorage.setItem('sr_location', selectedLocation);
+    localStorage.setItem('sr_view_mode', viewMode);
     // FIX #7: Store login timestamp for session expiry
     const loginTime = Date.now().toString();
     sessionStorage.setItem('sr_login_time', loginTime);
@@ -183,13 +204,21 @@ async function loginSelectLocation() {
     document.getElementById('login-screen').classList.add('hidden');
     updateUserUI();
     // FIX #14: Add error handling to async data load
-    loadFromSupabase().then(() => {
-      saveData(appData);
-      renderDashboard();
-    }).catch(err => {
-      console.error('Failed to load data:', err);
-      showToast('Failed to load data from server', 'delete');
-    });
+    if (isHeadOffice) {
+      switchToAdminMode();
+      loadAdminData().then(() => navigateTo('admin')).catch(err => {
+        console.error('Failed to load admin data:', err);
+        showToast('Failed to load data from server', 'delete');
+      });
+    } else {
+      loadFromSupabase().then(() => {
+        saveData(appData);
+        renderDashboard();
+      }).catch(err => {
+        console.error('Failed to load data:', err);
+        showToast('Failed to load data from server', 'delete');
+      });
+    }
     return;
   }
 
@@ -401,9 +430,11 @@ async function loginHeadOfficeOTP() {
   sessionStorage.setItem('sr_employee', JSON.stringify(currentEmployee));
   sessionStorage.setItem('sr_location', selectedLocation);
   sessionStorage.setItem('sr_headoffice', 'true');
+  sessionStorage.setItem('sr_view_mode', 'admin');
   localStorage.setItem('sr_employee', JSON.stringify(currentEmployee));
   localStorage.setItem('sr_location', selectedLocation);
   localStorage.setItem('sr_headoffice', 'true');
+  localStorage.setItem('sr_view_mode', 'admin');
   // FIX #7: Store login timestamp for session expiry
   const loginTime = Date.now().toString();
   sessionStorage.setItem('sr_login_time', loginTime);
@@ -495,17 +526,21 @@ function checkSession() {
 
   if (savedEmp && savedLoc) {
     currentEmployee = JSON.parse(savedEmp);
-    selectedLocation = savedLoc;
-    isAdminUser = savedHO === 'true';
-    const savedViewMode = sessionStorage.getItem('sr_view_mode') || localStorage.getItem('sr_view_mode');
+    const adminFlag = savedHO === 'true';
+    const savedViewMode = getStoredViewMode(savedLoc, adminFlag);
+    selectedLocation = savedViewMode === 'branch'
+      ? 'Head Office'
+      : (savedViewMode === 'corporate' ? 'Corporate Office' : savedLoc);
+    isAdminUser = canSwitchOfficeViews(savedLoc, adminFlag);
     // Admin user defaults to corporate/admin UI; only Head Office branch view uses the regular UI.
     isHeadOffice = isAdminUser && (savedViewMode !== 'branch');
     // Keep both in sync
     sessionStorage.setItem('sr_employee', savedEmp);
     sessionStorage.setItem('sr_location', savedLoc);
-    if (isAdminUser) sessionStorage.setItem('sr_headoffice', 'true');
+    sessionStorage.setItem('sr_view_mode', savedViewMode);
+    if (adminFlag) sessionStorage.setItem('sr_headoffice', 'true');
     // Update app profile branch from session
-    appData.profile.branch = savedLoc;
+    appData.profile.branch = selectedLocation;
     saveData(appData);
     document.getElementById('login-screen').classList.add('hidden');
     updateUserUI();
