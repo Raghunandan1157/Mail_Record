@@ -2125,16 +2125,23 @@ let entryType = 'in';     // 'in' or 'out'
 let activeCategory = 'All';
 let destBranch = '';      // for HO Stock Out: chosen destination branch
 let branchCredsList = null; // cache of branches from branch_credentials table
+let branchCredsLoading = false;
 
-async function loadBranchCreds() {
-  if (Array.isArray(branchCredsList)) return branchCredsList;
+async function loadBranchCreds(force = false) {
+  if (!force && Array.isArray(branchCredsList) && branchCredsList.length) return branchCredsList;
+  if (branchCredsLoading) return branchCredsList || [];
+  branchCredsLoading = true;
   try {
     const rows = await supabaseFetch('branch_credentials', 'select=branch&order=branch.asc');
-    branchCredsList = (rows || []).map(r => r.branch).filter(Boolean);
+    const list = (rows || []).map(r => r.branch).filter(Boolean);
+    // Don't cache empty result — allow retry next render
+    if (list.length) branchCredsList = list;
   } catch (e) {
-    branchCredsList = [];
+    console.error('[branch_credentials] fetch failed', e);
+  } finally {
+    branchCredsLoading = false;
   }
-  return branchCredsList;
+  return branchCredsList || [];
 }
 const CATEGORIES = ['All', 'Writing', 'Paper & Covers', 'Filing', 'Books & Registers', 'Desk Supplies', 'Tapes & Adhesives', 'Machines'];
 
@@ -2169,18 +2176,26 @@ function renderHoContextBar() {
       </div>`;
   } else {
     const branches = getAllBranchesList();
-    // Lazy-fetch branch_credentials if not cached, then re-render
-    if (!Array.isArray(branchCredsList)) {
+    const isLoading = !branches.length && (branchCredsLoading || !Array.isArray(branchCredsList));
+    // Lazy-fetch branch_credentials if missing/empty, then re-render
+    if (!Array.isArray(branchCredsList) || !branchCredsList.length) {
       loadBranchCreds().then(() => renderHoContextBar());
     }
-    const opts = ['<option value="">— Select destination branch —</option>']
-      .concat(branches.map(b => `<option value="${escHtml(b)}" ${b === destBranch ? 'selected' : ''}>${escHtml(b)}</option>`))
-      .join('');
+    let opts;
+    if (isLoading) {
+      opts = '<option value="">Loading branches…</option>';
+    } else if (!branches.length) {
+      opts = '<option value="">No branches found — check connection</option>';
+    } else {
+      opts = ['<option value="">— Select destination branch —</option>']
+        .concat(branches.map(b => `<option value="${escHtml(b)}" ${b === destBranch ? 'selected' : ''}>${escHtml(b)}</option>`))
+        .join('');
+    }
     bar.innerHTML = `
       <div class="flex items-center gap-3 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
         <span class="material-symbols-outlined text-red-600 dark:text-red-400">local_shipping</span>
         <label class="text-sm font-semibold text-red-700 dark:text-red-300">Ship to:</label>
-        <select id="dest-branch-select" onchange="destBranch=this.value" class="flex-1 max-w-xs px-3 py-1.5 rounded-md border border-red-200 dark:border-red-700 bg-white dark:bg-slate-800 text-sm text-slate-800 dark:text-slate-200">${opts}</select>
+        <select id="dest-branch-select" onchange="destBranch=this.value" ${isLoading ? 'disabled' : ''} class="flex-1 max-w-xs px-3 py-1.5 rounded-md border border-red-200 dark:border-red-700 bg-white dark:bg-slate-800 text-sm text-slate-800 dark:text-slate-200">${opts}</select>
       </div>`;
   }
 }
