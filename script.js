@@ -2135,6 +2135,9 @@ function getAllBranchesList() {
   const set = new Set();
   if (Array.isArray(appData.employees)) appData.employees.forEach(e => { if (e.location) set.add(e.location); });
   if (Array.isArray(appData.entries)) appData.entries.forEach(e => { if (e.location) set.add(e.location); });
+  // FIX: also pull from adminData (available in Head Office context)
+  if (Array.isArray(adminData.employees)) adminData.employees.forEach(e => { if (e.location) set.add(e.location); });
+  if (Array.isArray(adminData.entries)) adminData.entries.forEach(e => { if (e.location) set.add(e.location); });
   set.delete('Head Office');
   return Array.from(set).sort();
 }
