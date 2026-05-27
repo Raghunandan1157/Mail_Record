@@ -2181,21 +2181,21 @@ function renderHoContextBar() {
     if (!Array.isArray(branchCredsList) || !branchCredsList.length) {
       loadBranchCreds().then(() => renderHoContextBar());
     }
-    let opts;
-    if (isLoading) {
-      opts = '<option value="">Loading branches…</option>';
-    } else if (!branches.length) {
-      opts = '<option value="">No branches found — check connection</option>';
-    } else {
-      opts = ['<option value="">— Select destination branch —</option>']
-        .concat(branches.map(b => `<option value="${escHtml(b)}" ${b === destBranch ? 'selected' : ''}>${escHtml(b)}</option>`))
-        .join('');
-    }
+    const dlOpts = branches.map(b => `<option value="${escHtml(b)}"></option>`).join('');
+    const placeholder = isLoading
+      ? 'Loading branches…'
+      : (!branches.length ? 'No branches found' : 'Type branch name…');
     bar.innerHTML = `
-      <div class="flex items-center gap-3 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
+      <div class="inline-flex items-center gap-3 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
         <span class="material-symbols-outlined text-red-600 dark:text-red-400">local_shipping</span>
         <label class="text-sm font-semibold text-red-700 dark:text-red-300">Ship to:</label>
-        <select id="dest-branch-select" onchange="destBranch=this.value" ${isLoading ? 'disabled' : ''} class="flex-1 max-w-xs px-3 py-1.5 rounded-md border border-red-200 dark:border-red-700 bg-white dark:bg-slate-800 text-sm text-slate-800 dark:text-slate-200">${opts}</select>
+        <input id="dest-branch-input" list="dest-branch-options" autocomplete="off"
+          ${isLoading ? 'disabled' : ''}
+          value="${escHtml(destBranch)}"
+          placeholder="${placeholder}"
+          oninput="destBranch=this.value"
+          class="w-48 px-3 py-1.5 rounded-md border border-red-200 dark:border-red-700 bg-white dark:bg-slate-800 text-sm text-slate-800 dark:text-slate-200" />
+        <datalist id="dest-branch-options">${dlOpts}</datalist>
       </div>`;
   }
 }
