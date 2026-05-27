@@ -692,13 +692,27 @@
       isAdmin = effectiveAdmin;
       selectedLocation = effectiveLocation;
     }
+    function getActiveSidebarIdentity() {
+      const viewMode = getStoredViewMode();
+      if (canSwitchView()) {
+        if (viewMode === 'admin') return { initials: 'AD', name: 'Admin', role: 'Mail Record · Admin View' };
+        if (viewMode === 'corporate') return { initials: 'CO', name: 'Corporate Office', role: 'Mail Record · Corporate Office' };
+        if (viewMode === 'branch') return { initials: 'HO', name: 'Head Office', role: 'Mail Record · Head Office' };
+      }
+      return {
+        initials: getInitials(currentEmployee.name),
+        name: currentEmployee.name,
+        role: `${currentEmployee.role} · ${selectedLocation}`,
+      };
+    }
     function showApp() {
       applyViewMode();
+      const sidebarIdentity = getActiveSidebarIdentity();
       document.getElementById('loginScreen').style.display = 'none';
       document.getElementById('appScreen').style.display = 'flex';
-      document.getElementById('sidebarAvatar').textContent = getInitials(currentEmployee.name);
-      document.getElementById('sidebarName').textContent = currentEmployee.name;
-      document.getElementById('sidebarRole').textContent = `${currentEmployee.role} · ${selectedLocation}`;
+      document.getElementById('sidebarAvatar').textContent = sidebarIdentity.initials;
+      document.getElementById('sidebarName').textContent = sidebarIdentity.name;
+      document.getElementById('sidebarRole').textContent = sidebarIdentity.role;
       document.getElementById('headerDate').textContent = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
       if (isAdmin) { document.getElementById('navRegular').classList.add('hidden'); document.getElementById('navAdmin').classList.remove('hidden'); navigateTo('admin-dashboard'); }
       else { document.getElementById('navRegular').classList.remove('hidden'); document.getElementById('navAdmin').classList.add('hidden'); navigateTo('dashboard'); }
