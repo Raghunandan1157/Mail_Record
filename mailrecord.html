@@ -180,7 +180,16 @@
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div><label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Date</label><input type="date" id="outDate" required class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"></div>
                 <div><label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Employee ID</label><input type="text" id="outEmpId" required placeholder="e.g. NL12345" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"></div>
-                <div><label class="block text-xs font-semibold text-slate-500 uppercase mb-1">To</label><input type="text" id="outName" required placeholder="Recipient name" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"></div>
+                <div>
+                  <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">To</label>
+                  <div class="relative">
+                    <input type="text" id="outName" required autocomplete="off" placeholder="Type to search branches..." onfocus="openBranchRecipientDropdown('out')" oninput="onBranchRecipientInput('out')" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary pr-9">
+                    <span class="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 text-lg pointer-events-none">expand_more</span>
+                    <div id="outNameDrop" class="absolute z-30 left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-xl shadow-xl max-h-56 overflow-y-auto hidden">
+                      <div class="p-2 space-y-0.5" id="outNameOptions"></div>
+                    </div>
+                  </div>
+                </div>
                 <div>
                   <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Department</label>
                   <select id="outDeptSelect" onchange="onDeptSelectChange('out')" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary">
@@ -223,7 +232,7 @@
               <div class="flex gap-3 mt-5">
                 <button type="submit" id="outSubmitBtn" class="bg-primary text-white px-6 py-2 rounded-lg text-sm font-semibold hover:bg-primary/90 transition">Add Record</button>
                 <button type="button" id="outCancelBtn" onclick="cancelOutEdit()" class="bg-slate-100 text-slate-600 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-slate-200 transition hidden">Cancel</button>
-                <button type="button" onclick="document.getElementById('outwardForm').reset();setToday('outDate');resetDept('out')" class="bg-slate-100 text-slate-600 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-slate-200 transition">Clear</button>
+                <button type="button" onclick="document.getElementById('outwardForm').reset();setToday('outDate');resetDept('out');resetBranchRecipient('out')" class="bg-slate-100 text-slate-600 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-slate-200 transition">Clear</button>
               </div>
             </form>
           </div>
@@ -248,7 +257,16 @@
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div><label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Date</label><input type="date" id="inDate" required class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"></div>
                 <div><label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Employee ID</label><input type="text" id="inEmpId" required placeholder="e.g. NL12345" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"></div>
-                <div><label class="block text-xs font-semibold text-slate-500 uppercase mb-1">From</label><input type="text" id="inName" required placeholder="Sender name" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"></div>
+                <div>
+                  <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">From</label>
+                  <div class="relative">
+                    <input type="text" id="inName" required autocomplete="off" placeholder="Type to search branches..." onfocus="openBranchRecipientDropdown('in')" oninput="onBranchRecipientInput('in')" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent pr-9">
+                    <span class="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 text-lg pointer-events-none">expand_more</span>
+                    <div id="inNameDrop" class="absolute z-30 left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-xl shadow-xl max-h-56 overflow-y-auto hidden">
+                      <div class="p-2 space-y-0.5" id="inNameOptions"></div>
+                    </div>
+                  </div>
+                </div>
                 <div>
                   <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Department</label>
                   <select id="inDeptSelect" onchange="onDeptSelectChange('in')" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent">
@@ -289,7 +307,7 @@
               <div class="flex gap-3 mt-5">
                 <button type="submit" id="inSubmitBtn" class="bg-accent text-white px-6 py-2 rounded-lg text-sm font-semibold hover:bg-accent/90 transition">Add Record</button>
                 <button type="button" id="inCancelBtn" onclick="cancelInEdit()" class="bg-slate-100 text-slate-600 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-slate-200 transition hidden">Cancel</button>
-                <button type="button" onclick="document.getElementById('inwardForm').reset();setToday('inDate');resetDept('in')" class="bg-slate-100 text-slate-600 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-slate-200 transition">Clear</button>
+                <button type="button" onclick="document.getElementById('inwardForm').reset();setToday('inDate');resetDept('in');resetBranchRecipient('in')" class="bg-slate-100 text-slate-600 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-slate-200 transition">Clear</button>
               </div>
             </form>
           </div>
@@ -427,6 +445,7 @@
     let outRecords = [], inRecords = [], adminAllRecords = [];
     let editingOutId = null, editingInId = null;
     let selectedProfileIdx = -1, profilesList = [];
+    let branchRecipientChoices = [], branchRecipientLoad = null;
 
     // ===== HELPERS =====
     function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
@@ -457,7 +476,7 @@
 
     // Close dropdowns on outside click
     document.addEventListener('click', function(e) {
-      ['outDocsDrop', 'inDocsDrop'].forEach(id => {
+      ['outDocsDrop', 'inDocsDrop', 'outNameDrop', 'inNameDrop'].forEach(id => {
         const drop = document.getElementById(id);
         if (!drop) return;
         const parent = drop.closest('.relative');
@@ -520,6 +539,97 @@
       document.getElementById(hiddenId).value = value;
     }
 
+    // ===== BRANCH RECIPIENT DROPDOWN =====
+    async function loadBranchRecipientChoices() {
+      if (branchRecipientChoices.length) return branchRecipientChoices;
+      if (branchRecipientLoad) return branchRecipientLoad;
+      branchRecipientLoad = (async () => {
+        const names = [];
+        const [empRes, credRes] = await Promise.allSettled([
+          sbGet('employees', 'select=location&location=not.is.null'),
+          sbGet('branch_credentials', 'select=branch,username')
+        ]);
+        if (empRes.status === 'fulfilled' && Array.isArray(empRes.value)) {
+          empRes.value.forEach(e => { if (e.location) names.push(e.location); });
+        }
+        if (credRes.status === 'fulfilled' && Array.isArray(credRes.value)) {
+          credRes.value.forEach(c => {
+            const name = c.branch || c.username;
+            if (name) names.push(name);
+          });
+        }
+        names.push('Head Office', 'Corporate Office');
+        branchRecipientChoices = [...new Set(names.map(n => String(n).trim()).filter(Boolean))]
+          .sort((a, b) => a.localeCompare(b));
+        return branchRecipientChoices;
+      })();
+      return branchRecipientLoad;
+    }
+
+    function renderBranchRecipientOptions(pre) {
+      const input = document.getElementById(pre + 'Name');
+      const box = document.getElementById(pre + 'NameOptions');
+      const q = (input.value || '').toLowerCase().trim();
+      const filtered = branchRecipientChoices.filter(name => !q || name.toLowerCase().includes(q));
+      const otherBtn = `<button type="button" onclick="selectBranchRecipient('${pre}', '__other__')" class="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left text-sm font-semibold text-primary hover:bg-primary/5"><span class="material-symbols-outlined text-base">edit</span>Others</button>`;
+      const rows = filtered.slice(0, 80).map(name =>
+        `<button type="button" onclick="selectBranchRecipient('${pre}', decodeURIComponent('${encodeURIComponent(name)}'))" class="w-full px-3 py-2 rounded-lg text-left text-sm text-slate-700 hover:bg-slate-50">${esc(name)}</button>`
+      ).join('');
+      const empty = filtered.length ? '' : '<div class="px-3 py-2 text-xs text-slate-400">No matching branches</div>';
+      box.innerHTML = otherBtn + rows + empty;
+    }
+
+    async function openBranchRecipientDropdown(pre) {
+      await loadBranchRecipientChoices();
+      renderBranchRecipientOptions(pre);
+      document.getElementById(pre + 'NameDrop').classList.remove('hidden');
+    }
+
+    function onBranchRecipientInput(pre) {
+      const input = document.getElementById(pre + 'Name');
+      input.dataset.mode = input.dataset.mode === 'other' ? 'other' : '';
+      openBranchRecipientDropdown(pre);
+    }
+
+    function selectBranchRecipient(pre, value) {
+      const input = document.getElementById(pre + 'Name');
+      const drop = document.getElementById(pre + 'NameDrop');
+      if (value === '__other__') {
+        input.value = '';
+        input.dataset.mode = 'other';
+        input.placeholder = pre === 'out' ? 'Type other recipient...' : 'Type other sender...';
+        drop.classList.add('hidden');
+        setTimeout(() => input.focus(), 30);
+        return;
+      }
+      input.value = value;
+      input.dataset.mode = '';
+      input.placeholder = 'Type to search branches...';
+      drop.classList.add('hidden');
+    }
+
+    async function setBranchRecipientValue(pre, value) {
+      const input = document.getElementById(pre + 'Name');
+      input.value = value || '';
+      await loadBranchRecipientChoices();
+      input.dataset.mode = branchRecipientChoices.includes(value) || !value ? '' : 'other';
+      input.placeholder = input.dataset.mode === 'other'
+        ? (pre === 'out' ? 'Type other recipient...' : 'Type other sender...')
+        : 'Type to search branches...';
+      renderBranchRecipientOptions(pre);
+    }
+
+    function resetBranchRecipient(pre) {
+      const input = document.getElementById(pre + 'Name');
+      const drop = document.getElementById(pre + 'NameDrop');
+      if (!input) return;
+      input.value = '';
+      input.dataset.mode = '';
+      input.placeholder = 'Type to search branches...';
+      if (drop) drop.classList.add('hidden');
+      if (branchRecipientChoices.length) renderBranchRecipientOptions(pre);
+    }
+
     // Listen for Others text input changes
     document.addEventListener('input', function(e) {
       if (e.target.id === 'outDocsOther') onDocCheck('outDocsOptions', 'outDocsDisplay', 'outDocs', 'outDocsOther');
@@ -549,8 +659,8 @@
       const titles = { dashboard: 'Dashboard', outward: 'Outward Mail', inward: 'Inward Mail', reports: 'Reports', 'admin-dashboard': 'Admin Dashboard', 'admin-records': 'All Records', 'admin-editlog': 'Edit Log', 'admin-reports': 'Reports' };
       document.getElementById('headerTitle').textContent = titles[page] || page;
       document.getElementById('sidebar').classList.remove('open');
-      if (page === 'outward') { loadRecords('outward'); setToday('outDate'); initDocDropdown('outDocsOptions', 'outDocsDisplay', 'outDocs', 'outDocsOther'); }
-      if (page === 'inward') { loadRecords('inward'); setToday('inDate'); initDocDropdown('inDocsOptions', 'inDocsDisplay', 'inDocs', 'inDocsOther'); }
+      if (page === 'outward') { loadRecords('outward'); setToday('outDate'); initDocDropdown('outDocsOptions', 'outDocsDisplay', 'outDocs', 'outDocsOther'); loadBranchRecipientChoices().then(() => renderBranchRecipientOptions('out')); }
+      if (page === 'inward') { loadRecords('inward'); setToday('inDate'); initDocDropdown('inDocsOptions', 'inDocsDisplay', 'inDocs', 'inDocsOther'); loadBranchRecipientChoices().then(() => renderBranchRecipientOptions('in')); }
       if (page === 'reports') { setToday('reportDate'); renderDailyReport(); }
       if (page === 'admin-dashboard') loadAdminData();
       if (page === 'admin-records') loadAdminData();
@@ -834,6 +944,7 @@
           document.getElementById(pre === 'out' ? 'outwardForm' : 'inwardForm').reset();
           setToday(pre + 'Date');
           resetDept(pre);
+          resetBranchRecipient(pre);
         }
         await loadRecords(type);
       } catch (err) { showToast('Failed to save'); }
@@ -844,7 +955,7 @@
       const r = outRecords.find(x => x.id === id); if (!r) return;
       editingOutId = id;
       document.getElementById('outDate').value = r.date; document.getElementById('outEmpId').value = r.employee_id;
-      document.getElementById('outName').value = r.name; setDeptValue('out', r.department);
+      setBranchRecipientValue('out', r.name); setDeptValue('out', r.department);
       setDocFromValue('outDocsOptions', 'outDocsDisplay', 'outDocs', 'outDocsOther', r.documents);
       document.getElementById('outDocket').value = r.docket_number || '';
       document.getElementById('outCourierStatus').value = r.courier_status || '';
@@ -854,20 +965,20 @@
       document.getElementById('outCancelBtn').classList.remove('hidden');
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
-    function cancelOutEdit() { editingOutId = null; document.getElementById('outwardForm').reset(); setToday('outDate'); document.getElementById('outSubmitBtn').textContent = 'Add Record'; document.getElementById('outCancelBtn').classList.add('hidden'); initDocDropdown('outDocsOptions', 'outDocsDisplay', 'outDocs', 'outDocsOther'); resetDept('out'); }
+    function cancelOutEdit() { editingOutId = null; document.getElementById('outwardForm').reset(); setToday('outDate'); document.getElementById('outSubmitBtn').textContent = 'Add Record'; document.getElementById('outCancelBtn').classList.add('hidden'); initDocDropdown('outDocsOptions', 'outDocsDisplay', 'outDocs', 'outDocsOther'); resetDept('out'); resetBranchRecipient('out'); }
 
     function editInRecord(id) {
       const r = inRecords.find(x => x.id === id); if (!r) return;
       editingInId = id;
       document.getElementById('inDate').value = r.date; document.getElementById('inEmpId').value = r.employee_id;
-      document.getElementById('inName').value = r.name; setDeptValue('in', r.department);
+      setBranchRecipientValue('in', r.name); setDeptValue('in', r.department);
       setDocFromValue('inDocsOptions', 'inDocsDisplay', 'inDocs', 'inDocsOther', r.documents); document.getElementById('inParticular').value = r.particular;
       document.getElementById('inDetails').value = r.details || '';
       document.getElementById('inSubmitBtn').textContent = 'Update Record';
       document.getElementById('inCancelBtn').classList.remove('hidden');
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
-    function cancelInEdit() { editingInId = null; document.getElementById('inwardForm').reset(); setToday('inDate'); document.getElementById('inSubmitBtn').textContent = 'Add Record'; document.getElementById('inCancelBtn').classList.add('hidden'); initDocDropdown('inDocsOptions', 'inDocsDisplay', 'inDocs', 'inDocsOther'); resetDept('in'); }
+    function cancelInEdit() { editingInId = null; document.getElementById('inwardForm').reset(); setToday('inDate'); document.getElementById('inSubmitBtn').textContent = 'Add Record'; document.getElementById('inCancelBtn').classList.add('hidden'); initDocDropdown('inDocsOptions', 'inDocsDisplay', 'inDocs', 'inDocsOther'); resetDept('in'); resetBranchRecipient('in'); }
 
     // ===== DASHBOARD =====
     async function loadDashboard() {
