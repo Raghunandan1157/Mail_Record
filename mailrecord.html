@@ -181,7 +181,28 @@
                 <div><label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Date</label><input type="date" id="outDate" required class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"></div>
                 <div><label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Employee ID</label><input type="text" id="outEmpId" required placeholder="e.g. NL12345" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"></div>
                 <div><label class="block text-xs font-semibold text-slate-500 uppercase mb-1">To</label><input type="text" id="outName" required placeholder="Recipient name" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"></div>
-                <div><label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Department</label><input type="text" id="outDept" required placeholder="e.g. Finance, HR" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"></div>
+                <div>
+                  <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Department</label>
+                  <select id="outDeptSelect" onchange="onDeptSelectChange('out')" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary">
+                    <option value="">Select department…</option>
+                    <option value="AUDIT">AUDIT</option>
+                    <option value="HR">HR</option>
+                    <option value="LEGAL">LEGAL</option>
+                    <option value="FINANCE">FINANCE</option>
+                    <option value="ADMIN">ADMIN</option>
+                    <option value="ACCOUNTS">ACCOUNTS</option>
+                    <option value="IT">IT</option>
+                    <option value="CREDIT">CREDIT</option>
+                    <option value="MIS">MIS</option>
+                    <option value="OPS">OPS</option>
+                    <option value="__other__">Other (type custom)…</option>
+                  </select>
+                  <div id="outDeptOtherWrap" class="hidden mt-2">
+                    <input type="text" id="outDeptCustom" oninput="onDeptCustomInput('out')" placeholder="Type department name" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary">
+                    <button type="button" onclick="deptBackToList('out')" class="text-xs text-primary mt-1 hover:underline">← Back to list</button>
+                  </div>
+                  <input type="hidden" id="outDept">
+                </div>
                 <div class="md:col-span-2">
                   <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">List of Documents Sent</label>
                   <div class="relative">
@@ -202,7 +223,7 @@
               <div class="flex gap-3 mt-5">
                 <button type="submit" id="outSubmitBtn" class="bg-primary text-white px-6 py-2 rounded-lg text-sm font-semibold hover:bg-primary/90 transition">Add Record</button>
                 <button type="button" id="outCancelBtn" onclick="cancelOutEdit()" class="bg-slate-100 text-slate-600 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-slate-200 transition hidden">Cancel</button>
-                <button type="button" onclick="document.getElementById('outwardForm').reset();setToday('outDate')" class="bg-slate-100 text-slate-600 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-slate-200 transition">Clear</button>
+                <button type="button" onclick="document.getElementById('outwardForm').reset();setToday('outDate');resetDept('out')" class="bg-slate-100 text-slate-600 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-slate-200 transition">Clear</button>
               </div>
             </form>
           </div>
@@ -228,7 +249,28 @@
                 <div><label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Date</label><input type="date" id="inDate" required class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"></div>
                 <div><label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Employee ID</label><input type="text" id="inEmpId" required placeholder="e.g. NL12345" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"></div>
                 <div><label class="block text-xs font-semibold text-slate-500 uppercase mb-1">From</label><input type="text" id="inName" required placeholder="Sender name" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"></div>
-                <div><label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Department</label><input type="text" id="inDept" required placeholder="e.g. Finance, HR" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"></div>
+                <div>
+                  <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Department</label>
+                  <select id="inDeptSelect" onchange="onDeptSelectChange('in')" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent">
+                    <option value="">Select department…</option>
+                    <option value="AUDIT">AUDIT</option>
+                    <option value="HR">HR</option>
+                    <option value="LEGAL">LEGAL</option>
+                    <option value="FINANCE">FINANCE</option>
+                    <option value="ADMIN">ADMIN</option>
+                    <option value="ACCOUNTS">ACCOUNTS</option>
+                    <option value="IT">IT</option>
+                    <option value="CREDIT">CREDIT</option>
+                    <option value="MIS">MIS</option>
+                    <option value="OPS">OPS</option>
+                    <option value="__other__">Other (type custom)…</option>
+                  </select>
+                  <div id="inDeptOtherWrap" class="hidden mt-2">
+                    <input type="text" id="inDeptCustom" oninput="onDeptCustomInput('in')" placeholder="Type department name" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent">
+                    <button type="button" onclick="deptBackToList('in')" class="text-xs text-accent mt-1 hover:underline">← Back to list</button>
+                  </div>
+                  <input type="hidden" id="inDept">
+                </div>
                 <div class="md:col-span-2">
                   <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">List of Documents Received</label>
                   <div class="relative">
@@ -247,7 +289,7 @@
               <div class="flex gap-3 mt-5">
                 <button type="submit" id="inSubmitBtn" class="bg-accent text-white px-6 py-2 rounded-lg text-sm font-semibold hover:bg-accent/90 transition">Add Record</button>
                 <button type="button" id="inCancelBtn" onclick="cancelInEdit()" class="bg-slate-100 text-slate-600 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-slate-200 transition hidden">Cancel</button>
-                <button type="button" onclick="document.getElementById('inwardForm').reset();setToday('inDate')" class="bg-slate-100 text-slate-600 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-slate-200 transition">Clear</button>
+                <button type="button" onclick="document.getElementById('inwardForm').reset();setToday('inDate');resetDept('in')" class="bg-slate-100 text-slate-600 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-slate-200 transition">Clear</button>
               </div>
             </form>
           </div>
@@ -645,6 +687,59 @@
       document.getElementById('inBody').innerHTML = [...filtered].reverse().map(r => `<tr class="border-b border-slate-100 hover:bg-slate-50"><td class="py-2.5 font-semibold text-accent">${r.seq}</td><td class="py-2.5">${esc(r.date)}</td><td class="py-2.5">${esc(r.employee_id)}</td><td class="py-2.5 font-medium">${esc(r.name)}</td><td class="py-2.5">${esc(r.department)}</td><td class="py-2.5">${esc(r.documents)}</td><td class="py-2.5">${esc(r.particular)}</td><td class="py-2.5 text-slate-400">${esc(r.details||'')}</td><td class="py-2.5"><button onclick="editInRecord(${r.id})" class="text-blue-500 hover:text-blue-700 text-xs font-semibold">Edit</button></td></tr>`).join('');
     }
 
+    // ---------- Department combo helpers ----------
+    const DEPT_OPTIONS = ['AUDIT','HR','LEGAL','FINANCE','ADMIN','ACCOUNTS','IT','CREDIT','MIS','OPS'];
+    function onDeptSelectChange(pre) {
+      const sel = document.getElementById(pre + 'DeptSelect');
+      const wrap = document.getElementById(pre + 'DeptOtherWrap');
+      const custom = document.getElementById(pre + 'DeptCustom');
+      const hidden = document.getElementById(pre + 'Dept');
+      if (sel.value === '__other__') {
+        wrap.classList.remove('hidden');
+        custom.value = '';
+        hidden.value = '';
+        setTimeout(() => custom.focus(), 30);
+      } else {
+        wrap.classList.add('hidden');
+        custom.value = '';
+        hidden.value = sel.value;
+      }
+    }
+    function onDeptCustomInput(pre) {
+      document.getElementById(pre + 'Dept').value = document.getElementById(pre + 'DeptCustom').value;
+    }
+    function deptBackToList(pre) {
+      document.getElementById(pre + 'DeptOtherWrap').classList.add('hidden');
+      document.getElementById(pre + 'DeptCustom').value = '';
+      document.getElementById(pre + 'DeptSelect').value = '';
+      document.getElementById(pre + 'Dept').value = '';
+    }
+    function setDeptValue(pre, val) {
+      const v = (val || '').trim();
+      const sel = document.getElementById(pre + 'DeptSelect');
+      const wrap = document.getElementById(pre + 'DeptOtherWrap');
+      const custom = document.getElementById(pre + 'DeptCustom');
+      const hidden = document.getElementById(pre + 'Dept');
+      const upper = v.toUpperCase();
+      if (DEPT_OPTIONS.includes(upper)) {
+        sel.value = upper;
+        wrap.classList.add('hidden');
+        custom.value = '';
+        hidden.value = upper;
+      } else if (v) {
+        sel.value = '__other__';
+        wrap.classList.remove('hidden');
+        custom.value = v;
+        hidden.value = v;
+      } else {
+        sel.value = '';
+        wrap.classList.add('hidden');
+        custom.value = '';
+        hidden.value = '';
+      }
+    }
+    function resetDept(pre) { setDeptValue(pre, ''); }
+
     async function submitRecord(e, type) {
       e.preventDefault();
       const pre = type === 'outward' ? 'out' : 'in';
@@ -652,6 +747,8 @@
       onDocCheck(pre + 'DocsOptions', pre + 'DocsDisplay', pre + 'Docs', pre + 'DocsOther');
       const docsVal = document.getElementById(pre + 'Docs').value.trim();
       if (!docsVal) { showToast('Please select at least one document category'); return false; }
+      const deptVal = document.getElementById(pre + 'Dept').value.trim();
+      if (!deptVal) { showToast('Please select a department'); return false; }
       const data = {
         mail_type: type, date: document.getElementById(pre + 'Date').value,
         employee_id: document.getElementById(pre + 'EmpId').value.trim(), name: document.getElementById(pre + 'Name').value.trim(),
@@ -674,6 +771,7 @@
           showToast('Record added');
           document.getElementById(pre === 'out' ? 'outwardForm' : 'inwardForm').reset();
           setToday(pre + 'Date');
+          resetDept(pre);
         }
         await loadRecords(type);
       } catch (err) { showToast('Failed to save'); }
@@ -684,7 +782,7 @@
       const r = outRecords.find(x => x.id === id); if (!r) return;
       editingOutId = id;
       document.getElementById('outDate').value = r.date; document.getElementById('outEmpId').value = r.employee_id;
-      document.getElementById('outName').value = r.name; document.getElementById('outDept').value = r.department;
+      document.getElementById('outName').value = r.name; setDeptValue('out', r.department);
       setDocFromValue('outDocsOptions', 'outDocsDisplay', 'outDocs', 'outDocsOther', r.documents);
       document.getElementById('outDocket').value = r.docket_number || '';
       document.getElementById('outCourierStatus').value = r.courier_status || '';
@@ -694,20 +792,20 @@
       document.getElementById('outCancelBtn').classList.remove('hidden');
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
-    function cancelOutEdit() { editingOutId = null; document.getElementById('outwardForm').reset(); setToday('outDate'); document.getElementById('outSubmitBtn').textContent = 'Add Record'; document.getElementById('outCancelBtn').classList.add('hidden'); initDocDropdown('outDocsOptions', 'outDocsDisplay', 'outDocs', 'outDocsOther'); }
+    function cancelOutEdit() { editingOutId = null; document.getElementById('outwardForm').reset(); setToday('outDate'); document.getElementById('outSubmitBtn').textContent = 'Add Record'; document.getElementById('outCancelBtn').classList.add('hidden'); initDocDropdown('outDocsOptions', 'outDocsDisplay', 'outDocs', 'outDocsOther'); resetDept('out'); }
 
     function editInRecord(id) {
       const r = inRecords.find(x => x.id === id); if (!r) return;
       editingInId = id;
       document.getElementById('inDate').value = r.date; document.getElementById('inEmpId').value = r.employee_id;
-      document.getElementById('inName').value = r.name; document.getElementById('inDept').value = r.department;
+      document.getElementById('inName').value = r.name; setDeptValue('in', r.department);
       setDocFromValue('inDocsOptions', 'inDocsDisplay', 'inDocs', 'inDocsOther', r.documents); document.getElementById('inParticular').value = r.particular;
       document.getElementById('inDetails').value = r.details || '';
       document.getElementById('inSubmitBtn').textContent = 'Update Record';
       document.getElementById('inCancelBtn').classList.remove('hidden');
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
-    function cancelInEdit() { editingInId = null; document.getElementById('inwardForm').reset(); setToday('inDate'); document.getElementById('inSubmitBtn').textContent = 'Add Record'; document.getElementById('inCancelBtn').classList.add('hidden'); initDocDropdown('inDocsOptions', 'inDocsDisplay', 'inDocs', 'inDocsOther'); }
+    function cancelInEdit() { editingInId = null; document.getElementById('inwardForm').reset(); setToday('inDate'); document.getElementById('inSubmitBtn').textContent = 'Add Record'; document.getElementById('inCancelBtn').classList.add('hidden'); initDocDropdown('inDocsOptions', 'inDocsDisplay', 'inDocs', 'inDocsOther'); resetDept('in'); }
 
     // ===== DASHBOARD =====
     async function loadDashboard() {
