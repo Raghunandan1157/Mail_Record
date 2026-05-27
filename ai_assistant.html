@@ -62,11 +62,13 @@
 </div>
 
 <script>
-  // Access control: AI Assistant is restricted to Admin context only.
+  // Access control: AI Assistant restricted to Admin view. Available to admin + Head Office + Corporate Office accounts.
   const otp = sessionStorage.getItem('ai_otp') || localStorage.getItem('ai_otp');
   const isAdminFlag = (sessionStorage.getItem('sr_headoffice') || localStorage.getItem('sr_headoffice')) === 'true';
-  const viewMode = sessionStorage.getItem('sr_view_mode') || localStorage.getItem('sr_view_mode') || 'corporate';
-  if (!otp || !isAdminFlag) {
+  const loc = sessionStorage.getItem('sr_location') || localStorage.getItem('sr_location') || '';
+  const canSwitchView = isAdminFlag || loc === 'Head Office' || loc === 'Corporate Office';
+  const viewMode = sessionStorage.getItem('sr_view_mode') || localStorage.getItem('sr_view_mode') || 'admin';
+  if (!canSwitchView) {
     alert('Login required. Redirecting...');
     window.location.href = 'index.html';
   } else if (viewMode !== 'admin') {
@@ -77,7 +79,7 @@
   // Tab key: go to hub view picker
   document.addEventListener('keydown', (e) => {
     if (e.key !== 'Tab') return;
-    if (!isAdminFlag) return;
+    if (!canSwitchView) return;
     const tag = (e.target && e.target.tagName) || '';
     if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || (e.target && e.target.isContentEditable)) return;
     e.preventDefault();

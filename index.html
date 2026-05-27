@@ -451,7 +451,8 @@
         location: isAdmin ? 'Head Office' : branch
       };
       selectedLocation = currentEmployee.location;
-      if (isAdmin) makeAiToken(p);
+      // Issue AI token for admin + Head Office + Corporate Office accounts (all can switch to Admin view).
+      if (isAdmin || selectedLocation === 'Head Office' || selectedLocation === 'Corporate Office') makeAiToken(p);
       saveAndShowDoor();
     } catch(e) { showLoginError(1, 'Login failed: ' + (e && e.message || e)); }
   }
@@ -557,9 +558,9 @@
     document.getElementById('modAvatar').textContent = isBranchView ? 'H' : (isAdminView ? 'A' : 'C');
     document.getElementById('modName').textContent = isBranchView ? 'HEAD OFFICE' : (isAdminView ? 'ADMIN' : 'CORPORATE OFFICE');
     document.getElementById('modLoc').textContent = isBranchView ? 'Branch Operations' : (isAdminView ? 'Manage Records & Logs' : 'All Branches · Admin');
-    // AI Assistant tile — Admin view only AND only for real admin (not HO/CO impersonating admin).
+    // AI Assistant tile — Admin view only. Visible to real admin + HO + CO accounts.
     const aiTile = document.getElementById('aiAssistantTile');
-    if (aiTile) aiTile.style.display = (isAdmin && curView === 'admin') ? '' : 'none';
+    if (aiTile) aiTile.style.display = (canSwitchView() && curView === 'admin') ? '' : 'none';
     // View-mode hint for users with multi-view access
     if (canSwitchView()) {
       const cur = sessionStorage.getItem('sr_view_mode') || localStorage.getItem('sr_view_mode') || defaultViewForUser();
@@ -578,8 +579,8 @@
 
   function openModule(mod) {
     if (mod === 'ai') {
-      const curView = sessionStorage.getItem('sr_view_mode') || localStorage.getItem('sr_view_mode') || 'corporate';
-      if (!isAdmin || curView !== 'admin') { alert('AI Assistant requires Admin view.'); return; }
+      const curView = sessionStorage.getItem('sr_view_mode') || localStorage.getItem('sr_view_mode') || defaultViewForUser();
+      if (!canSwitchView() || curView !== 'admin') { alert('AI Assistant requires Admin view.'); return; }
     }
     if (mod === 'stationary') window.location.href = 'stationary.html';
     else if (mod === 'mail') window.location.href = 'mailrecord.html';
