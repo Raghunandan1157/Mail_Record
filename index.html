@@ -563,9 +563,13 @@
     const isBranchView = curView === 'branch';
     const isAdminView = curView === 'admin';
     const isCorporateView = curView === 'corporate';
-    document.getElementById('modAvatar').textContent = isBranchView ? 'H' : (isAdminView ? 'A' : 'C');
-    document.getElementById('modName').textContent = isBranchView ? 'HEAD OFFICE' : (isAdminView ? 'ADMIN' : 'CORPORATE OFFICE');
-    document.getElementById('modLoc').textContent = isBranchView ? 'Branch Operations' : (isAdminView ? 'Manage Records & Logs' : 'All Branches · Admin');
+    // Show the actual logged-in branch name, not a hardcoded label
+    const displayName = isBranchView ? (selectedLocation || 'BRANCH') : (isAdminView ? 'ADMIN' : 'CORPORATE OFFICE');
+    const displayLoc = isBranchView ? 'Branch Operations' : (isAdminView ? 'Manage Records & Logs' : 'All Branches · Admin');
+    const avatarLetter = isBranchView ? (selectedLocation ? selectedLocation.charAt(0) : 'B') : (isAdminView ? 'A' : 'C');
+    document.getElementById('modAvatar').textContent = avatarLetter;
+    document.getElementById('modName').textContent = displayName;
+    document.getElementById('modLoc').textContent = displayLoc;
     // AI Assistant tile — Admin view only. Visible to real admin + HO + CO accounts.
     const aiTile = document.getElementById('aiAssistantTile');
     if (aiTile) aiTile.style.display = ((isAdmin || selectedLocation === 'Head Office' || selectedLocation === 'Corporate Office') && curView === 'admin') ? '' : 'none';
