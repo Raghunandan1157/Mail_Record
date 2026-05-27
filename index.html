@@ -541,7 +541,7 @@
     return isAdmin || selectedLocation === 'Head Office' || selectedLocation === 'Corporate Office';
   }
   function defaultViewForUser() {
-    if (isAdmin) return 'corporate';
+    if (isAdmin) return 'admin';
     if (selectedLocation === 'Head Office') return 'branch';
     if (selectedLocation === 'Corporate Office') return 'corporate';
     return 'branch';

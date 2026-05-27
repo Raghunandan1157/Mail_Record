@@ -650,7 +650,7 @@
     }
     function applyViewMode() {
       const stored = sessionStorage.getItem('sr_view_mode') || localStorage.getItem('sr_view_mode');
-      const defaultView = isAdmin ? 'corporate'
+      const defaultView = isAdmin ? 'admin'
         : (selectedLocation === 'Head Office' ? 'branch'
         : (selectedLocation === 'Corporate Office' ? 'corporate' : 'branch'));
       const viewMode = stored || defaultView;
