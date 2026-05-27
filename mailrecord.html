@@ -683,8 +683,8 @@
     }
     function applyViewMode() {
       const viewMode = getStoredViewMode();
-      // Corporate and Admin both use the all-branches admin UI; only Admin unlocks Admin-only modules on the hub.
-      const effectiveAdmin = (viewMode === 'admin' || viewMode === 'corporate') && canSwitchView();
+      // Only Admin view should open Mail Record's admin dashboard.
+      const effectiveAdmin = (viewMode === 'admin') && canSwitchView();
       // Effective branch location for non-admin views.
       let effectiveLocation = sessionLocation;
       if (viewMode === 'branch') effectiveLocation = 'Head Office';
