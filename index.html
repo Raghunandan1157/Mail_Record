@@ -468,7 +468,13 @@
     localStorage.setItem('sr_employee', JSON.stringify(currentEmployee));
     localStorage.setItem('sr_location', selectedLocation);
     localStorage.setItem('sr_login_time', t);
-    if (isAdmin) { sessionStorage.setItem('sr_headoffice','true'); localStorage.setItem('sr_headoffice','true'); }
+    if (isAdmin) {
+      sessionStorage.setItem('sr_headoffice','true');
+      localStorage.setItem('sr_headoffice','true');
+    } else {
+      sessionStorage.removeItem('sr_headoffice');
+      localStorage.removeItem('sr_headoffice');
+    }
     const mr = { employee: currentEmployee, location: selectedLocation, admin: isAdmin, time: Date.now() };
     sessionStorage.setItem('mr_session', JSON.stringify(mr));
     localStorage.setItem('mr_session', JSON.stringify(mr));

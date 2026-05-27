@@ -467,8 +467,10 @@ function loginConfirm() {
   // Save session (both session + persistent localStorage)
   sessionStorage.setItem('sr_employee', JSON.stringify(currentEmployee));
   sessionStorage.setItem('sr_location', selectedLocation);
+  sessionStorage.removeItem('sr_headoffice');
   localStorage.setItem('sr_employee', JSON.stringify(currentEmployee));
   localStorage.setItem('sr_location', selectedLocation);
+  localStorage.removeItem('sr_headoffice');
   // FIX #7: Store login timestamp for session expiry
   const loginTime = Date.now().toString();
   sessionStorage.setItem('sr_login_time', loginTime);
@@ -528,9 +530,7 @@ function checkSession() {
     currentEmployee = JSON.parse(savedEmp);
     const adminFlag = savedHO === 'true';
     const savedViewMode = getStoredViewMode(savedLoc, adminFlag);
-    selectedLocation = savedViewMode === 'branch'
-      ? 'Head Office'
-      : (savedViewMode === 'corporate' ? 'Corporate Office' : savedLoc);
+    selectedLocation = savedViewMode === 'corporate' ? 'Corporate Office' : savedLoc;
     isAdminUser = canSwitchOfficeViews(savedLoc, adminFlag);
     // Admin user defaults to corporate/admin UI; only Head Office branch view uses the regular UI.
     isHeadOffice = isAdminUser && (savedViewMode !== 'branch');

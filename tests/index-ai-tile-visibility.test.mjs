@@ -35,3 +35,8 @@ assert.match(
   /await ensureAiToken\(\);[\s\S]*window\.location\.href = 'ai_assistant\.html'/,
   'AI Assistant must refresh the backend OTP before navigating'
 );
+assert.match(
+  source,
+  /function saveSession\(\)[\s\S]*?if \(isAdmin\)[\s\S]*?else[\s\S]*?sessionStorage\.removeItem\('sr_headoffice'\)[\s\S]*?localStorage\.removeItem\('sr_headoffice'\)/,
+  'branch login through the hub clears any stale Head Office admin flag'
+);
