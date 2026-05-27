@@ -1830,93 +1830,204 @@ async function renderBranches() {
   '</div>';
 }
 
-// Branch mapping: Region → District → BranchName (from master data)
-const BRANCH_REGION_MAP = [
-  {r:"ANDRA PRADESH",d:"KADAPA",b:"BUDWAL"},{r:"ANDRA PRADESH",d:"KADAPA",b:"DHARMAVARAM"},{r:"ANDRA PRADESH",d:"KADAPA",b:"KADAPA"},{r:"ANDRA PRADESH",d:"KADAPA",b:"KADIRI"},
-  {r:"DHARWAD",d:"BADAMI",b:"BADAMI"},{r:"DHARWAD",d:"BADAMI",b:"GAJENDRAGAD"},{r:"DHARWAD",d:"BADAMI",b:"NARAGUNDA"},{r:"DHARWAD",d:"BADAMI",b:"RAMDURGA"},
-  {r:"DHARWAD",d:"BALLARI",b:"BALLARI"},{r:"DHARWAD",d:"BALLARI",b:"KUDATHINI"},{r:"DHARWAD",d:"BALLARI",b:"SANDURU"},{r:"DHARWAD",d:"BALLARI",b:"SIRUGUPPA"},
-  {r:"DHARWAD",d:"BELAGAVI",b:"BAILHONGAL"},{r:"DHARWAD",d:"BELAGAVI",b:"BELAGAVI"},{r:"DHARWAD",d:"BELAGAVI",b:"GOKAK"},{r:"DHARWAD",d:"BELAGAVI",b:"KITTUR"},{r:"DHARWAD",d:"BELAGAVI",b:"YARAGATTI"},
-  {r:"DHARWAD",d:"CHIKKODI",b:"ATHANI"},{r:"DHARWAD",d:"CHIKKODI",b:"CHIKKODI"},{r:"DHARWAD",d:"CHIKKODI",b:"MUDALAGI"},{r:"DHARWAD",d:"CHIKKODI",b:"NIPPANI"},
-  {r:"DHARWAD",d:"DAVANAGERE",b:"DAVANAGERE"},{r:"DHARWAD",d:"DAVANAGERE",b:"HARIHARA"},{r:"DHARWAD",d:"DAVANAGERE",b:"HONNALI"},{r:"DHARWAD",d:"DAVANAGERE",b:"SANTHEBENNURU"},
-  {r:"DHARWAD",d:"DHARWAD",b:"DHARWAD"},{r:"DHARWAD",d:"DHARWAD",b:"HUBLI"},{r:"DHARWAD",d:"DHARWAD",b:"HUBLI-2"},{r:"DHARWAD",d:"DHARWAD",b:"KALGHATGI"},
-  {r:"DHARWAD",d:"GADAG",b:"GADAG"},{r:"DHARWAD",d:"GADAG",b:"LAXMESHWAR"},{r:"DHARWAD",d:"GADAG",b:"MUNDARAGI"},
-  {r:"DHARWAD",d:"KUDLIGI",b:"HARAPANAHALLI"},{r:"DHARWAD",d:"KUDLIGI",b:"KHANAHOSAHALLI"},{r:"DHARWAD",d:"KUDLIGI",b:"KOTTURU"},{r:"DHARWAD",d:"KUDLIGI",b:"KUDLIGI"},
-  {r:"DHARWAD",d:"VIJAYANAGARA",b:"HAGARIBOMMANAHALLI"},{r:"DHARWAD",d:"VIJAYANAGARA",b:"HOSPET"},{r:"DHARWAD",d:"VIJAYANAGARA",b:"HUVENAHADAGALLI"},
-  {r:"KALABURAGI",d:"BAGALKOTE",b:"BAGALKOT"},
-  {r:"KALABURAGI",d:"BIDAR",b:"AURAD"},{r:"KALABURAGI",d:"BIDAR",b:"BHALKI"},{r:"KALABURAGI",d:"BIDAR",b:"BIDAR"},{r:"KALABURAGI",d:"BIDAR",b:"BIDAR-2"},
-  {r:"KALABURAGI",d:"HUMNABAD",b:"BASAVAKALYAN"},{r:"KALABURAGI",d:"HUMNABAD",b:"HULSOOR"},{r:"KALABURAGI",d:"HUMNABAD",b:"HUMNABAD"},{r:"KALABURAGI",d:"HUMNABAD",b:"KAMALAPURA"},
-  {r:"KALABURAGI",d:"INDI",b:"AFZALPUR"},{r:"KALABURAGI",d:"INDI",b:"ALMEL"},{r:"KALABURAGI",d:"INDI",b:"CHADCHAN"},{r:"KALABURAGI",d:"INDI",b:"INDI"},
-  {r:"KALABURAGI",d:"KALBURGI",b:"ALAND"},{r:"KALABURAGI",d:"KALBURGI",b:"JEVARGI"},{r:"KALABURAGI",d:"KALBURGI",b:"KALABURAGI"},{r:"KALABURAGI",d:"KALBURGI",b:"KALBURGI-2"},
-  {r:"KALABURAGI",d:"KUSHTAGI",b:"GANGAVATHI"},{r:"KALABURAGI",d:"KUSHTAGI",b:"HUNGUND"},{r:"KALABURAGI",d:"KUSHTAGI",b:"KOPPAL"},{r:"KALABURAGI",d:"KUSHTAGI",b:"KUSHTAGI"},
-  {r:"KALABURAGI",d:"LINGSUGUR",b:"DEVADURGA"},{r:"KALABURAGI",d:"LINGSUGUR",b:"LINGSUGUR"},{r:"KALABURAGI",d:"LINGSUGUR",b:"MANVI"},{r:"KALABURAGI",d:"LINGSUGUR",b:"RAICHUR"},{r:"KALABURAGI",d:"LINGSUGUR",b:"SINDHNUR"},{r:"KALABURAGI",d:"LINGSUGUR",b:"SIRWAR"},
-  {r:"KALABURAGI",d:"SEDAM",b:"CHINCHOLI"},{r:"KALABURAGI",d:"SEDAM",b:"KALAGI"},{r:"KALABURAGI",d:"SEDAM",b:"SEDAM"},{r:"KALABURAGI",d:"SEDAM",b:"SHAHAPUR"},{r:"KALABURAGI",d:"SEDAM",b:"YADGIR"},
-  {r:"KALABURAGI",d:"VIJAYAPURA",b:"BILAGI"},{r:"KALABURAGI",d:"VIJAYAPURA",b:"JAMAKHANDI"},{r:"KALABURAGI",d:"VIJAYAPURA",b:"LOKAPUR"},{r:"KALABURAGI",d:"VIJAYAPURA",b:"MUDDEBIHAL"},{r:"KALABURAGI",d:"VIJAYAPURA",b:"SINDAGI"},{r:"KALABURAGI",d:"VIJAYAPURA",b:"TALIKOTI"},{r:"KALABURAGI",d:"VIJAYAPURA",b:"TIKOTA"},{r:"KALABURAGI",d:"VIJAYAPURA",b:"VIJAYAPUR"},
-  {r:"TELANGANA",d:"MAHABOOBNAGAR",b:"GADWAL"},{r:"TELANGANA",d:"MAHABOOBNAGAR",b:"MAHABUB NAGAR"},{r:"TELANGANA",d:"MAHABOOBNAGAR",b:"MARIKAL"},{r:"TELANGANA",d:"MAHABOOBNAGAR",b:"TANDUR"},
-  {r:"TELANGANA",d:"SANGAREDDY",b:"KODANGAL"},{r:"TELANGANA",d:"SANGAREDDY",b:"NARAYANKHED"},{r:"TELANGANA",d:"SANGAREDDY",b:"SANGAREDDY"},{r:"TELANGANA",d:"SANGAREDDY",b:"ZAHEERABAD"},
-  {r:"TUMKUR",d:"BENGALORE -RURAL",b:"DABUSPET"},{r:"TUMKUR",d:"BENGALORE -RURAL",b:"DODDABALLAPURA"},{r:"TUMKUR",d:"BENGALORE -RURAL",b:"GOWRIBIDANUR"},
-  {r:"TUMKUR",d:"BENGALORE -URBAN",b:"CHANDAPURA"},{r:"TUMKUR",d:"BENGALORE -URBAN",b:"HEBBAL"},{r:"TUMKUR",d:"BENGALORE -URBAN",b:"J P NAGAR"},{r:"TUMKUR",d:"BENGALORE -URBAN",b:"KENGERI"},
-  {r:"TUMKUR",d:"CHIKKABALLAPUR",b:"BAGEPALLI"},{r:"TUMKUR",d:"CHIKKABALLAPUR",b:"CHIKBALLAPURA"},{r:"TUMKUR",d:"CHIKKABALLAPUR",b:"CHINTAMANI"},{r:"TUMKUR",d:"CHIKKABALLAPUR",b:"DEVANAHALLI"},{r:"TUMKUR",d:"CHIKKABALLAPUR",b:"SRINIVASPURA"},
-  {r:"TUMKUR",d:"CHIKKAMAGALURU",b:"CHIKKAMAGALURU"},{r:"TUMKUR",d:"CHIKKAMAGALURU",b:"MUDIGERE"},{r:"TUMKUR",d:"CHIKKAMAGALURU",b:"NR PURA"},
-  {r:"TUMKUR",d:"CHITRADURGA",b:"CHALLAKERE"},{r:"TUMKUR",d:"CHITRADURGA",b:"CHITRADURGA"},{r:"TUMKUR",d:"CHITRADURGA",b:"HIRIYUR"},{r:"TUMKUR",d:"CHITRADURGA",b:"JAGALORE"},
-  {r:"TUMKUR",d:"HOLALKERE",b:"CHANNAGIRI"},{r:"TUMKUR",d:"HOLALKERE",b:"HOLAKERE"},{r:"TUMKUR",d:"HOLALKERE",b:"HOSADURGA"},
-  {r:"TUMKUR",d:"KADUR",b:"AJJAMPURA"},{r:"TUMKUR",d:"KADUR",b:"KADUR"},{r:"TUMKUR",d:"KADUR",b:"PANCHANHALLI"},{r:"TUMKUR",d:"KADUR",b:"TARIKERE"},
-  {r:"TUMKUR",d:"KOLAR",b:"BANGARPET"},{r:"TUMKUR",d:"KOLAR",b:"BETHAMANGALA"},{r:"TUMKUR",d:"KOLAR",b:"KOLAR"},{r:"TUMKUR",d:"KOLAR",b:"MALUR"},
-  {r:"TUMKUR",d:"TIPTUR",b:"CHIKKANAYAKANAHALLI"},{r:"TUMKUR",d:"TIPTUR",b:"GUBBI"},{r:"TUMKUR",d:"TIPTUR",b:"HULIYAR"},{r:"TUMKUR",d:"TIPTUR",b:"TIPTUR"},{r:"TUMKUR",d:"TIPTUR",b:"TUREVEKERE"},
-  {r:"TUMKUR",d:"TUMKUR",b:"KORATAGERE"},{r:"TUMKUR",d:"TUMKUR",b:"KUNIGAL"},{r:"TUMKUR",d:"TUMKUR",b:"MADHUGIRI"},{r:"TUMKUR",d:"TUMKUR",b:"SIRA"},{r:"TUMKUR",d:"TUMKUR",b:"TUMKUR"},
-];
+// Branch mapping: Region -> Division -> Area -> BranchName (from Grow With Me V2 structure)
+const BRANCH_V2_MAP = {
+  'AFZALPUR': {state: 'KALBURGI', division: 'KALBURGI', area: 'KALBURGI'},
+  'AJJAMPURA': {state: 'CHITRADURGA', division: 'CHITRADURGA', area: 'KADUR'},
+  'ALAND': {state: 'KALBURGI', division: 'KALBURGI', area: 'KALBURGI'},
+  'ALMEL': {state: 'KALBURGI', division: 'KALBURGI', area: 'INDI'},
+  'ATHANI': {state: 'DHARWAD', division: 'BELAGAVI', area: 'CHIKKODI'},
+  'AURAD': {state: 'KALBURGI', division: 'BIDAR', area: 'BIDAR'},
+  'BADAMI': {state: 'DHARWAD', division: 'HUBLI', area: 'BADAMI'},
+  'BAGALKOT': {state: 'DHARWAD', division: 'BELAGAVI', area: 'BAGALKOT'},
+  'BAGEPALLI': {state: 'TUMKUR', division: 'DODDABALLAPURA', area: 'CHIKBALLAPURA'},
+  'BAILHONGAL': {state: 'DHARWAD', division: 'BELAGAVI', area: 'BELAGAVI'},
+  'BALLARI': {state: 'CHITRADURGA', division: 'HOSPET', area: 'BALLARI'},
+  'BANGARPET': {state: 'TUMKUR', division: 'DODDABALLAPURA', area: 'KOLAR'},
+  'BASAVAKALYAN': {state: 'KALBURGI', division: 'BIDAR', area: 'HUMNABAD'},
+  'BELAGAVI': {state: 'DHARWAD', division: 'BELAGAVI', area: 'BELAGAVI'},
+  'BETHAMANGALA': {state: 'TUMKUR', division: 'DODDABALLAPURA', area: 'KOLAR'},
+  'BHALKI': {state: 'KALBURGI', division: 'BIDAR', area: 'BIDAR'},
+  'BIDAR': {state: 'KALBURGI', division: 'BIDAR', area: 'BIDAR'},
+  'BIDAR-2': {state: 'KALBURGI', division: 'BIDAR', area: 'BIDAR'},
+  'BILAGI': {state: 'DHARWAD', division: 'BELAGAVI', area: 'BAGALKOT'},
+  'BUDWAL': {state: 'AP', division: 'KADAPPA', area: 'KADAPA'},
+  'CHADCHAN': {state: 'KALBURGI', division: 'KALBURGI', area: 'INDI'},
+  'CHALLAKERE': {state: 'CHITRADURGA', division: 'CHITRADURGA', area: 'CHITRADURGA'},
+  'CHANDAPURA': {state: 'TUMKUR', division: 'DODDABALLAPURA', area: 'BANGALORE URBAN'},
+  'CHANNAGIRI': {state: 'CHITRADURGA', division: 'CHITRADURGA', area: 'CHITRADURGA'},
+  'CHIKBALLAPURA': {state: 'TUMKUR', division: 'DODDABALLAPURA', area: 'CHIKBALLAPURA'},
+  'CHIKKAMAGALURU': {state: 'TUMKUR', division: 'TUMKUR', area: 'CHIKKAMAGALURU'},
+  'CHIKKANAYAKANAHALLI': {state: 'TUMKUR', division: 'TUMKUR', area: 'TIPTUR'},
+  'CHIKKODI': {state: 'DHARWAD', division: 'BELAGAVI', area: 'CHIKKODI'},
+  'CHINCHOLI': {state: 'KALBURGI', division: 'BIDAR', area: 'SEDAM'},
+  'CHINTAMANI': {state: 'TUMKUR', division: 'DODDABALLAPURA', area: 'CHIKBALLAPURA'},
+  'CHITRADURGA': {state: 'CHITRADURGA', division: 'CHITRADURGA', area: 'CHITRADURGA'},
+  'CORPORATE OFFICE': {state: 'CORPORATE OFFICE', division: 'CORPORATE OFFICE', area: 'CORPORATE OFFICE'},
+  'DABUSPET': {state: 'TUMKUR', division: 'TUMKUR', area: 'TUMKUR'},
+  'DAVANAGERE': {state: 'CHITRADURGA', division: 'CHITRADURGA', area: 'DAVANAGERE'},
+  'DEVADURGA': {state: 'KALBURGI', division: 'KALBURGI', area: 'SHAHAPUR'},
+  'DEVANAHALLI': {state: 'TUMKUR', division: 'DODDABALLAPURA', area: 'DODDABALLAPURA'},
+  'DHARMAVARAM': {state: 'AP', division: 'KADAPPA', area: 'KADAPA'},
+  'DHARWAD': {state: 'DHARWAD', division: 'HUBLI', area: 'DHARWAD'},
+  'DODDABALLAPURA': {state: 'TUMKUR', division: 'DODDABALLAPURA', area: 'DODDABALLAPURA'},
+  'GADAG': {state: 'DHARWAD', division: 'HUBLI', area: 'GADAG'},
+  'GADWAL': {state: 'TS', division: 'SANGAREDDY', area: 'MAHABUB NAGAR'},
+  'GAJENDRAGAD': {state: 'DHARWAD', division: 'HUBLI', area: 'BADAMI'},
+  'GANGAVATHI': {state: 'DHARWAD', division: 'HUBLI', area: 'KUSHTAGI'},
+  'GOKAK': {state: 'DHARWAD', division: 'BELAGAVI', area: 'BELAGAVI'},
+  'GOWRIBIDANUR': {state: 'TUMKUR', division: 'DODDABALLAPURA', area: 'DODDABALLAPURA'},
+  'GUBBI': {state: 'TUMKUR', division: 'TUMKUR', area: 'TIPTUR'},
+  'HAGARIBOMMANAHALLI': {state: 'CHITRADURGA', division: 'HOSPET', area: 'HOSPET'},
+  'HARAPANAHALLI': {state: 'CHITRADURGA', division: 'HOSPET', area: 'KOTTURU'},
+  'HARIHARA': {state: 'CHITRADURGA', division: 'CHITRADURGA', area: 'DAVANAGERE'},
+  'HEAD OFFICE': {state: 'HEAD OFFICE', division: 'HEAD OFFICE', area: 'HEAD OFFICE'},
+  'HEBBAL': {state: 'TUMKUR', division: 'DODDABALLAPURA', area: 'BANGALORE URBAN'},
+  'HIRIYUR': {state: 'CHITRADURGA', division: 'CHITRADURGA', area: 'CHITRADURGA'},
+  'HOLAKERE': {state: 'CHITRADURGA', division: 'CHITRADURGA', area: 'CHITRADURGA'},
+  'HONNALI': {state: 'CHITRADURGA', division: 'CHITRADURGA', area: 'DAVANAGERE'},
+  'HOSADURGA': {state: 'CHITRADURGA', division: 'CHITRADURGA', area: 'CHITRADURGA'},
+  'HOSPET': {state: 'CHITRADURGA', division: 'HOSPET', area: 'HOSPET'},
+  'HUBLI': {state: 'DHARWAD', division: 'HUBLI', area: 'DHARWAD'},
+  'HUBLI-2': {state: 'DHARWAD', division: 'HUBLI', area: 'DHARWAD'},
+  'HULIYAR': {state: 'TUMKUR', division: 'TUMKUR', area: 'TIPTUR'},
+  'HULSOOR': {state: 'KALBURGI', division: 'BIDAR', area: 'HUMNABAD'},
+  'HUMNABAD': {state: 'KALBURGI', division: 'BIDAR', area: 'HUMNABAD'},
+  'HUNGUND': {state: 'DHARWAD', division: 'HUBLI', area: 'KUSHTAGI'},
+  'HUVENAHADAGALLI': {state: 'CHITRADURGA', division: 'HOSPET', area: 'HOSPET'},
+  'INDI': {state: 'KALBURGI', division: 'KALBURGI', area: 'INDI'},
+  'J P NAGAR': {state: 'TUMKUR', division: 'DODDABALLAPURA', area: 'BANGALORE URBAN'},
+  'JAGALORE': {state: 'CHITRADURGA', division: 'HOSPET', area: 'KOTTURU'},
+  'JAMAKHANDI': {state: 'DHARWAD', division: 'BELAGAVI', area: 'BAGALKOT'},
+  'JEVARGI': {state: 'KALBURGI', division: 'KALBURGI', area: 'KALBURGI'},
+  'KADAPA': {state: 'AP', division: 'KADAPPA', area: 'KADAPA'},
+  'KADIRI': {state: 'AP', division: 'KADAPPA', area: 'KADAPA'},
+  'KADUR': {state: 'CHITRADURGA', division: 'CHITRADURGA', area: 'KADUR'},
+  'KALABURAGI': {state: 'KALBURGI', division: 'KALBURGI', area: 'KALBURGI'},
+  'KALAGI': {state: 'KALBURGI', division: 'BIDAR', area: 'SEDAM'},
+  'KALBURGI-2': {state: 'KALBURGI', division: 'KALBURGI', area: 'KALBURGI'},
+  'KALGHATGI': {state: 'DHARWAD', division: 'HUBLI', area: 'DHARWAD'},
+  'KAMALAPURA': {state: 'KALBURGI', division: 'BIDAR', area: 'HUMNABAD'},
+  'KENGERI': {state: 'TUMKUR', division: 'DODDABALLAPURA', area: 'BANGALORE URBAN'},
+  'KHANAHOSAHALLI': {state: 'CHITRADURGA', division: 'HOSPET', area: 'KOTTURU'},
+  'KITTUR': {state: 'DHARWAD', division: 'BELAGAVI', area: 'BELAGAVI'},
+  'KODANGAL': {state: 'TS', division: 'SANGAREDDY', area: 'SANGAREDDY'},
+  'KODANGAL(VIKARABAD)': {state: 'TS', division: 'SANGAREDDY', area: 'SANGAREDDY'},
+  'KOLAR': {state: 'TUMKUR', division: 'DODDABALLAPURA', area: 'KOLAR'},
+  'KOPPAL': {state: 'DHARWAD', division: 'HUBLI', area: 'KUSHTAGI'},
+  'KORATAGERE': {state: 'TUMKUR', division: 'TUMKUR', area: 'TUMKUR'},
+  'KOTTURU': {state: 'CHITRADURGA', division: 'HOSPET', area: 'KOTTURU'},
+  'KUDATHINI': {state: 'CHITRADURGA', division: 'HOSPET', area: 'BALLARI'},
+  'KUDLIGI': {state: 'CHITRADURGA', division: 'HOSPET', area: 'HOSPET'},
+  'KUNIGAL': {state: 'TUMKUR', division: 'TUMKUR', area: 'TUMKUR'},
+  'KUSHTAGI': {state: 'DHARWAD', division: 'HUBLI', area: 'KUSHTAGI'},
+  'LAXMESHWAR': {state: 'DHARWAD', division: 'HUBLI', area: 'GADAG'},
+  'LINGSUGUR': {state: 'KALBURGI', division: 'KALBURGI', area: 'LINGSUGUR'},
+  'LOKAPUR': {state: 'DHARWAD', division: 'BELAGAVI', area: 'BAGALKOT'},
+  'MADHUGIRI': {state: 'TUMKUR', division: 'TUMKUR', area: 'TUMKUR'},
+  'MAHABUB NAGAR': {state: 'TS', division: 'SANGAREDDY', area: 'MAHABUB NAGAR'},
+  'MALUR': {state: 'TUMKUR', division: 'DODDABALLAPURA', area: 'KOLAR'},
+  'MANVI': {state: 'KALBURGI', division: 'BIDAR', area: 'LINGSUGUR'},
+  'MARIKAL': {state: 'TS', division: 'SANGAREDDY', area: 'MAHABUB NAGAR'},
+  'MUDALAGI': {state: 'DHARWAD', division: 'BELAGAVI', area: 'CHIKKODI'},
+  'MUDDEBIHAL': {state: 'KALBURGI', division: 'KALBURGI', area: 'VIJAYAPUR'},
+  'MUDIGERE': {state: 'TUMKUR', division: 'TUMKUR', area: 'CHIKKAMAGALURU'},
+  'MUNDARAGI': {state: 'DHARWAD', division: 'HUBLI', area: 'GADAG'},
+  'NARAGUNDA': {state: 'DHARWAD', division: 'HUBLI', area: 'BADAMI'},
+  'NARAYANKHED': {state: 'TS', division: 'SANGAREDDY', area: 'SANGAREDDY'},
+  'NIPPANI': {state: 'DHARWAD', division: 'BELAGAVI', area: 'CHIKKODI'},
+  'NR PURA': {state: 'TUMKUR', division: 'TUMKUR', area: 'CHIKKAMAGALURU'},
+  'PANCHANHALLI': {state: 'CHITRADURGA', division: 'CHITRADURGA', area: 'KADUR'},
+  'RAICHUR': {state: 'KALBURGI', division: 'BIDAR', area: 'LINGSUGUR'},
+  'RAMDURGA': {state: 'DHARWAD', division: 'HUBLI', area: 'BADAMI'},
+  'SANDURU': {state: 'CHITRADURGA', division: 'HOSPET', area: 'BALLARI'},
+  'SANGAREDDY': {state: 'TS', division: 'SANGAREDDY', area: 'SANGAREDDY'},
+  'SANTHEBENNURU': {state: 'CHITRADURGA', division: 'CHITRADURGA', area: 'DAVANAGERE'},
+  'SEDAM': {state: 'KALBURGI', division: 'BIDAR', area: 'SEDAM'},
+  'SHAHAPUR': {state: 'KALBURGI', division: 'KALBURGI', area: 'SHAHAPUR'},
+  'SINDAGI': {state: 'KALBURGI', division: 'KALBURGI', area: 'VIJAYAPUR'},
+  'SINDHNUR': {state: 'KALBURGI', division: 'BIDAR', area: 'LINGSUGUR'},
+  'SIRA': {state: 'TUMKUR', division: 'TUMKUR', area: 'TUMKUR'},
+  'SIRUGUPPA': {state: 'CHITRADURGA', division: 'HOSPET', area: 'BALLARI'},
+  'SIRWAR': {state: 'KALBURGI', division: 'BIDAR', area: 'LINGSUGUR'},
+  'SRINIVASPURA': {state: 'TUMKUR', division: 'DODDABALLAPURA', area: 'CHIKBALLAPURA'},
+  'TALIKOTI': {state: 'KALBURGI', division: 'KALBURGI', area: 'VIJAYAPUR'},
+  'TANDUR': {state: 'TS', division: 'SANGAREDDY', area: 'MAHABUB NAGAR'},
+  'TARIKERE': {state: 'CHITRADURGA', division: 'CHITRADURGA', area: 'KADUR'},
+  'TIKOTA': {state: 'KALBURGI', division: 'KALBURGI', area: 'VIJAYAPUR'},
+  'TIPTUR': {state: 'TUMKUR', division: 'TUMKUR', area: 'TIPTUR'},
+  'TUMKUR': {state: 'TUMKUR', division: 'TUMKUR', area: 'TUMKUR'},
+  'TUREVEKERE': {state: 'TUMKUR', division: 'TUMKUR', area: 'TIPTUR'},
+  'VIJAYAPUR': {state: 'KALBURGI', division: 'KALBURGI', area: 'VIJAYAPUR'},
+  'YADGIR': {state: 'KALBURGI', division: 'BIDAR', area: 'SHAHAPUR'},
+  'YARAGATTI': {state: 'DHARWAD', division: 'BELAGAVI', area: 'BELAGAVI'},
+  'ZAHEERABAD': {state: 'TS', division: 'SANGAREDDY', area: 'SANGAREDDY'}
+};
 
-// Build lookup: uppercase branch name → { region, district }
-const BRANCH_LOOKUP = {};
-BRANCH_REGION_MAP.forEach(m => { BRANCH_LOOKUP[m.b.toUpperCase()] = { region: m.r, district: m.d }; });
-
-function getBranchMapping(branchName) {
+function getBranchV2Mapping(branchName) {
   const key = (branchName || '').toUpperCase().trim();
-  return BRANCH_LOOKUP[key] || { region: 'UNMAPPED', district: 'UNMAPPED' };
+  const mapping = BRANCH_V2_MAP[key];
+  if (!mapping) return { region: 'UNMAPPED', division: 'UNMAPPED', area: 'UNMAPPED' };
+  return { region: mapping.state, division: mapping.division, area: mapping.area };
 }
 
-function downloadBranchesExcel() {
-  const entries = adminData.entries;
-  const employees = adminData.employees;
+async function getBranchActivityData(applyFilters) {
+  const entries = adminData.entries || [];
+  const employees = adminData.employees || [];
+  const searchText = (document.getElementById('branches-search')?.value || '').toLowerCase().trim();
+  const statusFilter = document.getElementById('branches-status-filter')?.value || 'all';
   const sourceFilter = document.getElementById('branches-source-filter')?.value || 'entries';
 
-  // Get unique branches (exclude Head Office and Corporate Office)
+  if ((sourceFilter === 'received' || sourceFilter === 'both') && !adminData.receivedDateLogs) {
+    try {
+      adminData.receivedDateLogs = await supabaseFetch('received_date_log', 'select=*&order=created_at.desc');
+    } catch (e) {
+      console.error('Failed to fetch received_date_log:', e);
+      adminData.receivedDateLogs = [];
+    }
+  }
+
   const branchesFromEntries = entries.map(e => e.location).filter(Boolean);
   const branchesFromEmployees = employees.map(e => e.location).filter(Boolean);
   const excludeLocations = ['Head Office', 'Corporate Office'];
-  const allBranches = [...new Set([...branchesFromEntries, ...branchesFromEmployees])].filter(b => !excludeLocations.includes(b)).sort();
+  const allBranches = [...new Set([...branchesFromEntries, ...branchesFromEmployees])]
+    .filter(b => !excludeLocations.includes(b))
+    .sort();
 
-  const todayStr = new Date().toISOString().slice(0, 10);
   const now = new Date();
   const daysAgo = d => Math.floor((now - new Date(d)) / 86400000);
-
-  // Compute last update per branch with region/district mapping
   const branchData = allBranches.map(branch => {
     let lastUpdate = null;
     if (sourceFilter === 'entries' || sourceFilter === 'both') {
       const branchEntries = entries.filter(e => e.location === branch);
-      const maxEntry = branchEntries.reduce((max, e) => { const d = new Date(e.created_at); return d > max ? d : max; }, new Date(0));
+      const maxEntry = branchEntries.reduce((max, e) => {
+        const d = new Date(e.created_at);
+        return d > max ? d : max;
+      }, new Date(0));
       if (branchEntries.length > 0 && maxEntry > new Date(0)) lastUpdate = maxEntry;
     }
     if (sourceFilter === 'received' || sourceFilter === 'both') {
       const rdLogs = (adminData.receivedDateLogs || []).filter(r => r.location === branch);
-      const maxRd = rdLogs.reduce((max, r) => { const d = new Date(r.created_at); return d > max ? d : max; }, new Date(0));
-      if (rdLogs.length > 0 && maxRd > new Date(0)) {
-        if (!lastUpdate || maxRd > lastUpdate) lastUpdate = maxRd;
-      }
+      const maxRd = rdLogs.reduce((max, r) => {
+        const d = new Date(r.created_at);
+        return d > max ? d : max;
+      }, new Date(0));
+      if (rdLogs.length > 0 && maxRd > new Date(0) && (!lastUpdate || maxRd > lastUpdate)) lastUpdate = maxRd;
     }
-    const mapping = getBranchMapping(branch);
+
+    const mapping = getBranchV2Mapping(branch);
     let status = 'No Updates';
+    let statusKey = 'inactive';
     if (lastUpdate) {
       const d = daysAgo(lastUpdate);
-      if (d === 0) status = 'Updated Today';
-      else if (d <= 5) status = 'Last 5 Days';
-      else if (d <= 10) status = 'Last 10 Days';
-      else status = '15+ Days Ago';
+      if (d === 0) { status = 'Updated Today'; statusKey = 'updated'; }
+      else if (d <= 5) { status = 'Last 5 Days'; statusKey = 'not-updated'; }
+      else if (d <= 10) { status = 'Last 10 Days'; statusKey = 'not-updated'; }
+      else { status = '15+ Days Ago'; statusKey = 'not-updated'; }
     }
-    return { branch, lastUpdate, status, region: mapping.region, district: mapping.district };
+    return { branch, lastUpdate, status, statusKey, region: mapping.region, division: mapping.division, area: mapping.area };
   });
 
-  // Sort: no updates first, then oldest first
   branchData.sort((a, b) => {
     if (!a.lastUpdate && !b.lastUpdate) return a.branch.localeCompare(b.branch);
     if (!a.lastUpdate) return -1;
@@ -1924,88 +2035,79 @@ function downloadBranchesExcel() {
     return a.lastUpdate - b.lastUpdate;
   });
 
+  if (!applyFilters) return branchData;
+  return branchData.filter(b => {
+    if (searchText && !b.branch.toLowerCase().includes(searchText)) return false;
+    if (statusFilter !== 'all' && b.statusKey !== statusFilter) return false;
+    return true;
+  });
+}
+
+function makeBranchActivitySheetRows(branchData, groupFields) {
   const bucketKeys = ['No Updates', '15+ Days Ago', 'Last 10 Days', 'Last 5 Days', 'Updated Today'];
-
-  // --- Sheet 1: Overall (Sl.No + bucket columns with branch names) ---
-  const buckets = { 'No Updates': [], '15+ Days Ago': [], 'Last 10 Days': [], 'Last 5 Days': [], 'Updated Today': [] };
-  branchData.forEach(b => buckets[b.status].push(b.branch));
-
-  const maxRows = Math.max(...Object.values(buckets).map(arr => arr.length), 1);
-  const overallRows = [];
-  for (let i = 0; i < maxRows; i++) {
-    const row = { 'Sl.No': i + 1 };
-    bucketKeys.forEach(k => { row[k] = buckets[k][i] || ''; });
-    overallRows.push(row);
-  }
-  overallRows.push({ 'Sl.No': '', 'No Updates': 'Count: ' + buckets['No Updates'].length, '15+ Days Ago': 'Count: ' + buckets['15+ Days Ago'].length, 'Last 10 Days': 'Count: ' + buckets['Last 10 Days'].length, 'Last 5 Days': 'Count: ' + buckets['Last 5 Days'].length, 'Updated Today': 'Count: ' + buckets['Updated Today'].length });
-
-  const wsOverall = XLSX.utils.json_to_sheet(overallRows);
-  wsOverall['!cols'] = [{ wch: 6 }, { wch: 28 }, { wch: 28 }, { wch: 28 }, { wch: 28 }, { wch: 28 }];
-  wsOverall['!views'] = [{ state: 'frozen', ySplit: 1 }];
-
-  // --- Sheet 2: Region (bucket columns with branch names, grouped by region) ---
-  const regionGroups = {};
+  const groups = {};
   branchData.forEach(b => {
-    if (!regionGroups[b.region]) regionGroups[b.region] = { 'No Updates': [], '15+ Days Ago': [], 'Last 10 Days': [], 'Last 5 Days': [], 'Updated Today': [] };
-    regionGroups[b.region][b.status].push(b.branch);
-  });
-
-  const regionRows = [];
-  let rSlNo = 1;
-  Object.keys(regionGroups).sort().forEach(region => {
-    const g = regionGroups[region];
-    // Region header row (just the name)
-    const row = { 'Sl.No': rSlNo++, 'Region': region };
-    bucketKeys.forEach(k => { row[k] = ''; });
-    regionRows.push(row);
-    // Branch names listed directly below
-    const maxR = Math.max(...bucketKeys.map(k => g[k].length), 0);
-    for (let i = 0; i < maxR; i++) {
-      const detail = { 'Sl.No': '', 'Region': '' };
-      bucketKeys.forEach(k => { detail[k] = g[k][i] || ''; });
-      regionRows.push(detail);
+    const key = groupFields.map(field => b[field] || 'UNMAPPED').join('||');
+    if (!groups[key]) {
+      groups[key] = { values: {}, buckets: {} };
+      groupFields.forEach(field => { groups[key].values[field] = b[field] || 'UNMAPPED'; });
+      bucketKeys.forEach(bucket => { groups[key].buckets[bucket] = []; });
     }
+    groups[key].buckets[b.status].push(b.branch);
   });
 
-  const wsRegion = XLSX.utils.json_to_sheet(regionRows);
-  wsRegion['!cols'] = [{ wch: 6 }, { wch: 20 }, { wch: 28 }, { wch: 28 }, { wch: 28 }, { wch: 28 }, { wch: 28 }];
-  wsRegion['!views'] = [{ state: 'frozen', ySplit: 1 }];
+  const rows = [];
+  let slNo = 1;
+  Object.keys(groups).sort().forEach(key => {
+    const group = groups[key];
+    const header = { 'Sl.No': slNo++ };
+    groupFields.forEach(field => { header[toTitleCase(field)] = group.values[field]; });
+    bucketKeys.forEach(bucket => { header[bucket] = ''; });
+    rows.push(header);
 
-  // --- Sheet 3: District (bucket columns with branch names, grouped by region > district) ---
-  const districtGroups = {};
-  branchData.forEach(b => {
-    const key = b.region + '||' + b.district;
-    if (!districtGroups[key]) districtGroups[key] = { region: b.region, district: b.district, 'No Updates': [], '15+ Days Ago': [], 'Last 10 Days': [], 'Last 5 Days': [], 'Updated Today': [] };
-    districtGroups[key][b.status].push(b.branch);
-  });
-
-  const districtRows = [];
-  let dSlNo = 1;
-  Object.keys(districtGroups).sort().forEach(key => {
-    const g = districtGroups[key];
-    // District header row (just region + district name)
-    const row = { 'Sl.No': dSlNo++, 'Region': g.region, 'District': g.district };
-    bucketKeys.forEach(k => { row[k] = ''; });
-    districtRows.push(row);
-    // Branch names listed directly below
-    const maxD = Math.max(...bucketKeys.map(k => g[k].length), 0);
-    for (let i = 0; i < maxD; i++) {
-      const detail = { 'Sl.No': '', 'Region': '', 'District': '' };
-      bucketKeys.forEach(k => { detail[k] = g[k][i] || ''; });
-      districtRows.push(detail);
+    const maxRows = Math.max(...bucketKeys.map(bucket => group.buckets[bucket].length), 0);
+    for (let i = 0; i < maxRows; i++) {
+      const detail = { 'Sl.No': '' };
+      groupFields.forEach(field => { detail[toTitleCase(field)] = ''; });
+      bucketKeys.forEach(bucket => { detail[bucket] = group.buckets[bucket][i] || ''; });
+      rows.push(detail);
     }
+
+    const countRow = { 'Sl.No': '' };
+    groupFields.forEach(field => { countRow[toTitleCase(field)] = ''; });
+    bucketKeys.forEach(bucket => { countRow[bucket] = 'Count: ' + group.buckets[bucket].length; });
+    rows.push(countRow);
+  });
+  return rows.length ? rows : [{ 'Sl.No': '', [toTitleCase(groupFields[0])]: 'No branch data found' }];
+}
+
+function toTitleCase(value) {
+  return String(value || '').replace(/(^|s)S/g, s => s.toUpperCase());
+}
+
+async function downloadBranchActivityRegionData() {
+  const branchData = await getBranchActivityData(true);
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const workbook = XLSX.utils.book_new();
+  const sheetDefs = [
+    { name: 'Region', fields: ['region'], widths: [{ wch: 6 }, { wch: 20 }, { wch: 28 }, { wch: 28 }, { wch: 28 }, { wch: 28 }, { wch: 28 }] },
+    { name: 'Division', fields: ['region', 'division'], widths: [{ wch: 6 }, { wch: 18 }, { wch: 22 }, { wch: 28 }, { wch: 28 }, { wch: 28 }, { wch: 28 }, { wch: 28 }] },
+    { name: 'Area', fields: ['region', 'division', 'area'], widths: [{ wch: 6 }, { wch: 18 }, { wch: 22 }, { wch: 22 }, { wch: 28 }, { wch: 28 }, { wch: 28 }, { wch: 28 }, { wch: 28 }] },
+  ];
+
+  sheetDefs.forEach(def => {
+    const rows = makeBranchActivitySheetRows(branchData, def.fields);
+    const sheet = XLSX.utils.json_to_sheet(rows);
+    sheet['!cols'] = def.widths;
+    sheet['!views'] = [{ state: 'frozen', ySplit: 1 }];
+    XLSX.utils.book_append_sheet(workbook, sheet, def.name);
   });
 
-  const wsDistrict = XLSX.utils.json_to_sheet(districtRows);
-  wsDistrict['!cols'] = [{ wch: 6 }, { wch: 20 }, { wch: 22 }, { wch: 28 }, { wch: 28 }, { wch: 28 }, { wch: 28 }, { wch: 28 }];
-  wsDistrict['!views'] = [{ state: 'frozen', ySplit: 1 }];
+  XLSX.writeFile(workbook, 'Branch_Activity_Region_Wise_' + todayStr + '.xlsx');
+}
 
-  // Build workbook with 3 sheets
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, wsOverall, 'Overall');
-  XLSX.utils.book_append_sheet(wb, wsRegion, 'Region');
-  XLSX.utils.book_append_sheet(wb, wsDistrict, 'District');
-  XLSX.writeFile(wb, 'Branches_' + todayStr + '.xlsx');
+function downloadBranchesExcel() {
+  downloadBranchActivityRegionData();
 }
 
 function toggleBranchContacts(headerEl) {

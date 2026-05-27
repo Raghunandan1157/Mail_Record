@@ -823,7 +823,7 @@
           <div class="flex items-center gap-3">
             <button onclick="downloadBranchesExcel()" class="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-xs font-bold transition-colors shadow-sm">
               <span class="material-symbols-outlined text-sm">download</span>
-              Download
+              Download Region-wise Data
             </button>
             <div class="flex items-center gap-2 px-3 py-1.5 bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-400 rounded-full text-xs font-bold uppercase tracking-wider">
               <span class="material-symbols-outlined text-sm">shield</span>
@@ -896,7 +896,13 @@
 
         <!-- Branch Activity Chart -->
         <div class="bg-white dark:bg-[#1c2631] rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm p-5 mb-8">
-          <h4 class="text-sm font-bold text-slate-800 dark:text-white mb-4">Branch Activity Overview</h4>
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+            <h4 class="text-sm font-bold text-slate-800 dark:text-white">Branch Activity Overview</h4>
+            <button onclick="downloadBranchActivityRegionData()" class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-xs font-bold transition-colors shadow-sm">
+              <span class="material-symbols-outlined text-sm">download</span>
+              Download Region-wise Data
+            </button>
+          </div>
           <div id="branches-chart" class="space-y-3">
             <!-- Rendered by JS -->
           </div>
