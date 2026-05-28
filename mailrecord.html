@@ -866,7 +866,7 @@
       const filtered = outRecords.filter(r => !f || Object.values(r).some(v => String(v).toLowerCase().includes(f)));
       document.getElementById('outCount').textContent = filtered.length + ' records';
       document.getElementById('outEmpty').style.display = filtered.length ? 'none' : 'block';
-      document.getElementById('outBody').innerHTML = [...filtered].reverse().map(r => `<tr class="border-b border-slate-100 hover:bg-slate-50"><td class="py-2.5 font-semibold text-primary">${r.seq}</td><td class="py-2.5">${esc(r.date)}</td><td class="py-2.5">${esc(r.employee_id)}</td><td class="py-2.5 font-medium">${esc(r.name)}</td><td class="py-2.5">${esc(r.department)}</td><td class="py-2.5">${esc(r.documents)}</td><td class="py-2.5 font-medium">${esc(r.docket_number||'')}</td><td class="py-2.5">${esc(r.courier_status||'')}</td><td class="py-2.5">${esc(r.particular)}</td><td class="py-2.5 text-slate-400">${esc(r.details||'')}</td><td class="py-2.5 text-slate-400">${esc((Array.isArray(r.customers)?r.customers:[]).join(', '))}</td><td class="py-2.5"><button onclick="editOutRecord(${r.id})" class="text-blue-500 hover:text-blue-700 text-xs font-semibold">Edit</button></td></tr>`).join('');
+      document.getElementById('outBody').innerHTML = [...filtered].reverse().map(r => `<tr class="border-b border-slate-100 hover:bg-slate-50"><td class="py-2.5 font-semibold text-primary">${r.seq}</td><td class="py-2.5">${esc(r.date)}</td><td class="py-2.5">${esc(r.employee_id)}</td><td class="py-2.5 font-medium">${esc(r.name)}</td><td class="py-2.5">${esc(r.department)}</td><td class="py-2.5">${esc(r.documents)}</td><td class="py-2.5 font-medium">${esc(r.docket_number||'')}</td><td class="py-2.5">${esc(r.courier_status||'')}</td><td class="py-2.5">${esc(r.particular)}</td><td class="py-2.5 text-slate-400">${esc(r.details||'')}</td><td class="py-2.5 text-slate-400">${esc((Array.isArray(r.customers)?r.customers:[]).join(', '))}</td><td class="py-2.5"><button onclick="editOutRecord(${r.id})" class="text-blue-500 hover:text-blue-700 text-xs font-semibold">Edit</button> <button onclick="deleteOutRecord(${r.id})" class="text-red-500 hover:text-red-700 text-xs font-semibold ml-2">Delete</button></td></tr>`).join('');
     }
 
     function renderInward() {
@@ -874,7 +874,7 @@
       const filtered = inRecords.filter(r => !f || Object.values(r).some(v => String(v).toLowerCase().includes(f)));
       document.getElementById('inCount').textContent = filtered.length + ' records';
       document.getElementById('inEmpty').style.display = filtered.length ? 'none' : 'block';
-      document.getElementById('inBody').innerHTML = [...filtered].reverse().map(r => `<tr class="border-b border-slate-100 hover:bg-slate-50"><td class="py-2.5 font-semibold text-accent">${r.seq}</td><td class="py-2.5">${esc(r.date)}</td><td class="py-2.5">${esc(r.employee_id)}</td><td class="py-2.5 font-medium">${esc(r.name)}</td><td class="py-2.5">${esc(r.department)}</td><td class="py-2.5">${esc(r.documents)}</td><td class="py-2.5">${esc(r.particular)}</td><td class="py-2.5 text-slate-400">${esc(r.details||'')}</td><td class="py-2.5 text-slate-400">${esc((Array.isArray(r.customers)?r.customers:[]).join(', '))}</td><td class="py-2.5"><button onclick="editInRecord(${r.id})" class="text-blue-500 hover:text-blue-700 text-xs font-semibold">Edit</button></td></tr>`).join('');
+      document.getElementById('inBody').innerHTML = [...filtered].reverse().map(r => `<tr class="border-b border-slate-100 hover:bg-slate-50"><td class="py-2.5 font-semibold text-accent">${r.seq}</td><td class="py-2.5">${esc(r.date)}</td><td class="py-2.5">${esc(r.employee_id)}</td><td class="py-2.5 font-medium">${esc(r.name)}</td><td class="py-2.5">${esc(r.department)}</td><td class="py-2.5">${esc(r.documents)}</td><td class="py-2.5">${esc(r.particular)}</td><td class="py-2.5 text-slate-400">${esc(r.details||'')}</td><td class="py-2.5 text-slate-400">${esc((Array.isArray(r.customers)?r.customers:[]).join(', '))}</td><td class="py-2.5"><button onclick="editInRecord(${r.id})" class="text-blue-500 hover:text-blue-700 text-xs font-semibold">Edit</button> <button onclick="deleteInRecord(${r.id})" class="text-red-500 hover:text-red-700 text-xs font-semibold ml-2">Delete</button></td></tr>`).join('');
     }
 
     // ---------- Department combo helpers ----------
@@ -929,6 +929,21 @@
       }
     }
     function resetDept(pre) { setDeptValue(pre, ''); }
+
+    // ---------- Delete record helpers ----------
+    async function sbDel(t, id){
+      return await fetch(`${SB}/rest/v1/${t}?id=eq.${id}`, { method: 'DELETE', headers: H });
+    }
+    async function deleteOutRecord(id){
+      if (!confirm('Delete this outward record? This cannot be undone.')) return;
+      try{ await sbDel('mail_records', id); showToast('Record deleted'); await loadRecords('outward'); }
+      catch(e){ showToast('Delete failed'); }
+    }
+    async function deleteInRecord(id){
+      if (!confirm('Delete this inward record? This cannot be undone.')) return;
+      try{ await sbDel('mail_records', id); showToast('Record deleted'); await loadRecords('inward'); }
+      catch(e){ showToast('Delete failed'); }
+    }
 
     // ---------- Customer chips helpers ----------
     function getCustomers(pre){ try{return JSON.parse(document.getElementById(pre+'Customers').value||'[]');}catch(_){return [];} }
@@ -1077,16 +1092,16 @@
 
       html += `<div class="bg-white rounded-xl border border-slate-200 p-5 mb-6"><h3 class="font-semibold text-sm text-primary mb-3 flex items-center gap-2"><span class="material-symbols-outlined text-lg">call_made</span>Outward (${out.length})</h3>`;
       if (out.length) {
-        html += `<div class="overflow-x-auto"><table class="w-full text-sm" id="reportOutTable"><thead><tr class="text-xs text-slate-400 uppercase border-b"><th class="pb-2 text-left">ID</th><th class="pb-2 text-left">Sl No</th><th class="pb-2 text-left">Emp ID</th><th class="pb-2 text-left">To</th><th class="pb-2 text-left">Dept</th><th class="pb-2 text-left">Documents Sent</th><th class="pb-2 text-left">Docket No.</th><th class="pb-2 text-left">Courier/Post Status</th><th class="pb-2 text-left">Particular</th><th class="pb-2 text-left">Details</th></tr></thead><tbody>`;
-        html += out.map(r => { const seq = outSeqMap[r.id]||'-'; return `<tr class="border-b border-slate-50"><td class="py-2 font-semibold text-primary text-xs">OUT/${eId}/${seq}</td><td class="py-2">${seq}</td><td class="py-2">${esc(r.employee_id)}</td><td class="py-2">${esc(r.name)}</td><td class="py-2">${esc(r.department)}</td><td class="py-2">${esc(r.documents)}</td><td class="py-2 font-medium">${esc(r.docket_number||'')}</td><td class="py-2">${esc(r.courier_status||'')}</td><td class="py-2">${esc(r.particular)}</td><td class="py-2 text-slate-400">${esc(r.details||'')}</td></tr>`; }).join('');
+        html += `<div class="overflow-x-auto"><table class="w-full text-sm" id="reportOutTable"><thead><tr class="text-xs text-slate-400 uppercase border-b"><th class="pb-2 text-left">ID</th><th class="pb-2 text-left">Sl No</th><th class="pb-2 text-left">Emp ID</th><th class="pb-2 text-left">To</th><th class="pb-2 text-left">Dept</th><th class="pb-2 text-left">Documents Sent</th><th class="pb-2 text-left">Docket No.</th><th class="pb-2 text-left">Courier/Post Status</th><th class="pb-2 text-left">Particular</th><th class="pb-2 text-left">Details</th><th class="pb-2 text-left">Customers</th></tr></thead><tbody>`;
+        html += out.map(r => { const seq = outSeqMap[r.id]||'-'; return `<tr class="border-b border-slate-50"><td class="py-2 font-semibold text-primary text-xs">OUT/${eId}/${seq}</td><td class="py-2">${seq}</td><td class="py-2">${esc(r.employee_id)}</td><td class="py-2">${esc(r.name)}</td><td class="py-2">${esc(r.department)}</td><td class="py-2">${esc(r.documents)}</td><td class="py-2 font-medium">${esc(r.docket_number||'')}</td><td class="py-2">${esc(r.courier_status||'')}</td><td class="py-2">${esc(r.particular)}</td><td class="py-2 text-slate-400">${esc(r.details||'')}</td><td class=\"py-2 text-slate-400\">${esc((Array.isArray(r.customers)?r.customers:[]).join(', '))}</td></tr>`; }).join('');
         html += `</tbody></table></div>`;
       } else html += `<p class="text-sm text-slate-300">No outward records for this date.</p>`;
       html += `</div>`;
 
       html += `<div class="bg-white rounded-xl border border-slate-200 p-5"><h3 class="font-semibold text-sm text-accent mb-3 flex items-center gap-2"><span class="material-symbols-outlined text-lg">call_received</span>Inward (${inn.length})</h3>`;
       if (inn.length) {
-        html += `<div class="overflow-x-auto"><table class="w-full text-sm" id="reportInTable"><thead><tr class="text-xs text-slate-400 uppercase border-b"><th class="pb-2 text-left">ID</th><th class="pb-2 text-left">Sl No</th><th class="pb-2 text-left">Emp ID</th><th class="pb-2 text-left">From</th><th class="pb-2 text-left">Dept</th><th class="pb-2 text-left">Documents Received</th><th class="pb-2 text-left">Particular</th><th class="pb-2 text-left">Details</th></tr></thead><tbody>`;
-        html += inn.map(r => { const seq = inSeqMap[r.id]||'-'; return `<tr class="border-b border-slate-50"><td class="py-2 font-semibold text-accent text-xs">IN/${eId}/${seq}</td><td class="py-2">${seq}</td><td class="py-2">${esc(r.employee_id)}</td><td class="py-2">${esc(r.name)}</td><td class="py-2">${esc(r.department)}</td><td class="py-2">${esc(r.documents)}</td><td class="py-2">${esc(r.particular)}</td><td class="py-2 text-slate-400">${esc(r.details||'')}</td></tr>`; }).join('');
+        html += `<div class="overflow-x-auto"><table class="w-full text-sm" id="reportInTable"><thead><tr class="text-xs text-slate-400 uppercase border-b"><th class="pb-2 text-left">ID</th><th class="pb-2 text-left">Sl No</th><th class="pb-2 text-left">Emp ID</th><th class="pb-2 text-left">From</th><th class="pb-2 text-left">Dept</th><th class="pb-2 text-left">Documents Received</th><th class="pb-2 text-left">Particular</th><th class="pb-2 text-left">Details</th><th class="pb-2 text-left">Customers</th></tr></thead><tbody>`;
+        html += inn.map(r => { const seq = inSeqMap[r.id]||'-'; return `<tr class="border-b border-slate-50"><td class="py-2 font-semibold text-accent text-xs">IN/${eId}/${seq}</td><td class="py-2">${seq}</td><td class="py-2">${esc(r.employee_id)}</td><td class="py-2">${esc(r.name)}</td><td class="py-2">${esc(r.department)}</td><td class="py-2">${esc(r.documents)}</td><td class="py-2">${esc(r.particular)}</td><td class="py-2 text-slate-400">${esc(r.details||'')}</td><td class=\"py-2 text-slate-400\">${esc((Array.isArray(r.customers)?r.customers:[]).join(', '))}</td></tr>`; }).join('');
         html += `</tbody></table></div>`;
       } else html += `<p class="text-sm text-slate-300">No inward records for this date.</p>`;
       html += `</div>`;
@@ -1237,17 +1252,17 @@
       }
 
       if (type === 'outward') {
-        data = outRecords.map(r => ({ 'ID': makeRecordId(r), 'Sl No': r.seq, 'Date': r.date, 'Employee ID': r.employee_id, 'To': r.name, 'Department': r.department, 'Documents Sent': r.documents, 'Docket No.': r.docket_number || '', 'Courier/Post Status': r.courier_status || '', 'Particular': r.particular, 'Details': r.details || '' }));
+        data = outRecords.map(r => ({ 'ID': makeRecordId(r), 'Sl No': r.seq, 'Date': r.date, 'Employee ID': r.employee_id, 'To': r.name, 'Department': r.department, 'Documents Sent': r.documents, 'Docket No.': r.docket_number || '', 'Courier/Post Status': r.courier_status || '', 'Particular': r.particular, 'Details': r.details || '', 'Customers': (Array.isArray(r.customers)?r.customers:[]).join(', ') }));
         sheetName = 'Outward';
         title = `Outward Mail Register - ${selectedLocation}`;
         filename = `Outward_${selectedLocation}_${fy.label.replace(/\s/g,'_')}.xlsx`;
       } else if (type === 'inward') {
-        data = inRecords.map(r => ({ 'ID': makeRecordId(r), 'Sl No': r.seq, 'Date': r.date, 'Employee ID': r.employee_id, 'From': r.name, 'Department': r.department, 'Documents Received': r.documents, 'Particular': r.particular, 'Details': r.details || '' }));
+        data = inRecords.map(r => ({ 'ID': makeRecordId(r), 'Sl No': r.seq, 'Date': r.date, 'Employee ID': r.employee_id, 'From': r.name, 'Department': r.department, 'Documents Received': r.documents, 'Particular': r.particular, 'Details': r.details || '', 'Customers': (Array.isArray(r.customers)?r.customers:[]).join(', ') }));
         sheetName = 'Inward';
         title = `Inward Mail Register - ${selectedLocation}`;
         filename = `Inward_${selectedLocation}_${fy.label.replace(/\s/g,'_')}.xlsx`;
       } else {
-        data = adminAllRecords.map(r => ({ 'ID': makeRecordId(r), 'Branch Name': r.location, 'Sl No': r.seq, 'Date': r.date, 'Type': r.mail_type.toUpperCase(), 'Employee ID': r.employee_id, 'To/From': r.name, 'Department': r.department, 'Documents': r.documents, 'Docket No.': r.docket_number || '', 'Courier/Post Status': r.courier_status || '', 'Particular': r.particular, 'Details': r.details || '', 'Created By': r.created_by }));
+        data = adminAllRecords.map(r => ({ 'ID': makeRecordId(r), 'Branch Name': r.location, 'Sl No': r.seq, 'Date': r.date, 'Type': r.mail_type.toUpperCase(), 'Employee ID': r.employee_id, 'To/From': r.name, 'Department': r.department, 'Documents': r.documents, 'Docket No.': r.docket_number || '', 'Courier/Post Status': r.courier_status || '', 'Particular': r.particular, 'Details': r.details || '', 'Customers': (Array.isArray(r.customers)?r.customers:[]).join(', '), 'Created By': r.created_by }));
         sheetName = 'All Records';
         title = 'All Mail Records';
         filename = `All_Records_${fy.label.replace(/\s/g,'_')}.xlsx`;
@@ -1307,7 +1322,7 @@
       if (outRecs.length) {
         const data = outRecs.map(r => {
           const seq = outSeq[r.id] || '-';
-          const base = { 'ID': `OUT/${eId}/${seq}` }; if (admin) base['Branch Name'] = r.location; return { ...base, 'Sl No': seq, 'Date': r.date, 'Employee ID': r.employee_id, 'To': r.name, 'Department': r.department, 'Documents Sent': r.documents, 'Docket No.': r.docket_number || '', 'Courier/Post Status': r.courier_status || '', 'Particular': r.particular, 'Details': r.details || '', 'Created By': r.created_by };
+          const base = { 'ID': `OUT/${eId}/${seq}` }; if (admin) base['Branch Name'] = r.location; return { ...base, 'Sl No': seq, 'Date': r.date, 'Employee ID': r.employee_id, 'To': r.name, 'Department': r.department, 'Documents Sent': r.documents, 'Docket No.': r.docket_number || '', 'Courier/Post Status': r.courier_status || '', 'Particular': r.particular, 'Details': r.details || '', 'Customers': (Array.isArray(r.customers)?r.customers:[]).join(', '), 'Created By': r.created_by };
         });
         const headerRows = [['Outward Mail Register - Daily Report'], [dateStr, '', branch, '', fy.label], []];
         const ws = XLSX.utils.aoa_to_sheet(headerRows);
@@ -1322,7 +1337,7 @@
       if (inRecs.length) {
         const data = inRecs.map(r => {
           const seq = inSeq[r.id] || '-';
-          const base = { 'ID': `IN/${eId}/${seq}` }; if (admin) base['Branch Name'] = r.location; return { ...base, 'Sl No': seq, 'Date': r.date, 'Employee ID': r.employee_id, 'From': r.name, 'Department': r.department, 'Documents Received': r.documents, 'Particular': r.particular, 'Details': r.details || '', 'Created By': r.created_by };
+          const base = { 'ID': `IN/${eId}/${seq}` }; if (admin) base['Branch Name'] = r.location; return { ...base, 'Sl No': seq, 'Date': r.date, 'Employee ID': r.employee_id, 'From': r.name, 'Department': r.department, 'Documents Received': r.documents, 'Particular': r.particular, 'Details': r.details || '', 'Customers': (Array.isArray(r.customers)?r.customers:[]).join(', '), 'Created By': r.created_by };
         });
         const headerRows = [['Inward Mail Register - Daily Report'], [dateStr, '', branch, '', fy.label], []];
         const ws = XLSX.utils.aoa_to_sheet(headerRows);
