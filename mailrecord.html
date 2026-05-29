@@ -245,16 +245,23 @@
               </div>
             </form>
           </div>
-          <div class="bg-white rounded-xl border border-slate-200 p-5">
-            <div class="flex items-center justify-between mb-4 flex-wrap gap-3">
-              <div class="flex items-center gap-3"><h3 class="font-semibold text-sm text-slate-700">Outward Records</h3><span class="text-xs bg-slate-100 text-slate-500 px-2.5 py-0.5 rounded-full" id="outCount">0</span></div>
-              <div class="flex gap-2">
-                <input type="text" id="outSearch" placeholder="Search..." oninput="renderOutward()" class="px-3 py-1.5 border border-slate-300 rounded-lg text-sm w-44 focus:outline-none focus:ring-2 focus:ring-primary/20">
-                <button onclick="exportToExcel('outward')" class="bg-green-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-green-700 transition flex items-center gap-1"><span class="material-symbols-outlined text-sm">download</span>Excel</button>
+          <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+            <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100 bg-slate-50/40 flex-wrap gap-3">
+              <div class="flex items-center gap-3">
+                <h3 class="font-bold text-base tracking-tight text-slate-900">Outward Records</h3>
+                <span class="h-4 w-px bg-slate-300"></span>
+                <span class="bg-slate-900 text-white text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider" id="outCount">0</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <div class="relative">
+                  <span class="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">search</span>
+                  <input type="text" id="outSearch" placeholder="Search records, dockets, employees..." oninput="renderOutward()" class="pl-9 pr-3 py-1.5 bg-slate-100/60 border border-transparent focus:border-primary focus:bg-white outline-none rounded-md text-sm w-72 transition-all">
+                </div>
+                <button onclick="exportToExcel('outward')" class="flex items-center gap-1.5 px-3 py-1.5 border border-slate-200 rounded-md text-[10px] uppercase tracking-widest font-bold text-slate-600 hover:bg-slate-100 transition"><span class="material-symbols-outlined text-sm opacity-70">download</span>Export</button>
               </div>
             </div>
-            <div class="overflow-x-auto"><table class="w-full text-sm min-w-[700px]"><thead><tr class="text-xs text-slate-400 uppercase border-b"><th class="pb-2 text-left">Actions</th><th class="pb-2 text-left">ID</th><th class="pb-2 text-left">Date</th><th class="pb-2 text-left">Emp ID</th><th class="pb-2 text-left">To</th><th class="pb-2 text-left">Dept</th><th class="pb-2 text-left">Documents Sent</th><th class="pb-2 text-left">Docket No.</th><th class="pb-2 text-left">Courier/Post Status</th><th class="pb-2 text-left">Particular</th><th class="pb-2 text-left">Details</th><th class="pb-2 text-left">Customers</th></tr></thead><tbody id="outBody"></tbody></table></div>
-            <div class="text-center py-8 text-slate-400 text-sm" id="outEmpty">No outward records yet.</div>
+            <div class="overflow-x-auto"><table class="w-full text-sm min-w-[800px]"><thead class="bg-slate-50/60"><tr class="text-[10px] text-slate-500 uppercase tracking-widest font-bold border-b border-slate-200"><th class="px-4 py-3 text-left">Actions</th><th class="px-3 py-3 text-left">ID</th><th class="px-3 py-3 text-left">Date</th><th class="px-3 py-3 text-left">Emp ID</th><th class="px-3 py-3 text-left">To</th><th class="px-3 py-3 text-left">Dept</th><th class="px-3 py-3 text-left">Documents Sent</th><th class="px-3 py-3 text-left">Docket No.</th><th class="px-3 py-3 text-left">Status</th><th class="px-3 py-3 text-left">Particular</th><th class="px-3 py-3 text-left">Details</th><th class="px-3 py-3 text-left">Customers</th></tr></thead><tbody id="outBody" class="divide-y divide-slate-100"></tbody></table></div>
+            <div class="text-center py-12 text-slate-400 text-sm" id="outEmpty">No outward records yet.</div>
           </div>
         </div>
 
@@ -862,12 +869,23 @@
       else { inRecords = recs; renderInward(); }
     }
 
+    function statusPill(s){
+      const v=(s||'').trim(); if(!v) return '<span class="text-slate-300 text-xs">—</span>';
+      const lo=v.toLowerCase();
+      let style='bg-slate-100 text-slate-700', dot='bg-slate-400';
+      if (lo.includes('deliver')) { style='bg-emerald-100 text-emerald-700'; dot='bg-emerald-500'; }
+      else if (lo.includes('transit')||lo.includes('dispatch')||lo.includes('sent')) { style='bg-blue-100 text-blue-700'; dot='bg-blue-500'; }
+      else if (lo.includes('pend')||lo.includes('hold')) { style='bg-amber-100 text-amber-700'; dot='bg-amber-500'; }
+      else if (lo.includes('return')||lo.includes('fail')) { style='bg-red-100 text-red-700'; dot='bg-red-500'; }
+      return `<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${style}"><span class="size-1.5 rounded-full ${dot}"></span>${esc(v)}</span>`;
+    }
+
     function renderOutward() {
       const f = (document.getElementById('outSearch').value || '').toLowerCase();
       const filtered = outRecords.filter(r => !f || Object.values(r).some(v => String(v).toLowerCase().includes(f)));
       document.getElementById('outCount').textContent = filtered.length + ' records';
       document.getElementById('outEmpty').style.display = filtered.length ? 'none' : 'block';
-      document.getElementById('outBody').innerHTML = [...filtered].reverse().map(r => `<tr class="border-b border-slate-100 hover:bg-slate-50 odd:bg-white even:bg-slate-50/40"><td class="py-2.5"><div class="flex gap-1.5"><button onclick="editOutRecord(${r.id})" title="Edit" class="px-2.5 py-1 text-[11px] font-semibold rounded-md bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-100 transition">Edit</button><button onclick="deleteOutRecord(${r.id})" title="Delete" class="px-2.5 py-1 text-[11px] font-semibold rounded-md bg-red-50 text-red-600 hover:bg-red-100 border border-red-100 transition">Delete</button></div></td><td class="py-2.5 font-semibold text-primary">${r.seq}</td><td class="py-2.5">${esc(fmtDate(r.date))}</td><td class="py-2.5">${esc(r.employee_id)}</td><td class="py-2.5 font-medium">${esc(r.name)}</td><td class="py-2.5">${esc(r.department)}</td><td class="py-2.5">${esc(r.documents)}</td><td class="py-2.5 font-medium">${esc(r.docket_number||'')}</td><td class="py-2.5">${esc(r.courier_status||'')}</td><td class="py-2.5">${esc(r.particular)}</td><td class="py-2.5 text-slate-400">${esc(r.details||'')}</td><td class="py-2.5 text-slate-400">${esc((Array.isArray(r.customers)?r.customers:[]).join(', '))}</td></tr>`).join('');
+      document.getElementById('outBody').innerHTML = [...filtered].reverse().map(r => `<tr class="hover:bg-slate-50/70 transition-colors"><td class="px-4 py-3"><div class="flex gap-1.5"><button onclick="editOutRecord(${r.id})" title="Edit" class="px-2.5 py-1 text-[11px] font-semibold rounded-md bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-100 transition">Edit</button><button onclick="deleteOutRecord(${r.id})" title="Delete" class="px-2.5 py-1 text-[11px] font-semibold rounded-md bg-red-50 text-red-600 hover:bg-red-100 border border-red-100 transition">Delete</button></div></td><td class="px-3 py-3"><span class="font-mono text-[11px] font-semibold tracking-tight bg-slate-100 text-slate-800 px-1.5 py-0.5 rounded">${r.seq}</span></td><td class="px-3 py-3 text-[11px] font-bold uppercase tracking-wider text-slate-500">${esc(fmtDate(r.date))}</td><td class="px-3 py-3 font-mono text-[11px] text-slate-700">${esc(r.employee_id)}</td><td class="px-3 py-3 font-bold text-slate-900">${esc(r.name)}</td><td class="px-3 py-3 text-slate-600">${esc(r.department)}</td><td class="px-3 py-3 text-slate-600">${esc(r.documents)}</td><td class="px-3 py-3 font-mono text-[11px] text-slate-700">${esc(r.docket_number||'')}</td><td class="px-3 py-3">${statusPill(r.courier_status)}</td><td class="px-3 py-3 text-slate-700">${esc(r.particular)}</td><td class="px-3 py-3 text-slate-500 text-xs">${esc(r.details||'')}</td><td class="px-3 py-3 text-slate-500 text-xs">${esc((Array.isArray(r.customers)?r.customers:[]).join(', '))}</td></tr>`).join('');
     }
 
     function renderInward() {
