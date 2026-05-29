@@ -343,16 +343,30 @@
               </div>
             </form>
           </div>
-          <div class="bg-white rounded-xl border border-slate-200 p-5">
-            <div class="flex items-center justify-between mb-4 flex-wrap gap-3">
-              <div class="flex items-center gap-3"><h3 class="font-semibold text-sm text-slate-700">Inward Records</h3><span class="text-xs bg-slate-100 text-slate-500 px-2.5 py-0.5 rounded-full" id="inCount">0</span></div>
-              <div class="flex gap-2">
-                <input type="text" id="inSearch" placeholder="Search..." oninput="renderInward()" class="px-3 py-1.5 border border-slate-300 rounded-lg text-sm w-44 focus:outline-none focus:ring-2 focus:ring-accent/20">
-                <button onclick="exportToExcel('inward')" class="bg-green-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-green-700 transition flex items-center gap-1"><span class="material-symbols-outlined text-sm">download</span>Excel</button>
+          <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+            <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100 bg-slate-50/40 flex-wrap gap-3">
+              <div class="flex items-center gap-3">
+                <h3 class="font-bold text-base tracking-tight text-slate-900">Inward Records</h3>
+                <span class="h-4 w-px bg-slate-300"></span>
+                <span class="bg-slate-900 text-white text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider" id="inCount">0</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <div class="relative">
+                  <span class="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">search</span>
+                  <input type="text" id="inSearch" placeholder="Search records, senders, employees..." oninput="renderInward()" class="pl-9 pr-3 py-1.5 bg-slate-100/60 border border-transparent focus:border-accent focus:bg-white outline-none rounded-md text-sm w-72 transition-all">
+                </div>
+                <button onclick="exportToExcel('inward')" class="flex items-center gap-1.5 px-3 py-1.5 border border-slate-200 rounded-md text-[10px] uppercase tracking-widest font-bold text-slate-600 hover:bg-slate-100 transition"><span class="material-symbols-outlined text-sm opacity-70">download</span>Export</button>
+                <button onclick="document.getElementById('inwardForm').scrollIntoView({behavior:'smooth',block:'start'});document.getElementById('inName').focus();" class="flex items-center gap-1.5 px-3.5 py-1.5 bg-accent text-white rounded-md text-sm font-semibold hover:bg-accent/90 transition shadow-sm"><span class="material-symbols-outlined text-base">add</span>New Record</button>
               </div>
             </div>
-            <div class="overflow-x-auto"><table class="w-full text-sm min-w-[700px]"><thead><tr class="text-xs text-slate-400 uppercase border-b"><th class="pb-2 text-left">Actions</th><th class="pb-2 text-left">ID</th><th class="pb-2 text-left">Date</th><th class="pb-2 text-left">Emp ID</th><th class="pb-2 text-left">From</th><th class="pb-2 text-left">Dept</th><th class="pb-2 text-left">Documents Received</th><th class="pb-2 text-left">Particular</th><th class="pb-2 text-left">Details</th><th class="pb-2 text-left">Customers</th></tr></thead><tbody id="inBody"></tbody></table></div>
-            <div class="text-center py-8 text-slate-400 text-sm" id="inEmpty">No inward records yet.</div>
+            <div id="inDeptTabsWrap" class="px-5 pt-4 pb-3 border-b border-slate-100 bg-slate-50/20">
+              <div id="inDeptTabs" class="flex gap-2 overflow-x-auto"></div>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-[380px_1fr] min-h-[560px]">
+              <div id="inList" class="border-r border-slate-100 max-h-[720px] overflow-y-auto divide-y divide-slate-100"></div>
+              <div id="inDetail" class="p-6 lg:p-8 max-h-[720px] overflow-y-auto bg-white"></div>
+            </div>
+            <div class="text-center py-12 text-slate-400 text-sm" id="inEmpty" style="display:none">No inward records yet.</div>
           </div>
         </div>
 
@@ -1004,12 +1018,103 @@
       `;
     }
 
+    let selectedInId = null;
+    let inDeptFilter = 'All Depts';
+
+    function formatInCode(r){
+      const y = String(r.date||'').slice(0,4) || new Date().getFullYear();
+      const n = String(r.seq||r.id||0).padStart(4,'0');
+      return `IN-${y}-${n}`;
+    }
+    function setInDeptFilter(d){ inDeptFilter = d; renderInward(); }
+    function selectInRecord(id){ selectedInId = id; renderInward(); }
+
     function renderInward() {
       const f = (document.getElementById('inSearch').value || '').toLowerCase();
-      const filtered = inRecords.filter(r => !f || Object.values(r).some(v => String(v).toLowerCase().includes(f)));
-      document.getElementById('inCount').textContent = filtered.length + ' records';
-      document.getElementById('inEmpty').style.display = filtered.length ? 'none' : 'block';
-      document.getElementById('inBody').innerHTML = [...filtered].reverse().map(r => `<tr class="border-b border-slate-100 hover:bg-slate-50 odd:bg-white even:bg-slate-50/40"><td class="py-2.5"><div class="flex gap-1.5"><button onclick="editInRecord(${r.id})" title="Edit" class="px-2.5 py-1 text-[11px] font-semibold rounded-md bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-100 transition">Edit</button><button onclick="deleteInRecord(${r.id})" title="Delete" class="px-2.5 py-1 text-[11px] font-semibold rounded-md bg-red-50 text-red-600 hover:bg-red-100 border border-red-100 transition">Delete</button></div></td><td class="py-2.5 font-semibold text-accent">${r.seq}</td><td class="py-2.5">${esc(fmtDate(r.date))}</td><td class="py-2.5">${esc(r.employee_id)}</td><td class="py-2.5 font-medium">${esc(r.name)}</td><td class="py-2.5">${esc(r.department)}</td><td class="py-2.5">${esc(r.documents)}</td><td class="py-2.5">${esc(r.particular)}</td><td class="py-2.5 text-slate-400">${esc(r.details||'')}</td><td class="py-2.5 text-slate-400">${esc((Array.isArray(r.customers)?r.customers:[]).join(', '))}</td></tr>`).join('');
+      let filtered = inRecords.filter(r => !f || Object.values(r).some(v => String(v).toLowerCase().includes(f)));
+      if (inDeptFilter !== 'All Depts') filtered = filtered.filter(r => (r.department||'') === inDeptFilter);
+
+      document.getElementById('inCount').textContent = filtered.length + ' Total';
+
+      const depts = ['All Depts', ...Array.from(new Set(inRecords.map(r=>r.department).filter(Boolean))).sort()];
+      if (!depts.includes(inDeptFilter)) inDeptFilter = 'All Depts';
+      document.getElementById('inDeptTabs').innerHTML = depts.map(d => {
+        const active = inDeptFilter===d;
+        const cls = active
+          ? 'bg-white border-slate-200 font-bold text-slate-900 shadow-sm'
+          : 'bg-transparent border-transparent text-slate-500 hover:bg-white hover:border-slate-200 font-medium';
+        return `<button onclick="setInDeptFilter('${esc(d).replace(/'/g,"&#39;")}')" class="px-3 py-1 rounded text-xs whitespace-nowrap border transition ${cls}">${esc(d)}</button>`;
+      }).join('');
+
+      const list = [...filtered].reverse();
+      document.getElementById('inEmpty').style.display = list.length ? 'none' : 'block';
+      document.getElementById('inDetail').style.display = list.length ? 'block' : 'none';
+
+      if (list.length && !list.find(r=>r.id===selectedInId)) selectedInId = list[0].id;
+      if (!list.length) selectedInId = null;
+
+      document.getElementById('inList').innerHTML = list.map(r => {
+        const active = r.id === selectedInId;
+        const code = formatInCode(r);
+        const place = (r.department||'').split('/')[0] || '—';
+        const docsCount = (r.documents||'').split(/[,\n]/).map(d=>d.trim()).filter(Boolean).length;
+        return `<button onclick="selectInRecord(${r.id})" class="w-full text-left p-4 hover:bg-slate-50 transition relative block ${active?'bg-slate-100/60':''}">
+          ${active?'<div class="absolute left-0 top-0 bottom-0 w-1 bg-accent"></div>':''}
+          <div class="flex justify-between items-start mb-1.5">
+            <span class="font-mono text-[11px] font-semibold tracking-tight bg-slate-900/5 px-1.5 py-0.5 rounded text-slate-800">${esc(code)}</span>
+            <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">${esc(fmtDate(r.date))}</span>
+          </div>
+          <h3 class="text-sm font-bold text-slate-900 leading-tight">${esc(r.name||'—')}</h3>
+          <p class="text-xs text-slate-500 mt-1 line-clamp-1">${esc(r.department||'—')} · ${esc(place)} · ${docsCount} items</p>
+          <div class="mt-3 flex items-center justify-between">
+            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-violet-100 text-violet-700"><span class="size-1.5 rounded-full bg-violet-500"></span>Received</span>
+            <span class="font-mono text-[10px] text-slate-400">${esc(r.employee_id||'-')}</span>
+          </div>
+        </button>`;
+      }).join('');
+
+      renderInDetail();
+    }
+
+    function renderInDetail() {
+      const el = document.getElementById('inDetail');
+      const r = inRecords.find(x => x.id === selectedInId);
+      if (!r) { el.innerHTML = '<div class="text-slate-400 text-sm text-center py-20">Select a record from the list</div>'; return; }
+      const code = formatInCode(r);
+      const docs = (r.documents||'').split(/[,\n]/).map(d=>d.trim()).filter(Boolean);
+      const customers = Array.isArray(r.customers) ? r.customers : [];
+      el.innerHTML = `
+        <div class="flex items-start justify-between gap-4 mb-6 flex-wrap">
+          <div class="flex items-center gap-3 flex-wrap">
+            <span class="font-mono text-[11px] font-bold bg-slate-900 text-white px-2.5 py-1 rounded">${esc(code)}</span>
+            <span class="text-slate-300">/</span>
+            <span class="text-[11px] uppercase tracking-widest font-bold text-accent">Inward Record</span>
+          </div>
+          <div class="flex gap-2">
+            <button onclick="editInRecord(${r.id})" title="Edit" class="size-9 inline-flex items-center justify-center rounded-md border border-slate-200 text-slate-600 hover:bg-slate-50 transition"><span class="material-symbols-outlined text-[18px]">edit</span></button>
+            <button onclick="deleteInRecord(${r.id})" title="Delete" class="size-9 inline-flex items-center justify-center rounded-md border border-slate-200 text-slate-600 hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition"><span class="material-symbols-outlined text-[18px]">delete</span></button>
+          </div>
+        </div>
+        <h1 class="text-3xl font-bold tracking-tight text-slate-900 mb-2">${esc(r.name||'—')}</h1>
+        <p class="text-slate-500 text-sm mb-8">${esc(r.department||'—')} · ${esc(r.particular||'—')}</p>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
+          <div><div class="text-[10px] uppercase tracking-widest font-bold text-slate-400 mb-1.5">Sender / Source</div><div class="font-bold text-slate-900">${esc(r.name||'—')}</div></div>
+          <div><div class="text-[10px] uppercase tracking-widest font-bold text-slate-400 mb-1.5">Date Received</div><div class="font-bold text-slate-900">${esc(fmtFullDate(r.date))}</div></div>
+          <div><div class="text-[10px] uppercase tracking-widest font-bold text-slate-400 mb-1.5">Employee ID</div><div class="font-bold text-slate-900 font-mono">${esc(r.employee_id||'—')}</div></div>
+          <div><div class="text-[10px] uppercase tracking-widest font-bold text-slate-400 mb-1.5">Department / Unit</div><div class="font-bold text-slate-900">${esc(r.department||'—')}</div></div>
+          <div><div class="text-[10px] uppercase tracking-widest font-bold text-slate-400 mb-1.5">Total Documents</div><div class="font-bold text-slate-900">${docs.length} items</div></div>
+          <div><div class="text-[10px] uppercase tracking-widest font-bold text-slate-400 mb-1.5">Status</div><div class="flex items-center gap-2"><span class="size-2 rounded-full bg-violet-500"></span><span class="font-bold text-slate-900 text-sm">Received</span></div></div>
+        </div>
+        <div class="border border-slate-200 rounded-lg overflow-hidden mb-6">
+          <div class="bg-slate-900 text-white px-5 py-3 flex items-center justify-between"><span class="text-[11px] font-bold uppercase tracking-widest">Detailed Particulars</span><span class="text-[10px] uppercase tracking-widest opacity-60 font-bold">${docs.length} Entries</span></div>
+          <table class="w-full text-sm">
+            <thead class="bg-slate-50"><tr class="text-[10px] uppercase tracking-widest font-bold text-slate-500"><th class="px-5 py-2.5 text-left">Ref No.</th><th class="px-5 py-2.5 text-left">Document Description</th></tr></thead>
+            <tbody class="divide-y divide-slate-100">${docs.length ? docs.map((d,i)=>`<tr><td class="px-5 py-3 font-mono text-xs text-slate-700 w-32">${String(i+1).padStart(3,'0')}</td><td class="px-5 py-3 text-slate-900">${esc(d)}</td></tr>`).join('') : '<tr><td colspan="2" class="px-5 py-6 text-center text-slate-400 text-xs">No documents listed</td></tr>'}</tbody>
+          </table>
+        </div>
+        ${customers.length ? `<div class="border border-slate-200 rounded-lg overflow-hidden mb-6"><div class="bg-slate-50 px-5 py-2.5 text-[10px] uppercase tracking-widest font-bold text-slate-500 border-b border-slate-200">Customers (${customers.length})</div><div class="px-5 py-3 flex flex-wrap gap-2">${customers.map(c=>`<span class="bg-slate-100 text-slate-700 text-xs px-2.5 py-1 rounded-full font-medium">${esc(c)}</span>`).join('')}</div></div>` : ''}
+        ${r.details ? `<div class="border border-dashed border-slate-200 rounded-lg p-5 bg-slate-50/40"><div class="text-[10px] uppercase tracking-widest font-bold text-slate-400 mb-2">Internal Remarks</div><p class="italic text-slate-700">&ldquo;${esc(r.details)}&rdquo;</p></div>` : ''}
+      `;
     }
 
     // ---------- Department combo helpers ----------
