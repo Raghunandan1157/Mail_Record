@@ -174,8 +174,11 @@
 
         <!-- ===== OUTWARD ===== -->
         <div id="page-outward" class="page fade-in hidden">
-          <div class="bg-white rounded-xl border border-slate-200 p-5 mb-6">
-            <h3 class="font-semibold text-sm mb-4 text-primary flex items-center gap-2"><span class="material-symbols-outlined text-lg">call_made</span>New Outward Record</h3>
+          <div id="outFormCard" class="bg-white rounded-xl border border-slate-200 p-5 mb-6 hidden">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="font-semibold text-sm text-primary flex items-center gap-2"><span class="material-symbols-outlined text-lg">call_made</span>New Outward Record</h3>
+              <button type="button" onclick="closeOutForm()" class="size-8 inline-flex items-center justify-center rounded-md text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition" title="Close"><span class="material-symbols-outlined text-[20px]">close</span></button>
+            </div>
             <form id="outwardForm" onsubmit="return submitRecord(event,'outward')">
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div><label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Date</label><input type="date" id="outDate" required class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"></div>
@@ -258,7 +261,7 @@
                   <input type="text" id="outSearch" placeholder="Search records, dockets, employees..." oninput="renderOutward()" class="pl-9 pr-3 py-1.5 bg-slate-100/60 border border-transparent focus:border-primary focus:bg-white outline-none rounded-md text-sm w-72 transition-all">
                 </div>
                 <button onclick="exportToExcel('outward')" class="flex items-center gap-1.5 px-3 py-1.5 border border-slate-200 rounded-md text-[10px] uppercase tracking-widest font-bold text-slate-600 hover:bg-slate-100 transition"><span class="material-symbols-outlined text-sm opacity-70">download</span>Export</button>
-                <button onclick="document.getElementById('outwardForm').scrollIntoView({behavior:'smooth',block:'start'});document.getElementById('outName').focus();" class="flex items-center gap-1.5 px-3.5 py-1.5 bg-primary text-white rounded-md text-sm font-semibold hover:bg-primary/90 transition shadow-sm"><span class="material-symbols-outlined text-base">add</span>New Record</button>
+                <button onclick="openOutForm()" class="flex items-center gap-1.5 px-3.5 py-1.5 bg-primary text-white rounded-md text-sm font-semibold hover:bg-primary/90 transition shadow-sm"><span class="material-symbols-outlined text-base">add</span>New Record</button>
               </div>
             </div>
             <div id="outDeptTabsWrap" class="px-5 pt-4 pb-3 border-b border-slate-100 bg-slate-50/20">
@@ -274,8 +277,11 @@
 
         <!-- ===== INWARD ===== -->
         <div id="page-inward" class="page fade-in hidden">
-          <div class="bg-white rounded-xl border border-slate-200 p-5 mb-6">
-            <h3 class="font-semibold text-sm mb-4 text-accent flex items-center gap-2"><span class="material-symbols-outlined text-lg">call_received</span>New Inward Record</h3>
+          <div id="inFormCard" class="bg-white rounded-xl border border-slate-200 p-5 mb-6 hidden">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="font-semibold text-sm text-accent flex items-center gap-2"><span class="material-symbols-outlined text-lg">call_received</span>New Inward Record</h3>
+              <button type="button" onclick="closeInForm()" class="size-8 inline-flex items-center justify-center rounded-md text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition" title="Close"><span class="material-symbols-outlined text-[20px]">close</span></button>
+            </div>
             <form id="inwardForm" onsubmit="return submitRecord(event,'inward')">
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div><label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Date</label><input type="date" id="inDate" required class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"></div>
@@ -356,7 +362,7 @@
                   <input type="text" id="inSearch" placeholder="Search records, senders, employees..." oninput="renderInward()" class="pl-9 pr-3 py-1.5 bg-slate-100/60 border border-transparent focus:border-accent focus:bg-white outline-none rounded-md text-sm w-72 transition-all">
                 </div>
                 <button onclick="exportToExcel('inward')" class="flex items-center gap-1.5 px-3 py-1.5 border border-slate-200 rounded-md text-[10px] uppercase tracking-widest font-bold text-slate-600 hover:bg-slate-100 transition"><span class="material-symbols-outlined text-sm opacity-70">download</span>Export</button>
-                <button onclick="document.getElementById('inwardForm').scrollIntoView({behavior:'smooth',block:'start'});document.getElementById('inName').focus();" class="flex items-center gap-1.5 px-3.5 py-1.5 bg-accent text-white rounded-md text-sm font-semibold hover:bg-accent/90 transition shadow-sm"><span class="material-symbols-outlined text-base">add</span>New Record</button>
+                <button onclick="openInForm()" class="flex items-center gap-1.5 px-3.5 py-1.5 bg-accent text-white rounded-md text-sm font-semibold hover:bg-accent/90 transition shadow-sm"><span class="material-symbols-outlined text-base">add</span>New Record</button>
               </div>
             </div>
             <div id="inDeptTabsWrap" class="px-5 pt-4 pb-3 border-b border-slate-100 bg-slate-50/20">
@@ -1248,6 +1254,7 @@
           resetDept(pre);
           resetBranchRecipient(pre);
           resetCustomers(pre);
+          if (pre === 'out') closeOutForm(); else closeInForm();
         }
         await loadRecords(type);
       } catch (err) { showToast('Failed to save'); }
@@ -1267,9 +1274,11 @@
       setCustomers('out', Array.isArray(r.customers) ? r.customers : (typeof r.customers === 'string' ? (function(){try{return JSON.parse(r.customers);}catch(_){return [];}})() : []));
       document.getElementById('outSubmitBtn').textContent = 'Update Record';
       document.getElementById('outCancelBtn').classList.remove('hidden');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      openOutForm();
     }
-    function cancelOutEdit() { editingOutId = null; document.getElementById('outwardForm').reset(); setToday('outDate'); document.getElementById('outSubmitBtn').textContent = 'Add Record'; document.getElementById('outCancelBtn').classList.add('hidden'); initDocDropdown('outDocsOptions', 'outDocsDisplay', 'outDocs', 'outDocsOther'); resetDept('out'); resetBranchRecipient('out'); resetCustomers('out'); }
+    function cancelOutEdit() { editingOutId = null; document.getElementById('outwardForm').reset(); setToday('outDate'); document.getElementById('outSubmitBtn').textContent = 'Add Record'; document.getElementById('outCancelBtn').classList.add('hidden'); initDocDropdown('outDocsOptions', 'outDocsDisplay', 'outDocs', 'outDocsOther'); resetDept('out'); resetBranchRecipient('out'); resetCustomers('out'); closeOutForm(); }
+    function openOutForm(){ const c=document.getElementById('outFormCard'); if(c){ c.classList.remove('hidden'); setTimeout(()=>{document.getElementById('outwardForm').scrollIntoView({behavior:'smooth',block:'start'}); const n=document.getElementById('outName'); if(n) n.focus();},50); } }
+    function closeOutForm(){ const c=document.getElementById('outFormCard'); if(c) c.classList.add('hidden'); }
 
     function editInRecord(id) {
       const r = inRecords.find(x => x.id === id); if (!r) return;
@@ -1281,9 +1290,11 @@
       setCustomers('in', Array.isArray(r.customers) ? r.customers : (typeof r.customers === 'string' ? (function(){try{return JSON.parse(r.customers);}catch(_){return [];}})() : []));
       document.getElementById('inSubmitBtn').textContent = 'Update Record';
       document.getElementById('inCancelBtn').classList.remove('hidden');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      openInForm();
     }
-    function cancelInEdit() { editingInId = null; document.getElementById('inwardForm').reset(); setToday('inDate'); document.getElementById('inSubmitBtn').textContent = 'Add Record'; document.getElementById('inCancelBtn').classList.add('hidden'); initDocDropdown('inDocsOptions', 'inDocsDisplay', 'inDocs', 'inDocsOther'); resetDept('in'); resetBranchRecipient('in'); resetCustomers('in'); }
+    function cancelInEdit() { editingInId = null; document.getElementById('inwardForm').reset(); setToday('inDate'); document.getElementById('inSubmitBtn').textContent = 'Add Record'; document.getElementById('inCancelBtn').classList.add('hidden'); initDocDropdown('inDocsOptions', 'inDocsDisplay', 'inDocs', 'inDocsOther'); resetDept('in'); resetBranchRecipient('in'); resetCustomers('in'); closeInForm(); }
+    function openInForm(){ const c=document.getElementById('inFormCard'); if(c){ c.classList.remove('hidden'); setTimeout(()=>{document.getElementById('inwardForm').scrollIntoView({behavior:'smooth',block:'start'}); const n=document.getElementById('inName'); if(n) n.focus();},50); } }
+    function closeInForm(){ const c=document.getElementById('inFormCard'); if(c) c.classList.add('hidden'); }
 
     // ===== DASHBOARD =====
     async function loadDashboard() {
