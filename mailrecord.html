@@ -942,7 +942,7 @@
       document.getElementById('outCount').textContent = filtered.length + ' Total';
 
       // dept tabs (derive from full set, not filtered)
-      const depts = ['All Depts', ...Array.from(new Set(outRecords.map(r=>r.department).filter(Boolean))).sort()];
+      const dCounts = {}; outRecords.forEach(r => { if(r.department) dCounts[r.department] = (dCounts[r.department]||0)+1; }); const depts = ['All Depts', ...Object.keys(dCounts).sort((a,b)=>dCounts[b]-dCounts[a] || a.localeCompare(b))];
       if (!depts.includes(outDeptFilter)) outDeptFilter = 'All Depts';
       document.getElementById('outDeptTabs').innerHTML = depts.map(d => {
         const active = outDeptFilter===d;
@@ -1042,7 +1042,7 @@
 
       document.getElementById('inCount').textContent = filtered.length + ' Total';
 
-      const depts = ['All Depts', ...Array.from(new Set(inRecords.map(r=>r.department).filter(Boolean))).sort()];
+      const dCounts = {}; inRecords.forEach(r => { if(r.department) dCounts[r.department] = (dCounts[r.department]||0)+1; }); const depts = ['All Depts', ...Object.keys(dCounts).sort((a,b)=>dCounts[b]-dCounts[a] || a.localeCompare(b))];
       if (!depts.includes(inDeptFilter)) inDeptFilter = 'All Depts';
       document.getElementById('inDeptTabs').innerHTML = depts.map(d => {
         const active = inDeptFilter===d;
