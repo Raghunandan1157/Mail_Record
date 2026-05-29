@@ -1264,7 +1264,7 @@
     function editOutRecord(id) {
       const r = outRecords.find(x => x.id === id); if (!r) return;
       editingOutId = id;
-      document.getElementById('outDate').value = r.date; document.getElementById('outEmpId').value = r.employee_id;
+      document.getElementById('outDate').value = (r.date||'').slice(0,10); document.getElementById('outEmpId').value = r.employee_id;
       setBranchRecipientValue('out', r.name); setDeptValue('out', r.department);
       setDocFromValue('outDocsOptions', 'outDocsDisplay', 'outDocs', 'outDocsOther', r.documents);
       document.getElementById('outDocket').value = r.docket_number || '';
@@ -1283,7 +1283,7 @@
     function editInRecord(id) {
       const r = inRecords.find(x => x.id === id); if (!r) return;
       editingInId = id;
-      document.getElementById('inDate').value = r.date; document.getElementById('inEmpId').value = r.employee_id;
+      document.getElementById('inDate').value = (r.date||'').slice(0,10); document.getElementById('inEmpId').value = r.employee_id;
       setBranchRecipientValue('in', r.name); setDeptValue('in', r.department);
       setDocFromValue('inDocsOptions', 'inDocsDisplay', 'inDocs', 'inDocsOther', r.documents); document.getElementById('inParticular').value = r.particular;
       document.getElementById('inDetails').value = r.details || '';
