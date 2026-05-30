@@ -229,7 +229,18 @@
                 </div>
                 <div><label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Docket Number</label><input type="text" id="outDocket" required placeholder="e.g. DK-001" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"></div>
                 <div><label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Status of the Courier / Post</label><input type="text" id="outCourierStatus" required placeholder="e.g. Speed Post, Courier" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"></div>
-                <div><label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Particular</label><input type="text" id="outParticular" required placeholder="Mail type / category" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"></div>
+                <div>
+                  <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Particular</label>
+                  <div class="relative">
+                    <input type="text" id="outPartDisplay" readonly placeholder="Select particular..." onclick="toggleDropdown('outPartDrop')" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary cursor-pointer bg-white pr-9">
+                    <span class="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 text-lg pointer-events-none">expand_more</span>
+                    <div id="outPartDrop" class="absolute z-30 left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-xl shadow-xl max-h-56 overflow-y-auto hidden">
+                      <div class="p-2 space-y-0.5" id="outPartOptions"></div>
+                    </div>
+                  </div>
+                  <input type="text" id="outPartOther" placeholder="Other - type here..." class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary mt-2 hidden">
+                  <input type="hidden" id="outParticular">
+                </div>
                 <div><label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Details (optional)</label><input type="text" id="outDetails" placeholder="Additional details" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"></div>
                 <div class="md:col-span-2">
                   <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Customers</label>
@@ -330,7 +341,18 @@
                   <input type="text" id="inDocsOther" placeholder="Other - type here..." class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent mt-2 hidden">
                   <input type="hidden" id="inDocs">
                 </div>
-                <div><label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Particular</label><input type="text" id="inParticular" required placeholder="Mail type / category" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"></div>
+                <div>
+                  <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Particular</label>
+                  <div class="relative">
+                    <input type="text" id="inPartDisplay" readonly placeholder="Select particular..." onclick="toggleDropdown('inPartDrop')" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent cursor-pointer bg-white pr-9">
+                    <span class="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 text-lg pointer-events-none">expand_more</span>
+                    <div id="inPartDrop" class="absolute z-30 left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-xl shadow-xl max-h-56 overflow-y-auto hidden">
+                      <div class="p-2 space-y-0.5" id="inPartOptions"></div>
+                    </div>
+                  </div>
+                  <input type="text" id="inPartOther" placeholder="Other - type here..." class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent mt-2 hidden">
+                  <input type="hidden" id="inParticular">
+                </div>
                 <div><label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Details (optional)</label><input type="text" id="inDetails" placeholder="Additional details" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"></div>
                 <div class="md:col-span-2">
                   <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Customers</label>
@@ -529,7 +551,7 @@
 
     // Close dropdowns on outside click
     document.addEventListener('click', function(e) {
-      ['outDocsDrop', 'inDocsDrop', 'outNameDrop', 'inNameDrop'].forEach(id => {
+      ['outDocsDrop', 'inDocsDrop', 'outPartDrop', 'inPartDrop', 'outNameDrop', 'inNameDrop'].forEach(id => {
         const drop = document.getElementById(id);
         if (!drop) return;
         const parent = drop.closest('.relative');
@@ -591,6 +613,72 @@
       document.getElementById(displayId).value = value;
       document.getElementById(hiddenId).value = value;
     }
+
+    // ===== PARTICULAR DROPDOWN (multi-select) =====
+    const PARTICULAR_OPTIONS = ['KYC','LEGAL OPINION','BANK CHEQUE','INSURANCE','SALE DEED','TITLE DEED','PANCHYATH UTTARA','E-SWATTU','EC','LOAN AGREEMENT BOND','Bhoja letter','Valuation report','Highmark','VL.tax invoice','Hypothecation letter','Vehicle Key','Others'];
+
+    function initPartDropdown(pre) {
+      const container = document.getElementById(pre + 'PartOptions');
+      if (!container) return;
+      const accent = pre === 'out' ? 'primary' : 'accent';
+      container.innerHTML = PARTICULAR_OPTIONS.map(cat =>
+        `<label class="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-slate-50 cursor-pointer text-sm">
+          <input type="checkbox" value="${esc(cat)}" onchange="onPartCheck('${pre}')" class="w-4 h-4 rounded border-slate-300 text-${accent} focus:ring-${accent}/20">
+          <span>${esc(cat)}</span>
+        </label>`
+      ).join('');
+      document.getElementById(pre + 'PartDisplay').value = '';
+      document.getElementById(pre + 'Particular').value = '';
+      document.getElementById(pre + 'PartOther').value = '';
+      document.getElementById(pre + 'PartOther').classList.add('hidden');
+    }
+
+    function onPartCheck(pre) {
+      const checks = document.querySelectorAll(`#${pre}PartOptions input[type=checkbox]`);
+      const selected = [];
+      let othersChecked = false;
+      checks.forEach(c => {
+        if (c.checked) {
+          if (c.value === 'Others') othersChecked = true;
+          else selected.push(c.value);
+        }
+      });
+      const otherInput = document.getElementById(pre + 'PartOther');
+      if (othersChecked) {
+        otherInput.classList.remove('hidden');
+        const otherVal = otherInput.value.trim();
+        if (otherVal) selected.push('Others: ' + otherVal);
+      } else {
+        otherInput.classList.add('hidden');
+        otherInput.value = '';
+      }
+      document.getElementById(pre + 'PartDisplay').value = selected.join(', ') + (othersChecked && !selected.some(s => s.startsWith('Others:')) ? (selected.length ? ', Others' : 'Others') : '');
+      document.getElementById(pre + 'Particular').value = selected.join(', ') || (othersChecked ? 'Others' : '');
+    }
+
+    function setPartFromValue(pre, value) {
+      const checks = document.querySelectorAll(`#${pre}PartOptions input[type=checkbox]`);
+      const parts = (value || '').split(',').map(s => s.trim()).filter(Boolean);
+      const otherInput = document.getElementById(pre + 'PartOther');
+      checks.forEach(c => { c.checked = false; });
+      otherInput.classList.add('hidden');
+      otherInput.value = '';
+      parts.forEach(p => {
+        if (p.startsWith('Others:')) {
+          const othersBox = [...checks].find(c => c.value === 'Others');
+          if (othersBox) othersBox.checked = true;
+          otherInput.value = p.replace('Others:', '').trim();
+          otherInput.classList.remove('hidden');
+        } else {
+          const box = [...checks].find(c => c.value === p);
+          if (box) box.checked = true;
+        }
+      });
+      document.getElementById(pre + 'PartDisplay').value = value || '';
+      document.getElementById(pre + 'Particular').value = value || '';
+    }
+
+    function resetParticular(pre) { initPartDropdown(pre); }
 
     // ===== BRANCH RECIPIENT DROPDOWN =====
     async function loadBranchRecipientChoices() {
@@ -687,6 +775,8 @@
     document.addEventListener('input', function(e) {
       if (e.target.id === 'outDocsOther') onDocCheck('outDocsOptions', 'outDocsDisplay', 'outDocs', 'outDocsOther');
       if (e.target.id === 'inDocsOther') onDocCheck('inDocsOptions', 'inDocsDisplay', 'inDocs', 'inDocsOther');
+      if (e.target.id === 'outPartOther') onPartCheck('out');
+      if (e.target.id === 'inPartOther') onPartCheck('in');
     });
     function showToast(msg) { const t = document.getElementById('toast'); document.getElementById('toastMsg').textContent = msg; t.classList.remove('translate-y-24', 'opacity-0'); t.classList.add('translate-y-0', 'opacity-100'); setTimeout(() => { t.classList.add('translate-y-24', 'opacity-0'); t.classList.remove('translate-y-0', 'opacity-100'); }, 2500); }
     function showStep(n) { document.querySelectorAll('.login-step').forEach(s => s.classList.remove('active')); document.getElementById('loginStep' + n).classList.add('active'); }
@@ -712,8 +802,8 @@
       const titles = { dashboard: 'Dashboard', outward: 'Outward Mail', inward: 'Inward Mail', reports: 'Reports', 'admin-dashboard': 'Admin Dashboard', 'admin-records': 'All Records', 'admin-editlog': 'Edit Log', 'admin-reports': 'Reports' };
       document.getElementById('headerTitle').textContent = titles[page] || page;
       document.getElementById('sidebar').classList.remove('open');
-      if (page === 'outward') { loadRecords('outward'); setToday('outDate'); initDocDropdown('outDocsOptions', 'outDocsDisplay', 'outDocs', 'outDocsOther'); loadBranchRecipientChoices().then(() => renderBranchRecipientOptions('out')); }
-      if (page === 'inward') { loadRecords('inward'); setToday('inDate'); initDocDropdown('inDocsOptions', 'inDocsDisplay', 'inDocs', 'inDocsOther'); loadBranchRecipientChoices().then(() => renderBranchRecipientOptions('in')); }
+      if (page === 'outward') { loadRecords('outward'); setToday('outDate'); initDocDropdown('outDocsOptions', 'outDocsDisplay', 'outDocs', 'outDocsOther'); initPartDropdown('out'); loadBranchRecipientChoices().then(() => renderBranchRecipientOptions('out')); }
+      if (page === 'inward') { loadRecords('inward'); setToday('inDate'); initDocDropdown('inDocsOptions', 'inDocsDisplay', 'inDocs', 'inDocsOther'); initPartDropdown('in'); loadBranchRecipientChoices().then(() => renderBranchRecipientOptions('in')); }
       if (page === 'reports') { setToday('reportDate'); renderDailyReport(); }
       if (page === 'admin-dashboard') loadAdminData();
       if (page === 'admin-records') loadAdminData();
@@ -1228,6 +1318,9 @@
       if (!docsVal) { showToast('Please select at least one document category'); return false; }
       const deptVal = document.getElementById(pre + 'Dept').value.trim();
       if (!deptVal) { showToast('Please select a department'); return false; }
+      onPartCheck(pre);
+      const partVal = document.getElementById(pre + 'Particular').value.trim();
+      if (!partVal) { showToast('Please select at least one particular'); return false; }
       const data = {
         mail_type: type, date: document.getElementById(pre + 'Date').value,
         employee_id: document.getElementById(pre + 'EmpId').value.trim(), name: document.getElementById(pre + 'Name').value.trim(),
@@ -1252,6 +1345,7 @@
           document.getElementById(pre === 'out' ? 'outwardForm' : 'inwardForm').reset();
           setToday(pre + 'Date');
           resetDept(pre);
+          resetParticular(pre);
           resetBranchRecipient(pre);
           resetCustomers(pre);
           if (pre === 'out') closeOutForm(); else closeInForm();
@@ -1269,14 +1363,14 @@
       setDocFromValue('outDocsOptions', 'outDocsDisplay', 'outDocs', 'outDocsOther', r.documents);
       document.getElementById('outDocket').value = r.docket_number || '';
       document.getElementById('outCourierStatus').value = r.courier_status || '';
-      document.getElementById('outParticular').value = r.particular;
+      setPartFromValue('out', r.particular || '');
       document.getElementById('outDetails').value = r.details || '';
       setCustomers('out', Array.isArray(r.customers) ? r.customers : (typeof r.customers === 'string' ? (function(){try{return JSON.parse(r.customers);}catch(_){return [];}})() : []));
       document.getElementById('outSubmitBtn').textContent = 'Update Record';
       document.getElementById('outCancelBtn').classList.remove('hidden');
       openOutForm();
     }
-    function cancelOutEdit() { editingOutId = null; document.getElementById('outwardForm').reset(); setToday('outDate'); document.getElementById('outSubmitBtn').textContent = 'Add Record'; document.getElementById('outCancelBtn').classList.add('hidden'); initDocDropdown('outDocsOptions', 'outDocsDisplay', 'outDocs', 'outDocsOther'); resetDept('out'); resetBranchRecipient('out'); resetCustomers('out'); closeOutForm(); }
+    function cancelOutEdit() { editingOutId = null; document.getElementById('outwardForm').reset(); setToday('outDate'); document.getElementById('outSubmitBtn').textContent = 'Add Record'; document.getElementById('outCancelBtn').classList.add('hidden'); initDocDropdown('outDocsOptions', 'outDocsDisplay', 'outDocs', 'outDocsOther'); resetParticular('out'); resetDept('out'); resetBranchRecipient('out'); resetCustomers('out'); closeOutForm(); }
     function openOutForm(){ const c=document.getElementById('outFormCard'); if(c){ c.classList.remove('hidden'); setTimeout(()=>{document.getElementById('outwardForm').scrollIntoView({behavior:'smooth',block:'start'}); const n=document.getElementById('outName'); if(n) n.focus();},50); } }
     function closeOutForm(){ const c=document.getElementById('outFormCard'); if(c) c.classList.add('hidden'); }
 
@@ -1285,14 +1379,14 @@
       editingInId = id;
       document.getElementById('inDate').value = (r.date||'').slice(0,10); document.getElementById('inEmpId').value = r.employee_id;
       setBranchRecipientValue('in', r.name); setDeptValue('in', r.department);
-      setDocFromValue('inDocsOptions', 'inDocsDisplay', 'inDocs', 'inDocsOther', r.documents); document.getElementById('inParticular').value = r.particular;
+      setDocFromValue('inDocsOptions', 'inDocsDisplay', 'inDocs', 'inDocsOther', r.documents); setPartFromValue('in', r.particular || '');
       document.getElementById('inDetails').value = r.details || '';
       setCustomers('in', Array.isArray(r.customers) ? r.customers : (typeof r.customers === 'string' ? (function(){try{return JSON.parse(r.customers);}catch(_){return [];}})() : []));
       document.getElementById('inSubmitBtn').textContent = 'Update Record';
       document.getElementById('inCancelBtn').classList.remove('hidden');
       openInForm();
     }
-    function cancelInEdit() { editingInId = null; document.getElementById('inwardForm').reset(); setToday('inDate'); document.getElementById('inSubmitBtn').textContent = 'Add Record'; document.getElementById('inCancelBtn').classList.add('hidden'); initDocDropdown('inDocsOptions', 'inDocsDisplay', 'inDocs', 'inDocsOther'); resetDept('in'); resetBranchRecipient('in'); resetCustomers('in'); closeInForm(); }
+    function cancelInEdit() { editingInId = null; document.getElementById('inwardForm').reset(); setToday('inDate'); document.getElementById('inSubmitBtn').textContent = 'Add Record'; document.getElementById('inCancelBtn').classList.add('hidden'); initDocDropdown('inDocsOptions', 'inDocsDisplay', 'inDocs', 'inDocsOther'); resetParticular('in'); resetDept('in'); resetBranchRecipient('in'); resetCustomers('in'); closeInForm(); }
     function openInForm(){ const c=document.getElementById('inFormCard'); if(c){ c.classList.remove('hidden'); setTimeout(()=>{document.getElementById('inwardForm').scrollIntoView({behavior:'smooth',block:'start'}); const n=document.getElementById('inName'); if(n) n.focus();},50); } }
     function closeInForm(){ const c=document.getElementById('inFormCard'); if(c) c.classList.add('hidden'); }
 
