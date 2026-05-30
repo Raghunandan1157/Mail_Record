@@ -523,6 +523,7 @@
 
     // ===== HELPERS =====
     function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+    function normCust(v){ if(Array.isArray(v))return v; if(v==null||v==='')return []; if(typeof v==='string'){try{const p=JSON.parse(v); return Array.isArray(p)?p:[];}catch(_){return v.split(',').map(s=>s.trim()).filter(Boolean);}} return []; }
     function fmtDate(d){ if(!d) return ''; const s=String(d); const parts=s.match(/^(\d{4})-(\d{2})-(\d{2})/); if(parts){return parts[3]+'-'+parts[2]+'-'+parts[1];} return s; }
     function getInitials(n) { return n ? n.split(/\s+/).map(w => w[0]).join('').substring(0, 2).toUpperCase() : '?'; }
     function setToday(id) { document.getElementById(id).valueAsDate = new Date(); }
@@ -980,7 +981,7 @@
     async function loadRecords(type) {
       const fy = getCurrentFY();
       const allRecs = await sbGet('mail_records', `select=*&mail_type=eq.${type}&location=eq.${encodeURIComponent(selectedLocation)}&date=gte.${fy.start}&date=lte.${fy.end}&order=created_at.asc`);
-      allRecs.forEach((r, i) => r.seq = i + 1);
+      allRecs.forEach((r, i) => { r.seq = i + 1; r.customers = normCust(r.customers); });
       const recs = allRecs;
       if (type === 'outward') { outRecords = recs; renderOutward(); }
       else { inRecords = recs; renderInward(); }
@@ -1458,7 +1459,7 @@
     async function loadAdminData() {
       const fy = getCurrentFY();
       adminAllRecords = await sbGet('mail_records', `select=*&date=gte.${fy.start}&date=lte.${fy.end}&order=created_at.asc`);
-      adminAllRecords.forEach((r, i) => r.seq = i + 1);
+      adminAllRecords.forEach((r, i) => { r.seq = i + 1; r.customers = normCust(r.customers); });
       const inward = adminAllRecords.filter(r => r.mail_type === 'inward').length;
       const outward = adminAllRecords.filter(r => r.mail_type === 'outward').length;
       const locs = new Set(adminAllRecords.map(r => r.location)).size;
