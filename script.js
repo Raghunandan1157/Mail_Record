@@ -184,7 +184,9 @@ async function loginSelectLocation() {
       : { id: 0, emp_id: 'CO-USER', name: 'Chetan', role: 'Admin Executive', mobile: '', location: location };
     const viewMode = defaultViewModeFor(location, false);
     isAdminUser = true;
-    isHeadOffice = viewMode !== 'branch';
+    // Admin UI only for 'admin' view. Corporate Office uses the regular branch UI
+    // scoped to selectedLocation so it shows CO stock, not the all-branches admin view.
+    isHeadOffice = viewMode === 'admin';
 
     sessionStorage.setItem('sr_employee', JSON.stringify(currentEmployee));
     sessionStorage.setItem('sr_location', selectedLocation);
@@ -532,8 +534,9 @@ function checkSession() {
     const savedViewMode = getStoredViewMode(savedLoc, adminFlag);
     selectedLocation = savedViewMode === 'corporate' ? 'Corporate Office' : savedLoc;
     isAdminUser = canSwitchOfficeViews(savedLoc, adminFlag);
-    // Admin user defaults to corporate/admin UI; only Head Office branch view uses the regular UI.
-    isHeadOffice = isAdminUser && (savedViewMode !== 'branch');
+    // Admin UI only for 'admin' view. Corporate Office (and branch) use the regular UI
+    // scoped to selectedLocation, so Corporate Office shows CO stock — not all-branches admin.
+    isHeadOffice = isAdminUser && (savedViewMode === 'admin');
     // Keep both in sync
     sessionStorage.setItem('sr_employee', savedEmp);
     sessionStorage.setItem('sr_location', savedLoc);
