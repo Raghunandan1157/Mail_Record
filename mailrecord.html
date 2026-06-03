@@ -117,6 +117,8 @@
       <nav id="navAdmin" class="flex-1 p-3 space-y-1 hidden">
         <a class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm cursor-pointer active" data-page="admin-dashboard" onclick="navigateTo('admin-dashboard')">
           <span class="material-symbols-outlined text-xl">admin_panel_settings</span>Dashboard</a>
+        <a class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm cursor-pointer" data-page="admin-branches" onclick="navigateTo('admin-branches')">
+          <span class="material-symbols-outlined text-xl">apartment</span>Branches</a>
         <a class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm cursor-pointer" data-page="admin-records" onclick="navigateTo('admin-records')">
           <span class="material-symbols-outlined text-xl">folder_open</span>All Records</a>
         <a class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm cursor-pointer" data-page="admin-editlog" onclick="navigateTo('admin-editlog')">
@@ -484,6 +486,116 @@
           <div id="adminDailyReportContent"></div>
         </div>
 
+        <!-- ===== ADMIN BRANCHES LIST ===== -->
+        <div id="page-admin-branches" class="page fade-in hidden">
+          <div class="bg-white rounded-xl border border-slate-200 p-5">
+            <div class="flex items-center justify-between mb-4 flex-wrap gap-3">
+              <div class="flex items-center gap-3">
+                <h3 class="font-semibold text-sm text-slate-700">Branches</h3>
+                <span class="text-xs bg-slate-100 text-slate-500 px-2.5 py-0.5 rounded-full" id="mrBranchCount">0</span>
+              </div>
+              <div class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 w-full sm:w-64">
+                <span class="material-symbols-outlined text-slate-400 text-base">search</span>
+                <input id="mrBranchSearch" type="text" placeholder="Search branch..." oninput="renderMrBranchList()" class="bg-transparent border-none p-0 text-sm text-slate-700 focus:ring-0 w-full placeholder-slate-400">
+              </div>
+            </div>
+            <div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr class="text-xs text-slate-400 uppercase border-b">
+              <th class="pb-2 text-left">Branch</th>
+              <th class="pb-2 text-left">Mail Records (FY)</th>
+              <th class="pb-2 text-left">Last Mail Entry</th>
+              <th class="pb-2 text-left">Status</th>
+              <th class="pb-2 text-right"></th>
+            </tr></thead><tbody id="mrBranchListBody"></tbody></table></div>
+            <div class="text-center py-8 text-slate-400 text-sm" id="mrBranchEmpty" style="display:none">No branches found.</div>
+          </div>
+        </div>
+
+        <!-- ===== BRANCH DETAIL (Admin) ===== -->
+        <div id="page-branch-detail" class="page fade-in hidden">
+          <!-- Header -->
+          <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
+            <div class="flex items-center gap-4">
+              <button onclick="navigateTo('admin-branches')" class="flex items-center gap-2 text-slate-500 hover:text-slate-700 transition"><span class="material-symbols-outlined">arrow_back</span><span class="text-sm font-medium">Back</span></button>
+              <div>
+                <h2 class="text-2xl font-bold text-slate-800" id="mrbd-name">--</h2>
+                <p class="text-sm text-slate-400">Branch Overview</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-3">
+              <div id="mrbd-last-update" class="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold bg-slate-100 text-slate-500">
+                <span class="material-symbols-outlined text-sm">schedule</span>
+                <span id="mrbd-last-update-text">--</span>
+              </div>
+              <div class="flex items-center gap-2 px-3 py-1.5 bg-primary/10 text-primary rounded-full text-xs font-bold uppercase tracking-wider">
+                <span class="material-symbols-outlined text-sm">location_on</span>
+                <span id="mrbd-badge">--</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Module Switch -->
+          <div class="flex items-center gap-1 mb-6 p-1 bg-slate-100 rounded-xl w-max">
+            <button id="mrbd-modbtn-mail" onclick="switchMrModule('mail')" class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-colors">
+              <span class="material-symbols-outlined text-base">mail</span>Mail Record
+            </button>
+            <button id="mrbd-modbtn-stationary" onclick="switchMrModule('stationary')" class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-colors">
+              <span class="material-symbols-outlined text-base">inventory_2</span>Stationary
+            </button>
+          </div>
+
+          <!-- ===== MAIL MODULE ===== -->
+          <div id="mrbd-mod-mail">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <div class="bg-white rounded-xl border border-slate-200 p-5"><div class="flex items-center gap-3 mb-2"><div class="bg-indigo-100 w-10 h-10 rounded-lg flex items-center justify-center"><span class="material-symbols-outlined text-indigo-600">call_made</span></div></div><div class="text-2xl font-bold text-slate-800" id="mrbd-kpi-out">--</div><div class="text-xs text-slate-400 uppercase tracking-wide mt-1">Total Outward</div></div>
+              <div class="bg-white rounded-xl border border-slate-200 p-5"><div class="flex items-center gap-3 mb-2"><div class="bg-green-100 w-10 h-10 rounded-lg flex items-center justify-center"><span class="material-symbols-outlined text-green-600">call_received</span></div></div><div class="text-2xl font-bold text-slate-800" id="mrbd-kpi-in">--</div><div class="text-xs text-slate-400 uppercase tracking-wide mt-1">Total Inward</div></div>
+              <div class="bg-white rounded-xl border border-slate-200 p-5"><div class="flex items-center gap-3 mb-2"><div class="bg-violet-100 w-10 h-10 rounded-lg flex items-center justify-center"><span class="material-symbols-outlined text-violet-600">schedule</span></div></div><div class="text-base font-bold text-slate-800 mt-1" id="mrbd-kpi-last">--</div><div class="text-xs text-slate-400 uppercase tracking-wide mt-1">Last Mail Entry</div></div>
+            </div>
+
+            <div class="flex items-center gap-1 mb-5 border-b border-slate-200">
+              <button id="mrbd-mailtabbtn-outward" onclick="switchMrMailTab('outward')" class="flex items-center gap-2 px-5 py-3 text-sm font-bold border-b-2 -mb-px transition-colors"><span class="material-symbols-outlined text-base">call_made</span>Outward</button>
+              <button id="mrbd-mailtabbtn-inward" onclick="switchMrMailTab('inward')" class="flex items-center gap-2 px-5 py-3 text-sm font-bold border-b-2 -mb-px transition-colors"><span class="material-symbols-outlined text-base">call_received</span>Inward</button>
+            </div>
+
+            <div id="mrbd-mailtab-outward" class="bg-white rounded-xl border border-slate-200 p-5">
+              <h4 class="font-semibold text-sm mb-3 text-slate-700">Recent Outward <span class="text-xs text-slate-400 font-normal">· last 10</span></h4>
+              <div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr class="text-xs text-slate-400 uppercase border-b"><th class="pb-2 text-left">Date</th><th class="pb-2 text-left">To</th><th class="pb-2 text-left">Dept</th><th class="pb-2 text-left">Documents</th></tr></thead><tbody id="mrbd-out-body"></tbody></table></div>
+            </div>
+            <div id="mrbd-mailtab-inward" class="hidden bg-white rounded-xl border border-slate-200 p-5">
+              <h4 class="font-semibold text-sm mb-3 text-slate-700">Recent Inward <span class="text-xs text-slate-400 font-normal">· last 10</span></h4>
+              <div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr class="text-xs text-slate-400 uppercase border-b"><th class="pb-2 text-left">Date</th><th class="pb-2 text-left">From</th><th class="pb-2 text-left">Dept</th><th class="pb-2 text-left">Documents</th></tr></thead><tbody id="mrbd-in-body"></tbody></table></div>
+            </div>
+          </div>
+
+          <!-- ===== STATIONARY MODULE ===== -->
+          <div id="mrbd-mod-stationary" class="hidden">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <div class="bg-white rounded-xl border border-slate-200 p-5"><div class="flex items-center gap-3 mb-2"><div class="bg-blue-100 w-10 h-10 rounded-lg flex items-center justify-center"><span class="material-symbols-outlined text-blue-600">inventory</span></div></div><div class="text-2xl font-bold text-slate-800" id="mrbd-st-kpi-closing">--</div><div class="text-xs text-slate-400 uppercase tracking-wide mt-1">Closing Stock</div></div>
+              <div class="bg-white rounded-xl border border-slate-200 p-5"><div class="flex items-center gap-3 mb-2"><div class="bg-green-100 w-10 h-10 rounded-lg flex items-center justify-center"><span class="material-symbols-outlined text-green-600">login</span></div></div><div class="text-2xl font-bold text-slate-800" id="mrbd-st-kpi-in">--</div><div class="text-xs text-slate-400 uppercase tracking-wide mt-1">Total Stock In</div></div>
+              <div class="bg-white rounded-xl border border-slate-200 p-5"><div class="flex items-center gap-3 mb-2"><div class="bg-slate-100 w-10 h-10 rounded-lg flex items-center justify-center"><span class="material-symbols-outlined text-slate-600">logout</span></div></div><div class="text-2xl font-bold text-slate-800" id="mrbd-st-kpi-out">--</div><div class="text-xs text-slate-400 uppercase tracking-wide mt-1">Total Stock Out</div></div>
+            </div>
+
+            <div class="flex items-center gap-1 mb-5 border-b border-slate-200">
+              <button id="mrbd-sttabbtn-stationary" onclick="switchMrStTab('stationary')" class="flex items-center gap-2 px-5 py-3 text-sm font-bold border-b-2 -mb-px transition-colors"><span class="material-symbols-outlined text-base">inventory_2</span>Stationary</button>
+              <button id="mrbd-sttabbtn-transactions" onclick="switchMrStTab('transactions')" class="flex items-center gap-2 px-5 py-3 text-sm font-bold border-b-2 -mb-px transition-colors"><span class="material-symbols-outlined text-base">swap_horiz</span>Transactions</button>
+            </div>
+
+            <div id="mrbd-sttab-stationary" class="bg-white rounded-xl border border-slate-200 p-5">
+              <h4 class="font-semibold text-sm mb-3 text-slate-700">Stationary Items</h4>
+              <div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr class="text-xs text-slate-400 uppercase border-b"><th class="pb-2 text-left">Item</th><th class="pb-2 text-left">Category</th><th class="pb-2 text-left">Qty</th><th class="pb-2 text-left">Reorder</th><th class="pb-2 text-left">Status</th></tr></thead><tbody id="mrbd-inv-body"></tbody></table></div>
+            </div>
+            <div id="mrbd-sttab-transactions" class="hidden bg-white rounded-xl border border-slate-200 p-5">
+              <h4 class="font-semibold text-sm mb-3 text-slate-700">Recent Transactions <span class="text-xs text-slate-400 font-normal">· last 10</span></h4>
+              <div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr class="text-xs text-slate-400 uppercase border-b"><th class="pb-2 text-left">Item</th><th class="pb-2 text-left">Type</th><th class="pb-2 text-left">Qty</th><th class="pb-2 text-left">Date</th><th class="pb-2 text-left">User</th></tr></thead><tbody id="mrbd-txn-body"></tbody></table></div>
+            </div>
+          </div>
+
+          <!-- Team Members -->
+          <div class="bg-white rounded-xl border border-slate-200 p-5 mt-6">
+            <h4 class="font-semibold text-sm mb-3 text-slate-700">Team Members <span class="text-xs text-slate-400 font-normal" id="mrbd-team-count"></span></h4>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3" id="mrbd-team-grid"></div>
+          </div>
+        </div>
+
       </div>
     </main>
   </div>
@@ -807,9 +919,10 @@
       const el = document.getElementById('page-' + page);
       if (el) el.classList.remove('hidden');
       document.querySelectorAll('.nav-link').forEach(l => l.classList.toggle('active', l.dataset.page === page));
-      const titles = { dashboard: 'Dashboard', outward: 'Outward Mail', inward: 'Inward Mail', reports: 'Reports', 'admin-dashboard': 'Admin Dashboard', 'admin-records': 'All Records', 'admin-editlog': 'Edit Log', 'admin-reports': 'Reports' };
+      const titles = { dashboard: 'Dashboard', outward: 'Outward Mail', inward: 'Inward Mail', reports: 'Reports', 'admin-dashboard': 'Admin Dashboard', 'admin-branches': 'Branches', 'branch-detail': 'Branch Detail', 'admin-records': 'All Records', 'admin-editlog': 'Edit Log', 'admin-reports': 'Reports' };
       document.getElementById('headerTitle').textContent = titles[page] || page;
       document.getElementById('sidebar').classList.remove('open');
+      if (page === 'admin-branches') { document.querySelector('.nav-link[data-page="admin-branches"]')?.classList.add('active'); loadAdminBranches(); }
       if (page === 'outward') { loadRecords('outward'); setToday('outDate'); initDocDropdown('outDocsOptions', 'outDocsDisplay', 'outDocs', 'outDocsOther'); initPartDropdown('out'); loadBranchRecipientChoices().then(() => renderBranchRecipientOptions('out')); }
       if (page === 'inward') { loadRecords('inward'); setToday('inDate'); initDocDropdown('inDocsOptions', 'inDocsDisplay', 'inDocs', 'inDocsOther'); initPartDropdown('in'); loadBranchRecipientChoices().then(() => renderBranchRecipientOptions('in')); }
       if (page === 'reports') { setToday('reportDate'); renderDailyReport(); }
@@ -1497,6 +1610,266 @@
 
       document.getElementById('adminRecentBody').innerHTML = [...adminAllRecords].reverse().slice(0, 20).map(r => `<tr class="border-b border-slate-100"><td class="py-2 font-semibold">${r.seq}</td><td class="py-2">${esc(r.location)}</td><td class="py-2">${esc(fmtDate(r.date))}</td><td class="py-2"><span class="inline-block px-2 py-0.5 rounded-full text-xs font-semibold badge-${r.mail_type}">${r.mail_type}</span></td><td class="py-2">${esc(r.name)}</td><td class="py-2">${esc(r.department)}</td><td class="py-2">${esc(r.documents)}</td><td class="py-2 text-slate-400">${esc(r.created_by)}</td></tr>`).join('') || '<tr><td colspan="8" class="py-8 text-center text-slate-300">No records yet</td></tr>';
       renderAdminRecords();
+    }
+
+    // ===== ADMIN BRANCH VIEW (Mail + Stationary modules) =====
+    let mrAllEmployees = null;
+    let mrSelectedBranch = null;
+    let mrModule = 'mail';
+    let mrMailRecords = [];
+    let mrMailLoadedBranch = null;
+    let mrStLoadedBranch = null;
+    let mrMailLast = { text: '--', tone: 'none' };
+    let mrStLast = { text: '--', tone: 'none' };
+
+    function mrTimeAgo(iso) {
+      if (!iso) return '';
+      const then = new Date(iso).getTime();
+      const diff = Date.now() - then;
+      if (isNaN(then)) return '';
+      const mins = Math.floor(diff / 60000);
+      if (mins < 1) return 'just now';
+      if (mins < 60) return mins + 'm ago';
+      const hrs = Math.floor(mins / 60);
+      if (hrs < 24) return hrs + 'h ago';
+      const days = Math.floor(hrs / 24);
+      if (days < 30) return days + 'd ago';
+      const months = Math.floor(days / 30);
+      if (months < 12) return months + 'mo ago';
+      return Math.floor(months / 12) + 'y ago';
+    }
+    function mrFmtDateTime(iso) {
+      if (!iso) return '--';
+      const d = new Date(iso);
+      if (isNaN(d.getTime())) return '--';
+      const M = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      return `${M[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+    }
+    function mrIsToday(iso) {
+      const d = new Date(iso); const t = new Date(); t.setHours(0,0,0,0);
+      return d.getTime() >= t.getTime();
+    }
+    function mrToneClass(tone) {
+      if (tone === 'today') return 'bg-green-100 text-green-700';
+      if (tone === 'stale') return 'bg-amber-100 text-amber-700';
+      return 'bg-slate-100 text-slate-500';
+    }
+    function mrApplyLastUpdate(info) {
+      const text = document.getElementById('mrbd-last-update-text');
+      const badge = document.getElementById('mrbd-last-update');
+      if (text) text.textContent = info.text;
+      if (badge) badge.className = 'flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold ' + mrToneClass(info.tone);
+    }
+
+    async function loadAdminBranches() {
+      const fy = getCurrentFY();
+      if (!adminAllRecords || !adminAllRecords.length) {
+        adminAllRecords = await sbGet('mail_records', `select=*&date=gte.${fy.start}&date=lte.${fy.end}&order=created_at.asc`);
+        adminAllRecords.forEach((r, i) => { r.seq = i + 1; });
+      }
+      if (!mrAllEmployees) {
+        mrAllEmployees = await sbGet('employees', 'select=*&order=name.asc').catch(() => []);
+      }
+      renderMrBranchList();
+    }
+
+    function renderMrBranchList() {
+      const q = (document.getElementById('mrBranchSearch')?.value || '').toLowerCase().trim();
+      const fromRecords = (adminAllRecords || []).map(r => r.location).filter(Boolean);
+      const fromEmps = (mrAllEmployees || []).map(e => e.location).filter(Boolean);
+      const branches = [...new Set([...fromRecords, ...fromEmps])]
+        .filter(b => b && b !== 'Head Office')
+        .filter(b => b.toLowerCase().includes(q))
+        .sort();
+
+      document.getElementById('mrBranchCount').textContent = branches.length + ' branches';
+      const empty = document.getElementById('mrBranchEmpty');
+      const body = document.getElementById('mrBranchListBody');
+
+      if (!branches.length) { body.innerHTML = ''; empty.style.display = 'block'; return; }
+      empty.style.display = 'none';
+
+      body.innerHTML = branches.map(b => {
+        const recs = (adminAllRecords || []).filter(r => r.location === b);
+        const last = recs.reduce((m, r) => {
+          const t = new Date(r.created_at).getTime();
+          return (!m || t > m.t) ? { t, r } : m;
+        }, null);
+        const lastStr = last ? mrTimeAgo(last.r.created_at) + ' · ' + mrFmtDateTime(last.r.created_at) : 'No updates';
+        const isToday = last && mrIsToday(last.r.created_at);
+        const statusBadge = !last
+          ? '<span class="inline-block px-2 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-500">No updates</span>'
+          : (isToday
+              ? '<span class="inline-block px-2 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-700">Updated today</span>'
+              : '<span class="inline-block px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-700">Not today</span>');
+        return `<tr class="border-b border-slate-100 hover:bg-slate-50 cursor-pointer" onclick="openMrBranchDetail(this.dataset.branch)" data-branch="${esc(b)}">
+          <td class="py-3 font-semibold text-slate-800">${esc(b)}</td>
+          <td class="py-3">${recs.length}</td>
+          <td class="py-3 text-slate-500">${esc(lastStr)}</td>
+          <td class="py-3">${statusBadge}</td>
+          <td class="py-3 text-right"><span class="material-symbols-outlined text-slate-300 text-base">chevron_right</span></td>
+        </tr>`;
+      }).join('');
+    }
+
+    function openMrBranchDetail(branch) {
+      mrSelectedBranch = branch;
+      mrMailLoadedBranch = null;
+      mrStLoadedBranch = null;
+      mrMailLast = { text: 'Loading…', tone: 'none' };
+      mrStLast = { text: 'Loading…', tone: 'none' };
+      navigateTo('branch-detail');
+      renderMrBranchDetail();
+    }
+
+    function renderMrBranchDetail() {
+      const branch = mrSelectedBranch;
+      if (!branch) { navigateTo('admin-branches'); return; }
+      document.getElementById('mrbd-name').textContent = branch;
+      document.getElementById('mrbd-badge').textContent = branch;
+
+      // Team members
+      const emps = (mrAllEmployees || []).filter(e => e.location === branch);
+      const teamCount = document.getElementById('mrbd-team-count');
+      if (teamCount) teamCount.textContent = emps.length ? '· ' + emps.length : '';
+      const COLORS = ['from-primary to-blue-400','from-emerald-500 to-teal-400','from-violet-500 to-purple-400','from-amber-500 to-orange-400','from-rose-500 to-pink-400','from-cyan-500 to-sky-400'];
+      const grid = document.getElementById('mrbd-team-grid');
+      grid.innerHTML = emps.length
+        ? emps.map((m, i) => {
+            const initials = m.name ? m.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2) : '??';
+            return `<div class="flex items-center gap-3 p-3 rounded-lg border border-slate-100">
+              <div class="w-10 h-10 rounded-full bg-gradient-to-br ${COLORS[i % COLORS.length]} flex items-center justify-center text-white font-bold text-xs flex-shrink-0">${initials}</div>
+              <div class="min-w-0"><p class="font-semibold text-slate-800 text-sm truncate">${esc(m.name)}</p><p class="text-[10px] text-slate-400">${esc(m.role || '')} · ${esc(m.emp_id || '')}</p></div>
+            </div>`;
+          }).join('')
+        : '<div class="col-span-full text-center text-slate-400 text-sm py-4">No employees at this branch</div>';
+
+      switchMrModule('mail');
+    }
+
+    function switchMrModule(mod) {
+      mrModule = mod;
+      const isMail = mod === 'mail';
+      document.getElementById('mrbd-mod-mail').classList.toggle('hidden', !isMail);
+      document.getElementById('mrbd-mod-stationary').classList.toggle('hidden', isMail);
+      const ACTIVE = ['bg-white', 'text-primary', 'shadow-sm'];
+      const INACTIVE = ['text-slate-500', 'hover:text-slate-700'];
+      const mailBtn = document.getElementById('mrbd-modbtn-mail');
+      const stBtn = document.getElementById('mrbd-modbtn-stationary');
+      mailBtn.classList.remove(...ACTIVE, ...INACTIVE);
+      stBtn.classList.remove(...ACTIVE, ...INACTIVE);
+      mailBtn.classList.add(...(isMail ? ACTIVE : INACTIVE));
+      stBtn.classList.add(...(isMail ? INACTIVE : ACTIVE));
+      if (isMail) { mrApplyLastUpdate(mrMailLast); loadMrMail(mrSelectedBranch); }
+      else { mrApplyLastUpdate(mrStLast); loadMrStationary(mrSelectedBranch); }
+    }
+
+    function switchMrMailTab(tab) {
+      const isOut = tab === 'outward';
+      document.getElementById('mrbd-mailtab-outward').classList.toggle('hidden', !isOut);
+      document.getElementById('mrbd-mailtab-inward').classList.toggle('hidden', isOut);
+      const A = ['border-primary', 'text-primary'], I = ['border-transparent', 'text-slate-400', 'hover:text-slate-600'];
+      const o = document.getElementById('mrbd-mailtabbtn-outward'), n = document.getElementById('mrbd-mailtabbtn-inward');
+      o.classList.remove(...A, ...I); n.classList.remove(...A, ...I);
+      o.classList.add(...(isOut ? A : I)); n.classList.add(...(isOut ? I : A));
+    }
+
+    function switchMrStTab(tab) {
+      const isStat = tab === 'stationary';
+      document.getElementById('mrbd-sttab-stationary').classList.toggle('hidden', !isStat);
+      document.getElementById('mrbd-sttab-transactions').classList.toggle('hidden', isStat);
+      const A = ['border-primary', 'text-primary'], I = ['border-transparent', 'text-slate-400', 'hover:text-slate-600'];
+      const s = document.getElementById('mrbd-sttabbtn-stationary'), t = document.getElementById('mrbd-sttabbtn-transactions');
+      s.classList.remove(...A, ...I); t.classList.remove(...A, ...I);
+      s.classList.add(...(isStat ? A : I)); t.classList.add(...(isStat ? I : A));
+    }
+
+    async function loadMrMail(branch) {
+      if (!branch || mrMailLoadedBranch === branch) return;
+      mrMailLoadedBranch = branch;
+      const outBody = document.getElementById('mrbd-out-body'), inBody = document.getElementById('mrbd-in-body');
+      outBody.innerHTML = inBody.innerHTML = '<tr><td colspan="4" class="py-6 text-center text-slate-400">Loading...</td></tr>';
+      let recs = [];
+      try {
+        recs = await sbGet('mail_records', `select=*&location=eq.${encodeURIComponent(branch)}&order=created_at.desc`) || [];
+      } catch (e) {
+        mrMailLoadedBranch = null;
+        outBody.innerHTML = inBody.innerHTML = '<tr><td colspan="4" class="py-6 text-center text-red-400">Failed to load</td></tr>';
+        return;
+      }
+      const out = recs.filter(r => r.mail_type === 'outward');
+      const inn = recs.filter(r => r.mail_type === 'inward');
+      document.getElementById('mrbd-kpi-out').textContent = out.length;
+      document.getElementById('mrbd-kpi-in').textContent = inn.length;
+      const latest = recs[0];
+      if (latest) {
+        mrMailLast = { text: 'Last mail entry ' + mrTimeAgo(latest.created_at) + ' · ' + mrFmtDateTime(latest.created_at), tone: mrIsToday(latest.created_at) ? 'today' : 'stale' };
+        document.getElementById('mrbd-kpi-last').textContent = mrFmtDateTime(latest.created_at);
+      } else {
+        mrMailLast = { text: 'No mail updates yet', tone: 'none' };
+        document.getElementById('mrbd-kpi-last').textContent = '--';
+      }
+      if (mrModule === 'mail') mrApplyLastUpdate(mrMailLast);
+      const mailRow = r => `<tr class="border-b border-slate-50"><td class="py-2">${esc(mrFmtDateTime(r.created_at))}</td><td class="py-2 font-medium text-slate-700">${esc(r.name || '--')}</td><td class="py-2 text-slate-500">${esc(r.department || '--')}</td><td class="py-2 text-slate-500">${esc(r.documents || '--')}</td></tr>`;
+      outBody.innerHTML = out.length ? out.slice(0, 10).map(mailRow).join('') : '<tr><td colspan="4" class="py-6 text-center text-slate-400">No outward records</td></tr>';
+      inBody.innerHTML = inn.length ? inn.slice(0, 10).map(mailRow).join('') : '<tr><td colspan="4" class="py-6 text-center text-slate-400">No inward records</td></tr>';
+      switchMrMailTab('outward');
+    }
+
+    async function loadMrStationary(branch) {
+      if (!branch || mrStLoadedBranch === branch) return;
+      mrStLoadedBranch = branch;
+      const invBody = document.getElementById('mrbd-inv-body'), txnBody = document.getElementById('mrbd-txn-body');
+      invBody.innerHTML = txnBody.innerHTML = '<tr><td colspan="5" class="py-6 text-center text-slate-400">Loading...</td></tr>';
+      let entries = [];
+      try {
+        entries = await sbGet('stock_entries', `select=*&location=eq.${encodeURIComponent(branch)}&order=created_at.desc`) || [];
+      } catch (e) {
+        mrStLoadedBranch = null;
+        invBody.innerHTML = txnBody.innerHTML = '<tr><td colspan="5" class="py-6 text-center text-red-400">Failed to load</td></tr>';
+        return;
+      }
+      // Aggregate per-item qty (entries are desc; order does not affect net qty)
+      const items = {};
+      let totalIn = 0, totalOut = 0;
+      entries.forEach(e => {
+        const name = e.item_name || '--';
+        if (!items[name]) items[name] = { name, category: e.category || '—', qty: 0 };
+        if (e.entry_type === 'in') { items[name].qty += e.quantity; totalIn += e.quantity; }
+        else { items[name].qty = Math.max(0, items[name].qty - e.quantity); totalOut += e.quantity; }
+      });
+      const itemList = Object.values(items);
+      const closing = itemList.reduce((s, i) => s + i.qty, 0);
+      document.getElementById('mrbd-st-kpi-closing').textContent = closing.toLocaleString();
+      document.getElementById('mrbd-st-kpi-in').textContent = totalIn.toLocaleString();
+      document.getElementById('mrbd-st-kpi-out').textContent = totalOut.toLocaleString();
+
+      const latest = entries[0];
+      if (latest) {
+        mrStLast = { text: 'Last stock entry ' + mrTimeAgo(latest.created_at) + ' · ' + mrFmtDateTime(latest.created_at), tone: mrIsToday(latest.created_at) ? 'today' : 'stale' };
+      } else {
+        mrStLast = { text: 'No stock updates yet', tone: 'none' };
+      }
+      if (mrModule === 'stationary') mrApplyLastUpdate(mrStLast);
+
+      invBody.innerHTML = itemList.length
+        ? itemList.map(i => {
+            const st = i.qty <= 0 ? '<span class="inline-block px-2 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-700">Out</span>'
+              : '<span class="inline-block px-2 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-700">In Stock</span>';
+            return `<tr class="border-b border-slate-50"><td class="py-2 font-medium text-slate-700">${esc(i.name)}</td><td class="py-2 text-slate-500">${esc(i.category)}</td><td class="py-2 font-semibold">${i.qty.toLocaleString()}</td><td class="py-2 text-slate-400">—</td><td class="py-2">${st}</td></tr>`;
+          }).join('')
+        : '<tr><td colspan="5" class="py-6 text-center text-slate-400">No stationary data for this branch</td></tr>';
+
+      txnBody.innerHTML = entries.length
+        ? entries.slice(0, 10).map(e => {
+            const badge = e.entry_type === 'in'
+              ? '<span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold bg-green-100 text-green-700">IN</span>'
+              : '<span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-600">OUT</span>';
+            return `<tr class="border-b border-slate-50"><td class="py-2 font-medium text-slate-700">${esc(e.item_name)}</td><td class="py-2">${badge}</td><td class="py-2 font-semibold">${e.entry_type === 'in' ? '+' : '-'}${e.quantity}</td><td class="py-2 text-slate-500">${esc(mrFmtDateTime(e.created_at))}</td><td class="py-2 text-slate-400">${esc(e.emp_name || '--')}</td></tr>`;
+          }).join('')
+        : '<tr><td colspan="5" class="py-6 text-center text-slate-400">No transactions</td></tr>';
+
+      switchMrStTab('stationary');
     }
 
     // Column filters state: { column: Set of selected values }
