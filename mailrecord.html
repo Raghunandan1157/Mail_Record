@@ -160,15 +160,22 @@
         <!-- ===== DASHBOARD ===== -->
         <div id="page-dashboard" class="page fade-in">
           <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6" id="dashKpis"></div>
-          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div class="bg-white rounded-xl border border-slate-200 p-5">
-              <h3 class="font-semibold text-sm mb-4 text-slate-700">Recent Outward</h3>
-              <div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr class="text-xs text-slate-400 uppercase border-b"><th class="pb-2 text-left">ID</th><th class="pb-2 text-left">Date</th><th class="pb-2 text-left">To</th><th class="pb-2 text-left">Documents</th></tr></thead><tbody id="dashOutward"></tbody></table></div>
-            </div>
-            <div class="bg-white rounded-xl border border-slate-200 p-5">
-              <h3 class="font-semibold text-sm mb-4 text-slate-700">Recent Inward</h3>
-              <div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr class="text-xs text-slate-400 uppercase border-b"><th class="pb-2 text-left">ID</th><th class="pb-2 text-left">Date</th><th class="pb-2 text-left">From</th><th class="pb-2 text-left">Documents</th></tr></thead><tbody id="dashInward"></tbody></table></div>
-            </div>
+
+          <!-- Outward / Inward Tabs -->
+          <div class="flex items-center gap-1 mb-5 border-b border-slate-200">
+            <button id="dashTabBtn-outward" onclick="switchDashTab('outward')" class="flex items-center gap-2 px-5 py-3 text-sm font-semibold border-b-2 -mb-px transition-colors">
+              <span class="material-symbols-outlined text-base">call_made</span>Recent Outward
+            </button>
+            <button id="dashTabBtn-inward" onclick="switchDashTab('inward')" class="flex items-center gap-2 px-5 py-3 text-sm font-semibold border-b-2 -mb-px transition-colors">
+              <span class="material-symbols-outlined text-base">call_received</span>Recent Inward
+            </button>
+          </div>
+
+          <div id="dashTab-outward" class="bg-white rounded-xl border border-slate-200 p-5">
+            <div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr class="text-xs text-slate-400 uppercase border-b"><th class="pb-2 text-left">ID</th><th class="pb-2 text-left">Date</th><th class="pb-2 text-left">To</th><th class="pb-2 text-left">Documents</th></tr></thead><tbody id="dashOutward"></tbody></table></div>
+          </div>
+          <div id="dashTab-inward" class="hidden bg-white rounded-xl border border-slate-200 p-5">
+            <div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr class="text-xs text-slate-400 uppercase border-b"><th class="pb-2 text-left">ID</th><th class="pb-2 text-left">Date</th><th class="pb-2 text-left">From</th><th class="pb-2 text-left">Documents</th></tr></thead><tbody id="dashInward"></tbody></table></div>
           </div>
         </div>
 
@@ -1392,7 +1399,22 @@
     function closeInForm(){ const c=document.getElementById('inFormCard'); if(c) c.classList.add('hidden'); }
 
     // ===== DASHBOARD =====
+    function switchDashTab(tab) {
+      const isOut = tab === 'outward';
+      document.getElementById('dashTab-outward').classList.toggle('hidden', !isOut);
+      document.getElementById('dashTab-inward').classList.toggle('hidden', isOut);
+      const ACTIVE = ['border-primary', 'text-primary'];
+      const INACTIVE = ['border-transparent', 'text-slate-400', 'hover:text-slate-600'];
+      const outBtn = document.getElementById('dashTabBtn-outward');
+      const inBtn = document.getElementById('dashTabBtn-inward');
+      outBtn.classList.remove(...ACTIVE, ...INACTIVE);
+      inBtn.classList.remove(...ACTIVE, ...INACTIVE);
+      outBtn.classList.add(...(isOut ? ACTIVE : INACTIVE));
+      inBtn.classList.add(...(isOut ? INACTIVE : ACTIVE));
+    }
+
     async function loadDashboard() {
+      switchDashTab('outward'); // default to Outward tab
       const fy = getCurrentFY();
       const [outFY, inFY] = await Promise.all([
         sbGet('mail_records', `select=*&mail_type=eq.outward&location=eq.${encodeURIComponent(selectedLocation)}&date=gte.${fy.start}&date=lte.${fy.end}&order=created_at.asc`),

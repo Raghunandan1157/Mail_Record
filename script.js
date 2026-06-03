@@ -1063,8 +1063,28 @@ function openBranchDetail(branchName) {
   navigateTo('branchdetail');
 }
 
+function switchBranchDetailTab(tab) {
+  const isStat = tab === 'stationary';
+  const statPanel = document.getElementById('bd-tab-stationary');
+  const txnPanel = document.getElementById('bd-tab-transactions');
+  if (statPanel) statPanel.classList.toggle('hidden', !isStat);
+  if (txnPanel) txnPanel.classList.toggle('hidden', isStat);
+
+  const ACTIVE = ['border-primary', 'text-primary'];
+  const INACTIVE = ['border-transparent', 'text-slate-500', 'dark:text-slate-400', 'hover:text-slate-700', 'dark:hover:text-slate-200'];
+  const statBtn = document.getElementById('bd-tabbtn-stationary');
+  const txnBtn = document.getElementById('bd-tabbtn-transactions');
+  if (statBtn && txnBtn) {
+    statBtn.classList.remove(...ACTIVE, ...INACTIVE);
+    txnBtn.classList.remove(...ACTIVE, ...INACTIVE);
+    statBtn.classList.add(...(isStat ? ACTIVE : INACTIVE));
+    txnBtn.classList.add(...(isStat ? INACTIVE : ACTIVE));
+  }
+}
+
 function renderBranchDetail() {
   if (!selectedBranch) { navigateTo('admin'); return; }
+  switchBranchDetailTab('stationary'); // default to Stationary tab on open
 
   const entries = adminData.entries.filter(e => e.location === selectedBranch);
   const employees = adminData.employees.filter(e => e.location === selectedBranch);
@@ -1123,8 +1143,10 @@ function renderBranchDetail() {
     }).join('');
   }
 
-  // Recent transactions (last 10)
-  const recentTxns = entries.slice(0, 10);
+  // Recent transactions (last 10) — entries arrive created_at.asc, so sort desc to show newest first
+  const recentTxns = [...entries]
+    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+    .slice(0, 10);
   const txnTable = document.getElementById('bd-txn-table');
   if (recentTxns.length === 0) {
     txnTable.innerHTML = '<tr><td colspan="5" class="px-6 py-16 text-center"><div class="flex flex-col items-center text-slate-400 dark:text-slate-500"><span class="material-symbols-outlined text-5xl mb-3">swap_horiz</span><p class="text-sm font-medium">No transactions recorded</p><p class="text-xs mt-1">Stock entries for this branch will appear here</p></div></td></tr>';
