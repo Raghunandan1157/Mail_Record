@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 
 const scriptSource = readFileSync(new URL('../script.js', import.meta.url), 'utf8');
 const mailrecordSource = readFileSync(new URL('../mailrecord.html', import.meta.url), 'utf8');
+const auditSource = readFileSync(new URL('../audit.html', import.meta.url), 'utf8');
 const packageSource = readFileSync(new URL('../package.json', import.meta.url), 'utf8');
 
 assert.match(
@@ -45,4 +46,22 @@ assert.match(
   mailrecordSource,
   /downloadMrBranch\(\)[\s\S]*sbGet\('mail_records', mrBranchMailQuery\(branch\)\)/,
   'Mail Record branch report download must use the branch involvement query'
+);
+
+assert.match(
+  auditSource,
+  /function auditBranchMailQuery\(branch, type, range\)[\s\S]*or=\(location\.eq\.\$\{encodedBranch\},name\.ilike\.\$\{encodedBranch\}\)/,
+  'Auditor monthly branch counts must use the same branch involvement query'
+);
+
+assert.match(
+  auditSource,
+  /loadBranchCounts\(\)[\s\S]*sbGet\('mail_records', auditBranchMailQuery\(selectedBranch, 'inward', range\)\)/,
+  'Auditor inward count must use the branch involvement query'
+);
+
+assert.match(
+  auditSource,
+  /loadBranchCounts\(\)[\s\S]*sbGet\('mail_records', auditBranchMailQuery\(selectedBranch, 'outward', range\)\)/,
+  'Auditor outward count must use the branch involvement query'
 );

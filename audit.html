@@ -218,6 +218,11 @@
     return { start: fmt(start), end: fmt(last), next: fmt(next) };
   }
 
+  function auditBranchMailQuery(branch, type, range) {
+    const encodedBranch = encodeURIComponent(branch);
+    return `select=id&mail_type=eq.${type}&or=(location.eq.${encodedBranch},name.ilike.${encodedBranch})&date=gte.${range.start}&date=lte.${range.end}`;
+  }
+
   function monthLabel() {
     const [year, month] = document.getElementById('auditMonth').value.split('-').map(Number);
     return new Date(year, month - 1, 1).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
@@ -323,8 +328,8 @@
     const range = selectedMonthRange();
     try {
       const [mailIn, mailOut, stock, complaints] = await Promise.all([
-        sbGet('mail_records', `select=id&mail_type=eq.inward&location=eq.${encodeURIComponent(selectedBranch)}&date=gte.${range.start}&date=lte.${range.end}`),
-        sbGet('mail_records', `select=id&mail_type=eq.outward&location=eq.${encodeURIComponent(selectedBranch)}&date=gte.${range.start}&date=lte.${range.end}`),
+        sbGet('mail_records', auditBranchMailQuery(selectedBranch, 'inward', range)),
+        sbGet('mail_records', auditBranchMailQuery(selectedBranch, 'outward', range)),
         sbGet('stock_entries', `select=id&location=eq.${encodeURIComponent(selectedBranch)}&created_at=gte.${range.start}T00:00:00&created_at=lt.${range.next}T00:00:00`).catch(() => []),
         sbGet('complaint_records', `select=id,status&branch=eq.${encodeURIComponent(selectedBranch)}&date=gte.${range.start}&date=lte.${range.end}`).catch(() => []),
       ]);
