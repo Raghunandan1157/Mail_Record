@@ -533,13 +533,18 @@
             </div>
           </div>
 
-          <!-- Module Switch -->
-          <div class="flex items-center gap-1 mb-6 p-1 bg-slate-100 rounded-xl w-max">
-            <button id="mrbd-modbtn-mail" onclick="switchMrModule('mail')" class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-colors">
-              <span class="material-symbols-outlined text-base">mail</span>Mail Record
-            </button>
-            <button id="mrbd-modbtn-stationary" onclick="switchMrModule('stationary')" class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-colors">
-              <span class="material-symbols-outlined text-base">inventory_2</span>Stationary
+          <!-- Module Switch + Download -->
+          <div class="flex items-center justify-between gap-3 mb-6 flex-wrap">
+            <div class="flex items-center gap-1 p-1 bg-slate-100 rounded-xl w-max">
+              <button id="mrbd-modbtn-mail" onclick="switchMrModule('mail')" class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-colors">
+                <span class="material-symbols-outlined text-base">mail</span>Mail Record
+              </button>
+              <button id="mrbd-modbtn-stationary" onclick="switchMrModule('stationary')" class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-colors">
+                <span class="material-symbols-outlined text-base">inventory_2</span>Stationary
+              </button>
+            </div>
+            <button id="mrbd-download-btn" onclick="downloadMrBranch()" class="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-bold transition-colors shadow-sm">
+              <span class="material-symbols-outlined text-base">download</span>Download Branch Report
             </button>
           </div>
 
@@ -1870,6 +1875,105 @@
         : '<tr><td colspan="5" class="py-6 text-center text-slate-400">No transactions</td></tr>';
 
       switchMrStTab('stationary');
+    }
+
+    async function downloadMrBranch() {
+      const branch = mrSelectedBranch;
+      if (!branch) return;
+      const btn = document.getElementById('mrbd-download-btn');
+      const orig = btn ? btn.innerHTML : '';
+      if (btn) { btn.disabled = true; btn.innerHTML = '<span class="material-symbols-outlined text-base animate-spin">progress_activity</span>Preparing...'; }
+
+      try {
+        const [mail, stock, empsRes] = await Promise.all([
+          sbGet('mail_records', `select=*&location=eq.${encodeURIComponent(branch)}&order=created_at.desc`).catch(() => []),
+          sbGet('stock_entries', `select=*&location=eq.${encodeURIComponent(branch)}&order=created_at.desc`).catch(() => []),
+          Promise.resolve((mrAllEmployees || []).filter(e => e.location === branch)),
+        ]);
+        const mailRecs = mail || [], stockRecs = stock || [], emps = empsRes || [];
+
+        const wb = XLSX.utils.book_new();
+        const addSheet = (name, rows, fallback) => {
+          const ws = XLSX.utils.json_to_sheet(rows.length ? rows : [fallback]);
+          XLSX.utils.book_append_sheet(wb, ws, name.slice(0, 31));
+        };
+
+        // Sheet 1: Branch Summary
+        const outwardCount = mailRecs.filter(r => r.mail_type === 'outward').length;
+        const inwardCount = mailRecs.filter(r => r.mail_type === 'inward').length;
+        const stIn = stockRecs.filter(e => e.entry_type === 'in').reduce((s, e) => s + (e.quantity || 0), 0);
+        const stOut = stockRecs.filter(e => e.entry_type === 'out').reduce((s, e) => s + (e.quantity || 0), 0);
+        const lastMail = mailRecs[0] ? mrFmtDateTime(mailRecs[0].created_at) : '—';
+        const lastStock = stockRecs[0] ? mrFmtDateTime(stockRecs[0].created_at) : '—';
+        addSheet('Summary', [
+          { Field: 'Branch', Value: branch },
+          { Field: 'Generated On', Value: mrFmtDateTime(new Date().toISOString()) },
+          { Field: 'Total Mail Records', Value: mailRecs.length },
+          { Field: 'Mail Outward', Value: outwardCount },
+          { Field: 'Mail Inward', Value: inwardCount },
+          { Field: 'Last Mail Entry', Value: lastMail },
+          { Field: 'Total Stock In', Value: stIn },
+          { Field: 'Total Stock Out', Value: stOut },
+          { Field: 'Last Stock Entry', Value: lastStock },
+          { Field: 'Team Members', Value: emps.length },
+        ], { Field: '', Value: '' });
+
+        // Sheet 2: Current Stationary Status (aggregated inventory)
+        const items = {};
+        stockRecs.forEach(e => {
+          const n = e.item_name || '--';
+          if (!items[n]) items[n] = { Item: n, Category: e.category || '', Quantity: 0 };
+          if (e.entry_type === 'in') items[n].Quantity += (e.quantity || 0);
+          else items[n].Quantity = Math.max(0, items[n].Quantity - (e.quantity || 0));
+        });
+        const statusRows = Object.values(items).map(i => ({ ...i, Status: i.Quantity <= 0 ? 'Out of Stock' : 'In Stock' }));
+        addSheet('Stationary Status', statusRows, { Item: 'No data', Category: '', Quantity: '', Status: '' });
+
+        // Sheet 3: Stationary Transactions (all)
+        const txnRows = stockRecs.map(e => ({
+          Date: mrFmtDateTime(e.created_at),
+          Item: e.item_name || '',
+          Type: (e.entry_type || '').toUpperCase(),
+          Quantity: (e.entry_type === 'in' ? '+' : '-') + (e.quantity || 0),
+          User: e.emp_name || '',
+          Edited: e.is_edited ? 'Yes' : '',
+        }));
+        addSheet('Stationary Transactions', txnRows, { Date: 'No data', Item: '', Type: '', Quantity: '', User: '', Edited: '' });
+
+        // Sheet 4: Mail Outward
+        const outRows = mailRecs.filter(r => r.mail_type === 'outward').map(r => ({
+          Date: fmtDate(r.date), Recorded: mrFmtDateTime(r.created_at), 'Employee ID': r.employee_id || '',
+          To: r.name || '', Department: r.department || '', Documents: r.documents || '',
+          'Docket No.': r.docket_number || '', 'Courier/Post Status': r.courier_status || '',
+          Particular: r.particular || '', Details: r.details || '',
+          Customers: Array.isArray(r.customers) ? r.customers.join(', ') : (r.customers || ''),
+          'By': r.created_by || '',
+        }));
+        addSheet('Mail Outward', outRows, { Date: 'No data', To: '', Department: '', Documents: '' });
+
+        // Sheet 5: Mail Inward
+        const inRows = mailRecs.filter(r => r.mail_type === 'inward').map(r => ({
+          Date: fmtDate(r.date), Recorded: mrFmtDateTime(r.created_at), 'Employee ID': r.employee_id || '',
+          From: r.name || '', Department: r.department || '', Documents: r.documents || '',
+          Particular: r.particular || '', Details: r.details || '',
+          Customers: Array.isArray(r.customers) ? r.customers.join(', ') : (r.customers || ''),
+          'By': r.created_by || '',
+        }));
+        addSheet('Mail Inward', inRows, { Date: 'No data', From: '', Department: '', Documents: '' });
+
+        // Sheet 6: Team Members
+        const teamRows = emps.map(e => ({ Name: e.name || '', 'Emp ID': e.emp_id || '', Role: e.role || '', Mobile: e.mobile || '', Location: e.location || '' }));
+        addSheet('Team', teamRows, { Name: 'No employees', 'Emp ID': '', Role: '', Mobile: '', Location: '' });
+
+        const safe = branch.replace(/[^a-z0-9]+/gi, '_');
+        const stamp = new Date().toISOString().split('T')[0];
+        XLSX.writeFile(wb, `Branch_${safe}_${stamp}.xlsx`);
+      } catch (err) {
+        console.error('Branch download failed:', err);
+        alert('Failed to generate branch report. Please try again.');
+      } finally {
+        if (btn) { btn.disabled = false; btn.innerHTML = orig; }
+      }
     }
 
     // Column filters state: { column: Set of selected values }
