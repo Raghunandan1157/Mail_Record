@@ -1113,7 +1113,7 @@ function switchBranchDetailTab(tab) {
 
 function renderBranchDetail() {
   if (!selectedBranch) { navigateTo('admin'); return; }
-  switchBranchDetailTab('stationary'); // default to Stationary tab on open
+  switchBranchDetailTab('transactions'); // default to Transactions tab on open
 
   const entries = adminData.entries.filter(e => e.location === selectedBranch);
   const employees = adminData.employees.filter(e => e.location === selectedBranch);
@@ -3137,6 +3137,16 @@ document.addEventListener('click', (e) => {
 
 document.getElementById('search-input').addEventListener('input', function () {
   const q = this.value.toLowerCase().trim();
+
+  // Admin sessions: route the global search to the Branches page
+  if (isAdminUser) {
+    if (!q) { renderPage(currentPage); return; }
+    if (currentPage !== 'branches') navigateTo('branches');
+    const bs = document.getElementById('branches-search');
+    if (bs) { bs.value = this.value; renderBranches(); }
+    return;
+  }
+
   if (!q) {
     renderPage(currentPage);
     return;
