@@ -62,6 +62,10 @@
 </div>
 
 <script>
+  if ((sessionStorage.getItem('sr_auditor') || localStorage.getItem('sr_auditor')) === 'true') {
+    window.location.href = 'audit.html';
+  }
+
   // Access control: AI Assistant restricted to Admin view. Available to admin + Head Office + Corporate Office accounts.
   const otp = sessionStorage.getItem('ai_otp') || localStorage.getItem('ai_otp');
   const isAdminFlag = (sessionStorage.getItem('sr_headoffice') || localStorage.getItem('sr_headoffice')) === 'true';

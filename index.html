@@ -194,18 +194,22 @@
   .module-card.stationary:hover { border-color: #137fec; }
   .module-card.mail:hover { border-color: #0f3460; }
   .module-card.complain:hover { border-color: #d9480f; }
+  .module-card.audit:hover { border-color: #111827; }
   .module-card .icon-wrap { width: 72px; height: 72px; border-radius: 18px; display: flex; align-items: center; justify-content: center; margin: 0 auto 18px; }
   .module-card.stationary .icon-wrap { background: rgba(19,127,236,0.1); }
   .module-card.mail .icon-wrap { background: rgba(15,52,96,0.1); }
   .module-card.complain .icon-wrap { background: rgba(217,72,15,0.1); }
+  .module-card.audit .icon-wrap { background: rgba(17,24,39,0.08); }
   .module-card .icon-wrap .material-symbols-outlined { font-size: 2rem; }
   .module-card.stationary .icon-wrap .material-symbols-outlined { color: #137fec; }
   .module-card.mail .icon-wrap .material-symbols-outlined { color: #0f3460; }
   .module-card.complain .icon-wrap .material-symbols-outlined { color: #d9480f; }
+  .module-card.audit .icon-wrap .material-symbols-outlined { color: #111827; }
   .module-card h2 { font-size: 1.15rem; font-weight: 700; margin-bottom: 6px; }
   .module-card.stationary h2 { color: #137fec; }
   .module-card.mail h2 { color: #0f3460; }
   .module-card.complain h2 { color: #d9480f; }
+  .module-card.audit h2 { color: #111827; }
   .module-card p { font-size: 0.82rem; color: #888; line-height: 1.4; }
   .module-card.ai-assistant:hover { border-color: #6c63ff; }
   .module-card.ai-assistant .icon-wrap { background: rgba(108,99,255,0.1); }
@@ -316,6 +320,11 @@
       <h2>AI Assistant</h2>
       <p>Voice &amp; chat Q&amp;A across all modules — complaints, mail &amp; stock</p>
     </div>
+    <div class="module-card audit" id="auditTile" style="display:none" onclick="openModule('audit')">
+      <div class="icon-wrap"><span class="material-symbols-outlined">fact_check</span></div>
+      <h2>Audit</h2>
+      <p>Monthly branch worksheet review with pending, in-progress &amp; completed colors</p>
+    </div>
   </div>
 </div>
 
@@ -371,7 +380,7 @@
   const H = { 'apikey': SK, 'Authorization': 'Bearer ' + SK, 'Content-Type': 'application/json' };
   async function sbGet(t, p='') { return (await fetch(`${SB}/rest/v1/${t}?${p}`, { headers: H })).json(); }
 
-  let currentEmployee = null, selectedLocation = null, isAdmin = false;
+  let currentEmployee = null, selectedLocation = null, isAdmin = false, auditorMode = false, auditorName = '';
   let selectedProfileIdx = -1, profilesList = [];
 
   function esc(s) { const d = document.createElement('div'); d.textContent = s||''; return d.innerHTML; }
@@ -441,14 +450,21 @@
       if (!rows || !rows.length) { showLoginError(1, 'Invalid credentials'); return; }
       const row = rows[0];
       isAdmin = !!row.is_admin;
+      auditorMode = !!row.is_auditor;
+      auditorName = '';
       const branch = row.branch;
+      if (auditorMode) {
+        const enteredName = (window.prompt('Enter auditor name') || '').trim();
+        if (!enteredName) { showLoginError(1, 'Auditor name required'); return; }
+        auditorName = enteredName;
+      }
       currentEmployee = {
         id: 0,
-        emp_id: isAdmin ? 'ADMIN' : ('BR-' + branch),
-        name: branch,
-        role: isAdmin ? 'Administrator' : 'Branch User',
+        emp_id: auditorMode ? 'AUDITOR' : (isAdmin ? 'ADMIN' : ('BR-' + branch)),
+        name: auditorMode ? auditorName : branch,
+        role: auditorMode ? 'Internal Auditor' : (isAdmin ? 'Administrator' : 'Branch User'),
         mobile: '',
-        location: isAdmin ? 'Head Office' : branch
+        location: auditorMode ? 'Internal Audit' : (isAdmin ? 'Head Office' : branch)
       };
       selectedLocation = currentEmployee.location;
       // Issue AI token for admin + Head Office + Corporate Office accounts (all can switch to Admin view).
@@ -468,6 +484,17 @@
     localStorage.setItem('sr_employee', JSON.stringify(currentEmployee));
     localStorage.setItem('sr_location', selectedLocation);
     localStorage.setItem('sr_login_time', t);
+    if (auditorMode) {
+      sessionStorage.setItem('sr_auditor','true');
+      sessionStorage.setItem('sr_auditor_name', auditorName || currentEmployee.name || 'Internal Auditor');
+      localStorage.setItem('sr_auditor','true');
+      localStorage.setItem('sr_auditor_name', auditorName || currentEmployee.name || 'Internal Auditor');
+    } else {
+      sessionStorage.removeItem('sr_auditor');
+      sessionStorage.removeItem('sr_auditor_name');
+      localStorage.removeItem('sr_auditor');
+      localStorage.removeItem('sr_auditor_name');
+    }
     if (isAdmin) {
       sessionStorage.setItem('sr_headoffice','true');
       localStorage.setItem('sr_headoffice','true');
@@ -475,7 +502,7 @@
       sessionStorage.removeItem('sr_headoffice');
       localStorage.removeItem('sr_headoffice');
     }
-    const mr = { employee: currentEmployee, location: selectedLocation, admin: isAdmin, time: Date.now() };
+    const mr = { employee: currentEmployee, location: selectedLocation, admin: isAdmin, auditor: auditorMode, auditorName: auditorName, time: Date.now() };
     sessionStorage.setItem('mr_session', JSON.stringify(mr));
     localStorage.setItem('mr_session', JSON.stringify(mr));
   }
@@ -488,10 +515,17 @@
       if (Date.now() - parseInt(lt||'0') > 86400000) { logout(); return false; }
       currentEmployee = JSON.parse(emp); selectedLocation = loc;
       isAdmin = (sessionStorage.getItem('sr_headoffice') || localStorage.getItem('sr_headoffice')) === 'true';
+      auditorMode = (sessionStorage.getItem('sr_auditor') || localStorage.getItem('sr_auditor')) === 'true';
+      auditorName = sessionStorage.getItem('sr_auditor_name') || localStorage.getItem('sr_auditor_name') || '';
       return true;
     }
     const raw = sessionStorage.getItem('mr_session') || localStorage.getItem('mr_session');
-    if (raw) { const s = JSON.parse(raw); if (Date.now()-s.time>86400000){logout();return false;} currentEmployee=s.employee; selectedLocation=s.location; isAdmin=s.admin; return true; }
+    if (raw) {
+      const s = JSON.parse(raw);
+      if (Date.now()-s.time>86400000){logout();return false;}
+      currentEmployee=s.employee; selectedLocation=s.location; isAdmin=s.admin; auditorMode=!!s.auditor; auditorName=s.auditorName || '';
+      return true;
+    }
     return false;
   }
 
@@ -547,6 +581,7 @@
 
   // ===== MODULE SCREEN =====
   function canSwitchView() {
+    if (auditorMode) return false;
     return isAdmin || selectedLocation === 'Head Office' || selectedLocation === 'Corporate Office';
   }
   function defaultViewForUser() {
@@ -559,6 +594,20 @@
     document.getElementById('doorScreen').style.display = 'none';
     document.getElementById('loginScreen').style.display = 'none';
     document.getElementById('moduleScreen').style.display = 'flex';
+    const auditTile = document.getElementById('auditTile');
+    const regularTiles = document.querySelectorAll('.module-card.stationary, .module-card.mail, .module-card.complain');
+    if (auditorMode) {
+      regularTiles.forEach(tile => { tile.style.display = 'none'; });
+      if (auditTile) auditTile.style.display = '';
+      const aiTile = document.getElementById('aiAssistantTile');
+      if (aiTile) aiTile.style.display = 'none';
+      document.getElementById('modAvatar').textContent = 'IA';
+      document.getElementById('modName').textContent = auditorName || currentEmployee.name || 'Internal Auditor';
+      document.getElementById('modLoc').textContent = 'Internal Audit';
+      return;
+    }
+    regularTiles.forEach(tile => { tile.style.display = ''; });
+    if (auditTile) auditTile.style.display = 'none';
     const curView = sessionStorage.getItem('sr_view_mode') || localStorage.getItem('sr_view_mode') || defaultViewForUser();
     const isBranchView = curView === 'branch';
     const isAdminView = curView === 'admin';
@@ -590,6 +639,10 @@
   }
 
   async function openModule(mod) {
+    if (auditorMode && mod !== 'audit') {
+      window.location.href = 'audit.html';
+      return;
+    }
     if (mod === 'ai') {
       const curView = sessionStorage.getItem('sr_view_mode') || localStorage.getItem('sr_view_mode') || defaultViewForUser();
       if (!canSwitchView() || curView !== 'admin') { alert('AI Assistant requires Admin view.'); return; }
@@ -604,6 +657,7 @@
     else if (mod === 'mail') window.location.href = 'mailrecord.html';
     else if (mod === 'complain') window.location.href = 'complain.html';
     else if (mod === 'ai') window.location.href = 'ai_assistant.html';
+    else if (mod === 'audit') window.location.href = 'audit.html';
   }
 
   function makeAiToken(otp) {
@@ -621,8 +675,8 @@
   }
 
   function logout() {
-    ['sr_employee','sr_location','sr_headoffice','sr_login_time','sr_dept_admin','mr_session','sr_view_mode'].forEach(k=>{sessionStorage.removeItem(k);localStorage.removeItem(k);});
-    currentEmployee=null; selectedLocation=null; isAdmin=false;
+    ['sr_employee','sr_location','sr_headoffice','sr_login_time','sr_dept_admin','mr_session','sr_view_mode','sr_auditor','sr_auditor_name'].forEach(k=>{sessionStorage.removeItem(k);localStorage.removeItem(k);});
+    currentEmployee=null; selectedLocation=null; isAdmin=false; auditorMode=false; auditorName='';
     document.getElementById('moduleScreen').style.display = 'none';
     document.getElementById('doorScreen').style.display = 'none';
     document.getElementById('loginScreen').style.display = 'flex';

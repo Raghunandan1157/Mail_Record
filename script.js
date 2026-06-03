@@ -534,9 +534,7 @@ function checkSession() {
     const savedViewMode = getStoredViewMode(savedLoc, adminFlag);
     selectedLocation = savedViewMode === 'corporate' ? 'Corporate Office' : savedLoc;
     isAdminUser = canSwitchOfficeViews(savedLoc, adminFlag);
-    // Admin UI only for 'admin' view. Corporate Office (and branch) use the regular UI
-    // scoped to selectedLocation, so Corporate Office shows CO stock — not all-branches admin.
-    isHeadOffice = isAdminUser && (savedViewMode === 'admin');
+    isHeadOffice = isAdminUser && ((savedViewMode || 'admin') === 'admin' || savedViewMode === 'corporate');
     // Keep both in sync
     sessionStorage.setItem('sr_employee', savedEmp);
     sessionStorage.setItem('sr_location', savedLoc);
@@ -1527,6 +1525,89 @@ function exportOutOfStockToExcel() {
 
   XLSX.writeFile(wb, 'Out_Of_Stock_' + new Date().toISOString().slice(0, 10) + '.xlsx');
   showToast('Out of stock Excel downloaded');
+}
+
+function downloadStationaryBranchReport() {
+  if (!selectedBranch) {
+    showToast('Open a branch first', 'delete');
+    return;
+  }
+
+  const branchEntries = adminData.entries.filter(e => e.location === selectedBranch);
+  const branchEmployees = adminData.employees.filter(e => e.location === selectedBranch);
+  const branchInventory = computeBranchInventory(selectedBranch);
+  const itemsWithActivity = branchInventory.filter(item =>
+    item.qty > 0 || branchEntries.some(e => e.item_name === item.name)
+  );
+  const closingStock = branchInventory.reduce((sum, item) => sum + item.qty, 0);
+  const lowStockItems = branchInventory.filter(item => item.qty > 0 && item.qty <= item.reorder).length;
+  const stockInQty = branchEntries
+    .filter(e => e.entry_type === 'in')
+    .reduce((sum, e) => sum + e.quantity, 0);
+  const stockOutQty = branchEntries
+    .filter(e => e.entry_type === 'out')
+    .reduce((sum, e) => sum + e.quantity, 0);
+  const lastEntry = [...branchEntries].sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0];
+
+  const wb = XLSX.utils.book_new();
+
+  const wsSummary = XLSX.utils.json_to_sheet([
+    { Metric: 'Branch', Value: selectedBranch },
+    { Metric: 'Closing Stock', Value: closingStock },
+    { Metric: 'Low Stock Items', Value: lowStockItems },
+    { Metric: 'Total Stock In', Value: stockInQty },
+    { Metric: 'Total Stock Out', Value: stockOutQty },
+    { Metric: 'Transactions', Value: branchEntries.length },
+    { Metric: 'Team Members', Value: branchEmployees.length },
+    { Metric: 'Last Stock Entry', Value: lastEntry ? formatDate(lastEntry.created_at) : 'No stock updates yet' },
+    { Metric: 'Generated On', Value: formatDate(new Date().toISOString()) },
+  ]);
+  wsSummary['!cols'] = [{ wch: 22 }, { wch: 28 }];
+  XLSX.utils.book_append_sheet(wb, wsSummary, 'Summary');
+
+  const inventoryRows = itemsWithActivity.length ? itemsWithActivity.map(item => ({
+    'Item Name': item.name,
+    'HSN Code': item.sku || '',
+    'Category': item.category,
+    'Quantity': item.qty,
+    'Unit': item.unit || 'No',
+    'Rate (Excl. Tax)': item.rate || '',
+    'GST %': item.gst || '',
+    'Reorder Level': item.reorder,
+    'Status': item.qty <= 0 ? 'Out of Stock' : item.qty <= item.reorder ? 'Low Stock' : 'In Stock',
+  })) : [{ 'Item Name': 'No inventory data', 'HSN Code': '', 'Category': '', 'Quantity': '', 'Unit': '', 'Rate (Excl. Tax)': '', 'GST %': '', 'Reorder Level': '', 'Status': '' }];
+  const wsInventory = XLSX.utils.json_to_sheet(inventoryRows);
+  wsInventory['!cols'] = [{ wch: 28 }, { wch: 14 }, { wch: 18 }, { wch: 10 }, { wch: 8 }, { wch: 16 }, { wch: 8 }, { wch: 14 }, { wch: 14 }];
+  XLSX.utils.book_append_sheet(wb, wsInventory, 'Stationary Items');
+
+  const transactionRows = branchEntries.length ? [...branchEntries]
+    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+    .map(e => ({
+      'Item': e.item_name,
+      'HSN Code': e.hsn_code || '',
+      'Type': e.entry_type === 'in' ? 'Stock In' : 'Stock Out',
+      'Quantity': e.quantity,
+      'Date & Time': formatDate(e.created_at),
+      'User': e.emp_name || '',
+    })) : [{ 'Item': 'No transactions', 'HSN Code': '', 'Type': '', 'Quantity': '', 'Date & Time': '', 'User': '' }];
+  const wsTransactions = XLSX.utils.json_to_sheet(transactionRows);
+  wsTransactions['!cols'] = [{ wch: 28 }, { wch: 14 }, { wch: 12 }, { wch: 10 }, { wch: 20 }, { wch: 22 }];
+  XLSX.utils.book_append_sheet(wb, wsTransactions, 'Transactions');
+
+  const teamRows = branchEmployees.length ? branchEmployees.map(emp => ({
+    'Employee ID': emp.emp_id || '',
+    'Name': emp.name || '',
+    'Role': emp.role || '',
+    'Mobile': emp.mobile || '',
+    'Location': emp.location || selectedBranch,
+  })) : [{ 'Employee ID': '', 'Name': 'No employees found', 'Role': '', 'Mobile': '', 'Location': selectedBranch }];
+  const wsTeam = XLSX.utils.json_to_sheet(teamRows);
+  wsTeam['!cols'] = [{ wch: 14 }, { wch: 28 }, { wch: 18 }, { wch: 16 }, { wch: 22 }];
+  XLSX.utils.book_append_sheet(wb, wsTeam, 'Team Members');
+
+  const safeBranch = selectedBranch.replace(/[^a-z0-9]/gi, '_');
+  XLSX.writeFile(wb, 'Stationary_Branch_Report_' + safeBranch + '_' + new Date().toISOString().slice(0, 10) + '.xlsx');
+  showToast('Branch report downloaded');
 }
 
 // --- STOCK RECEIVED DATE (Branch) ---
@@ -4410,6 +4491,10 @@ async function saveShipEdit() {
 }
 
 // --- INIT ---
+
+if ((sessionStorage.getItem('sr_auditor') || localStorage.getItem('sr_auditor')) === 'true') {
+  window.location.href = 'audit.html';
+}
 
 // Check if already logged in
 if (checkSession()) {

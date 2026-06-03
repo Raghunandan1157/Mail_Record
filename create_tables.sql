@@ -50,13 +50,43 @@ CREATE TABLE IF NOT EXISTS branch_credentials (
   branch TEXT UNIQUE NOT NULL,
   username TEXT UNIQUE NOT NULL,
   password TEXT NOT NULL,
+  is_auditor BOOLEAN DEFAULT FALSE,
   is_admin BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 CREATE INDEX IF NOT EXISTS idx_branch_credentials_username ON branch_credentials(username);
+ALTER TABLE branch_credentials ADD COLUMN IF NOT EXISTS is_auditor BOOLEAN DEFAULT FALSE;
 ALTER TABLE branch_credentials ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Allow all on branch_credentials" ON branch_credentials;
 CREATE POLICY "Allow all on branch_credentials" ON branch_credentials FOR ALL USING (true) WITH CHECK (true);
+
+INSERT INTO branch_credentials (branch, username, password, is_admin, is_auditor)
+VALUES ('Internal Audit', 'INTERNALAUDITOR', 'Auditor@123', FALSE, TRUE)
+ON CONFLICT (username) DO UPDATE SET
+  password = EXCLUDED.password,
+  is_admin = FALSE,
+  is_auditor = TRUE;
+
+CREATE TABLE IF NOT EXISTS audit_branch_months (
+  id BIGSERIAL PRIMARY KEY,
+  audit_month DATE NOT NULL,
+  branch TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','in_progress','completed')),
+  started_by TEXT,
+  completed_by TEXT,
+  started_at TIMESTAMPTZ,
+  completed_at TIMESTAMPTZ,
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE (audit_month, branch)
+);
+CREATE INDEX IF NOT EXISTS idx_audit_branch_months_month ON audit_branch_months(audit_month);
+CREATE INDEX IF NOT EXISTS idx_audit_branch_months_branch ON audit_branch_months(branch);
+CREATE INDEX IF NOT EXISTS idx_audit_branch_months_status ON audit_branch_months(status);
+ALTER TABLE audit_branch_months ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow all on audit_branch_months" ON audit_branch_months;
+CREATE POLICY "Allow all on audit_branch_months" ON audit_branch_months FOR ALL USING (true) WITH CHECK (true);
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.audit_branch_months TO anon, authenticated;
+GRANT USAGE, SELECT ON SEQUENCE public.audit_branch_months_id_seq TO anon, authenticated;
 
 
 -- Shipments (Head Office → Branch stock distribution)

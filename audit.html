@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Internal Audit</title>
+<link rel="icon" href="data:,">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL@20..48,100..700,0..1" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { min-height: 100vh; font-family: Inter, system-ui, sans-serif; background: #f6f8fb; color: #111827; }
+  .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 450, 'GRAD' 0, 'opsz' 24; }
+  header { position: sticky; top: 0; z-index: 20; background: rgba(255,255,255,0.94); border-bottom: 1px solid #e5e7eb; backdrop-filter: blur(12px); }
+  .topbar { max-width: 1180px; margin: 0 auto; padding: 16px 22px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+  .brand-icon { width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center; background: #111827; color: #fff; }
+  h1 { font-size: 20px; font-weight: 800; letter-spacing: 0; }
+  .sub { margin-top: 2px; font-size: 12px; color: #6b7280; }
+  .actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+  .month-field { display: flex; align-items: center; gap: 9px; padding: 9px 12px; border: 1px solid #d1d5db; border-radius: 10px; background: #fff; }
+  .month-field label { font-size: 11px; font-weight: 800; text-transform: uppercase; color: #6b7280; }
+  input[type="month"] { border: 0; outline: 0; font: inherit; font-size: 14px; font-weight: 700; color: #111827; background: transparent; }
+  button { font: inherit; cursor: pointer; border: 0; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 14px; border-radius: 10px; font-size: 13px; font-weight: 800; }
+  .btn-dark { background: #111827; color: #fff; }
+  .btn-light { background: #fff; color: #374151; border: 1px solid #d1d5db; }
+  main { max-width: 1180px; margin: 0 auto; padding: 28px 22px 48px; }
+  .summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-bottom: 22px; }
+  .kpi { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; }
+  .kpi .label { font-size: 11px; text-transform: uppercase; font-weight: 800; color: #6b7280; }
+  .kpi .value { margin-top: 8px; font-size: 28px; font-weight: 800; color: #111827; }
+  .legend { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 18px; color: #4b5563; font-size: 13px; font-weight: 700; }
+  .legend span { display: inline-flex; align-items: center; gap: 7px; }
+  .dot { width: 10px; height: 10px; border-radius: 999px; display: inline-block; }
+  .toolbar { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 16px; }
+  .search { width: min(360px, 100%); display: flex; align-items: center; gap: 8px; background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 10px 12px; }
+  .search input { border: 0; outline: 0; width: 100%; font: inherit; font-size: 14px; background: transparent; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
+  .branch-card { background: #fff; border: 1px solid #e5e7eb; border-left: 7px solid var(--status-color); border-radius: 12px; padding: 16px; box-shadow: 0 1px 3px rgba(15,23,42,0.04); text-align: left; transition: transform 0.16s, box-shadow 0.16s; }
+  .branch-card:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(15,23,42,0.08); }
+  .branch-name { font-size: 15px; line-height: 1.35; font-weight: 800; color: #111827; }
+  .status-pill { margin-top: 14px; display: inline-flex; align-items: center; gap: 6px; padding: 5px 9px; border-radius: 999px; color: #fff; background: var(--status-color); font-size: 11px; font-weight: 800; text-transform: uppercase; }
+  .meta { margin-top: 10px; color: #6b7280; font-size: 12px; line-height: 1.5; }
+  .empty { padding: 42px; text-align: center; color: #6b7280; background: #fff; border: 1px dashed #d1d5db; border-radius: 12px; }
+  .modal { position: fixed; inset: 0; z-index: 50; display: none; align-items: center; justify-content: center; padding: 18px; background: rgba(15,23,42,0.56); }
+  .modal.open { display: flex; }
+  .panel { width: min(760px, 100%); max-height: min(760px, 92vh); overflow: auto; background: #fff; border-radius: 16px; box-shadow: 0 24px 80px rgba(0,0,0,0.25); }
+  .panel-head { padding: 22px; border-bottom: 1px solid #e5e7eb; display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; }
+  .panel-title { font-size: 20px; font-weight: 800; }
+  .panel-body { padding: 22px; }
+  .detail-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+  .detail { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px; padding: 14px; }
+  .detail .label { color: #6b7280; font-size: 11px; text-transform: uppercase; font-weight: 800; }
+  .detail .value { margin-top: 8px; font-size: 22px; font-weight: 800; }
+  .panel-actions { padding: 18px 22px; border-top: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: flex-end; gap: 10px; flex-wrap: wrap; }
+  .btn-green { background: #16a34a; color: #fff; }
+  .btn-blue { background: #2563eb; color: #fff; }
+  .error { color: #b91c1c; font-size: 13px; font-weight: 700; margin-bottom: 14px; display: none; }
+  @media (max-width: 760px) {
+    .topbar { align-items: flex-start; flex-direction: column; }
+    .actions { width: 100%; justify-content: stretch; }
+    .actions > * { flex: 1; }
+    .summary, .detail-grid { grid-template-columns: 1fr 1fr; }
+    .toolbar { align-items: stretch; flex-direction: column; }
+    .search { width: 100%; }
+  }
+  @media (max-width: 480px) {
+    .summary, .detail-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-icon"><span class="material-symbols-outlined">fact_check</span></div>
+      <div>
+        <h1>Internal Audit</h1>
+        <div class="sub" id="auditorLabel">Monthly branch worksheet review</div>
+      </div>
+    </div>
+    <div class="actions">
+      <div class="month-field">
+        <label for="auditMonth">Month</label>
+        <input id="auditMonth" type="month" onchange="loadAuditDashboard()">
+      </div>
+      <button class="btn btn-light" onclick="loadAuditDashboard()"><span class="material-symbols-outlined">refresh</span>Refresh</button>
+      <button class="btn btn-dark" onclick="logout()"><span class="material-symbols-outlined">logout</span>Logout</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="error" id="errorBox"></div>
+  <section class="summary">
+    <div class="kpi"><div class="label">Branches</div><div class="value" id="kpiTotal">0</div></div>
+    <div class="kpi"><div class="label">Pending</div><div class="value" id="kpiPending">0</div></div>
+    <div class="kpi"><div class="label">In Progress</div><div class="value" id="kpiProgress">0</div></div>
+    <div class="kpi"><div class="label">Completed</div><div class="value" id="kpiCompleted">0</div></div>
+  </section>
+
+  <div class="legend">
+    <span><i class="dot" style="background:#111827"></i>Black Pending</span>
+    <span><i class="dot" style="background:#16a34a"></i>Green In-progress</span>
+    <span><i class="dot" style="background:#2563eb"></i>Blue Completed</span>
+  </div>
+
+  <div class="toolbar">
+    <div>
+      <strong id="monthTitle">Audit worksheet</strong>
+      <div class="sub">Open a branch to start audit. Mark completed when review is finished.</div>
+    </div>
+    <label class="search">
+      <span class="material-symbols-outlined" style="font-size:18px;color:#9ca3af">search</span>
+      <input id="branchSearch" type="search" placeholder="Search branch" oninput="renderBranches()">
+    </label>
+  </div>
+
+  <div class="grid" id="branchGrid"></div>
+  <div class="empty" id="emptyState" style="display:none">No branches found for audit.</div>
+</main>
+
+<div class="modal" id="branchModal" onclick="if(event.target===this)closeBranchModal()">
+  <div class="panel">
+    <div class="panel-head">
+      <div>
+        <div class="panel-title" id="detailBranch">Branch</div>
+        <div class="sub" id="detailStatus">Status</div>
+      </div>
+      <button class="btn btn-light" onclick="closeBranchModal()"><span class="material-symbols-outlined">close</span>Close</button>
+    </div>
+    <div class="panel-body">
+      <div class="error" id="detailError"></div>
+      <div class="detail-grid">
+        <div class="detail"><div class="label">Mail Inward</div><div class="value" id="mailInward">0</div></div>
+        <div class="detail"><div class="label">Mail Outward</div><div class="value" id="mailOutward">0</div></div>
+        <div class="detail"><div class="label">Stationary Txns</div><div class="value" id="stockTxns">0</div></div>
+        <div class="detail"><div class="label">Complaints</div><div class="value" id="complaintsTotal">0</div></div>
+        <div class="detail"><div class="label">Pending Complaints</div><div class="value" id="complaintsPending">0</div></div>
+        <div class="detail"><div class="label">Resolved Complaints</div><div class="value" id="complaintsResolved">0</div></div>
+      </div>
+    </div>
+    <div class="panel-actions">
+      <button class="btn btn-green" id="reopenBtn" onclick="setSelectedStatus('in_progress')"><span class="material-symbols-outlined">play_arrow</span>Reopen In Progress</button>
+      <button class="btn btn-blue" id="completeBtn" onclick="setSelectedStatus('completed')"><span class="material-symbols-outlined">task_alt</span>Mark Completed</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const SUPABASE_URL = 'https://zovnmmdfthpbubrorsgh.supabase.co';
+  const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpvdm5tbWRmdGhwYnVicm9yc2doIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE1NzE3ODgsImV4cCI6MjA3NzE0Nzc4OH0.92BH2sjUOgkw6iSRj1_4gt0p3eThg3QT4VK-Q4EdmBE';
+  const HEADERS = { apikey: SUPABASE_ANON, Authorization: 'Bearer ' + SUPABASE_ANON, 'Content-Type': 'application/json' };
+  const statusColors = {
+    pending: { color: '#111827', label: 'Pending' },
+    in_progress: { color: '#16a34a', label: 'In Progress' },
+    completed: { color: '#2563eb', label: 'Completed' },
+  };
+
+  const auditorName = sessionStorage.getItem('sr_auditor_name') || localStorage.getItem('sr_auditor_name') || '';
+  const auditorSession = (sessionStorage.getItem('sr_auditor') || localStorage.getItem('sr_auditor')) === 'true';
+  let branches = [];
+  let auditRows = [];
+  let selectedBranch = null;
+
+  if (!auditorSession) {
+    window.location.href = 'index.html';
+  }
+
+  document.getElementById('auditorLabel').textContent = auditorName ? `Auditor: ${auditorName}` : 'Internal auditor session';
+
+  function showError(message) {
+    const el = document.getElementById('errorBox');
+    el.textContent = message;
+    el.style.display = message ? 'block' : 'none';
+  }
+
+  function showDetailError(message) {
+    const el = document.getElementById('detailError');
+    el.textContent = message;
+    el.style.display = message ? 'block' : 'none';
+  }
+
+  function esc(value) {
+    const div = document.createElement('div');
+    div.textContent = value == null ? '' : String(value);
+    return div.innerHTML;
+  }
+
+  async function sbGet(table, params = '') {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${params}`, { headers: HEADERS });
+    if (!res.ok) throw new Error(`${table} read failed: ${res.status}`);
+    return res.json();
+  }
+
+  async function upsertAudit(row) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/audit_branch_months?on_conflict=audit_month,branch`, {
+      method: 'POST',
+      headers: { ...HEADERS, Prefer: 'resolution=merge-duplicates,return=representation' },
+      body: JSON.stringify(row),
+    });
+    if (!res.ok) throw new Error('Audit status update failed: ' + await res.text());
+    const data = await res.json();
+    return Array.isArray(data) ? data[0] : data;
+  }
+
+  function selectedAuditMonth() {
+    return `${document.getElementById('auditMonth').value}-01`;
+  }
+
+  function selectedMonthRange() {
+    const [year, month] = document.getElementById('auditMonth').value.split('-').map(Number);
+    const start = new Date(year, month - 1, 1);
+    const next = new Date(year, month, 1);
+    const last = new Date(year, month, 0);
+    const fmt = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    return { start: fmt(start), end: fmt(last), next: fmt(next) };
+  }
+
+  function monthLabel() {
+    const [year, month] = document.getElementById('auditMonth').value.split('-').map(Number);
+    return new Date(year, month - 1, 1).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
+  }
+
+  function getAuditRow(branch) {
+    return auditRows.find(row => row.branch === branch) || {
+      audit_month: selectedAuditMonth(),
+      branch,
+      status: 'pending',
+      started_by: '',
+      completed_by: '',
+      started_at: '',
+      completed_at: '',
+    };
+  }
+
+  async function loadBranches() {
+    const creds = await sbGet('branch_credentials', 'select=branch,username,is_admin,is_auditor&order=branch.asc');
+    const names = creds
+      .filter(row => !row.is_admin && !row.is_auditor)
+      .map(row => row.branch || row.username)
+      .filter(Boolean)
+      .filter(name => !['Head Office', 'Corporate Office', 'Internal Audit'].includes(name));
+    branches = [...new Set(names)].sort((a, b) => a.localeCompare(b));
+  }
+
+  async function loadAuditDashboard() {
+    showError('');
+    try {
+      if (!branches.length) await loadBranches();
+      const month = selectedAuditMonth();
+      auditRows = await sbGet('audit_branch_months', `select=*&audit_month=eq.${month}`);
+      document.getElementById('monthTitle').textContent = `${monthLabel()} audit worksheet`;
+      renderBranches();
+    } catch (err) {
+      showError(err.message + '. Run the audit SQL setup in Supabase if this is the first deployment.');
+    }
+  }
+
+  function renderBranches() {
+    const q = (document.getElementById('branchSearch').value || '').toLowerCase().trim();
+    const visible = branches.filter(branch => !q || branch.toLowerCase().includes(q));
+    const counts = { pending: 0, in_progress: 0, completed: 0 };
+    branches.forEach(branch => { counts[getAuditRow(branch).status || 'pending'] += 1; });
+    document.getElementById('kpiTotal').textContent = branches.length;
+    document.getElementById('kpiPending').textContent = counts.pending;
+    document.getElementById('kpiProgress').textContent = counts.in_progress;
+    document.getElementById('kpiCompleted').textContent = counts.completed;
+
+    const grid = document.getElementById('branchGrid');
+    document.getElementById('emptyState').style.display = visible.length ? 'none' : 'block';
+    grid.innerHTML = visible.map(branch => {
+      const row = getAuditRow(branch);
+      const status = statusColors[row.status] || statusColors.pending;
+      const byLine = row.status === 'completed'
+        ? `Completed by ${row.completed_by || '-'}`
+        : row.status === 'in_progress'
+          ? `Started by ${row.started_by || '-'}`
+          : 'Not checked yet';
+      return `<button class="branch-card" style="--status-color:${status.color}" onclick="openBranch('${encodeURIComponent(branch)}')">
+        <div class="branch-name">${esc(branch)}</div>
+        <div class="status-pill">${status.label}</div>
+        <div class="meta">${esc(byLine)}</div>
+      </button>`;
+    }).join('');
+  }
+
+  async function openBranch(encodedBranch) {
+    selectedBranch = decodeURIComponent(encodedBranch);
+    showDetailError('');
+    let row = getAuditRow(selectedBranch);
+    if (row.status === 'pending') {
+      row = await upsertAudit({
+        audit_month: selectedAuditMonth(),
+        branch: selectedBranch,
+        status: 'in_progress',
+        started_by: auditorName,
+        started_at: new Date().toISOString(),
+        completed_by: null,
+        completed_at: null,
+        updated_at: new Date().toISOString(),
+      });
+      auditRows = auditRows.filter(r => r.branch !== selectedBranch).concat(row);
+      renderBranches();
+    }
+    document.getElementById('branchModal').classList.add('open');
+    renderSelectedHeader();
+    await loadBranchCounts();
+  }
+
+  function renderSelectedHeader() {
+    const row = getAuditRow(selectedBranch);
+    const status = statusColors[row.status] || statusColors.pending;
+    document.getElementById('detailBranch').textContent = selectedBranch;
+    document.getElementById('detailStatus').textContent = `${status.label} · ${monthLabel()}`;
+    document.getElementById('detailStatus').style.color = status.color;
+    document.getElementById('reopenBtn').style.display = row.status === 'completed' ? 'inline-flex' : 'none';
+    document.getElementById('completeBtn').style.display = row.status === 'completed' ? 'none' : 'inline-flex';
+  }
+
+  async function loadBranchCounts() {
+    const range = selectedMonthRange();
+    try {
+      const [mailIn, mailOut, stock, complaints] = await Promise.all([
+        sbGet('mail_records', `select=id&mail_type=eq.inward&location=eq.${encodeURIComponent(selectedBranch)}&date=gte.${range.start}&date=lte.${range.end}`),
+        sbGet('mail_records', `select=id&mail_type=eq.outward&location=eq.${encodeURIComponent(selectedBranch)}&date=gte.${range.start}&date=lte.${range.end}`),
+        sbGet('stock_entries', `select=id&location=eq.${encodeURIComponent(selectedBranch)}&created_at=gte.${range.start}T00:00:00&created_at=lt.${range.next}T00:00:00`).catch(() => []),
+        sbGet('complaint_records', `select=id,status&branch=eq.${encodeURIComponent(selectedBranch)}&date=gte.${range.start}&date=lte.${range.end}`).catch(() => []),
+      ]);
+      document.getElementById('mailInward').textContent = mailIn.length;
+      document.getElementById('mailOutward').textContent = mailOut.length;
+      document.getElementById('stockTxns').textContent = stock.length;
+      document.getElementById('complaintsTotal').textContent = complaints.length;
+      document.getElementById('complaintsPending').textContent = complaints.filter(c => c.status === 'pending' || c.status === 'in_progress').length;
+      document.getElementById('complaintsResolved').textContent = complaints.filter(c => c.status === 'resolved').length;
+    } catch (err) {
+      showDetailError(err.message);
+    }
+  }
+
+  async function setSelectedStatus(status) {
+    if (!selectedBranch) return;
+    const current = getAuditRow(selectedBranch);
+    const now = new Date().toISOString();
+    const next = {
+      audit_month: selectedAuditMonth(),
+      branch: selectedBranch,
+      status,
+      started_by: current.started_by || auditorName,
+      started_at: current.started_at || now,
+      completed_by: status === 'completed' ? auditorName : null,
+      completed_at: status === 'completed' ? now : null,
+      updated_at: now,
+    };
+    try {
+      const row = await upsertAudit(next);
+      auditRows = auditRows.filter(r => r.branch !== selectedBranch).concat(row);
+      renderBranches();
+      renderSelectedHeader();
+    } catch (err) {
+      showDetailError(err.message);
+    }
+  }
+
+  function closeBranchModal() {
+    document.getElementById('branchModal').classList.remove('open');
+    selectedBranch = null;
+  }
+
+  function logout() {
+    ['sr_employee','sr_location','sr_headoffice','sr_login_time','sr_dept_admin','mr_session','sr_view_mode','sr_auditor','sr_auditor_name'].forEach(key => {
+      sessionStorage.removeItem(key);
+      localStorage.removeItem(key);
+    });
+    window.location.href = 'index.html';
+  }
+
+  (function init() {
+    const now = new Date();
+    document.getElementById('auditMonth').value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    loadAuditDashboard();
+  })();
+</script>
+</body>
+</html>

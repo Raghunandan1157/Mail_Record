@@ -1062,12 +1062,13 @@
     }
     function applyViewMode() {
       const viewMode = getStoredViewMode();
+      const switchable = canSwitchView();
       // Only Admin view should open Mail Record's admin dashboard.
-      const effectiveAdmin = (viewMode === 'admin') && canSwitchView();
+      const effectiveAdmin = (viewMode === 'admin') && switchable;
       // Effective branch location for non-admin views.
       let effectiveLocation = sessionLocation;
-      if (viewMode === 'branch') effectiveLocation = 'Head Office';
-      else if (viewMode === 'corporate') effectiveLocation = 'Corporate Office';
+      if (switchable && viewMode === 'branch') effectiveLocation = 'Head Office';
+      else if (switchable && viewMode === 'corporate') effectiveLocation = 'Corporate Office';
       isAdmin = effectiveAdmin;
       selectedLocation = effectiveLocation;
     }
@@ -2198,6 +2199,10 @@
     }
 
     function printReport() { window.print(); }
+
+    if ((sessionStorage.getItem('sr_auditor') || localStorage.getItem('sr_auditor')) === 'true') {
+      window.location.href = 'audit.html';
+    }
 
     // ===== INIT =====
     if (checkSession()) showApp(); else window.location.href = 'index.html';

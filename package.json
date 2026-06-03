@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "test": "node tests/ai-assistant-access.test.mjs && node tests/index-ai-tile-visibility.test.mjs && node tests/stationary-view-mode.test.mjs && node tests/view-mode-helpers.test.mjs"
+    "test": "node tests/auditor-flow.test.mjs && node tests/mailrecord-view-mode.test.mjs && node tests/stationary-branch-download.test.mjs && node tests/ai-assistant-access.test.mjs && node tests/index-ai-tile-visibility.test.mjs && node tests/stationary-view-mode.test.mjs && node tests/view-mode-helpers.test.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0"

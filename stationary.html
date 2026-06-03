@@ -924,7 +924,7 @@
       <div id="page-branchdetail" class="hidden">
 
         <!-- Header -->
-        <div class="flex items-center justify-between mb-8">
+        <div class="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4 mb-8">
           <div class="flex items-center gap-4">
             <button onclick="navigateTo('admin')" class="flex items-center gap-2 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors">
               <span class="material-symbols-outlined">arrow_back</span>
@@ -935,7 +935,7 @@
               <p class="text-sm text-slate-500 dark:text-slate-400">Branch Overview</p>
             </div>
           </div>
-          <div class="flex items-center gap-3">
+          <div id="bd-branch-actions" class="flex flex-wrap items-center justify-start xl:justify-end gap-3 w-full xl:w-auto">
             <div id="bd-last-update" class="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">
               <span class="material-symbols-outlined text-sm">schedule</span>
               <span id="bd-last-update-text">--</span>
@@ -947,13 +947,18 @@
           </div>
         </div>
 
-        <!-- Module Switch (Stationary / Mail Record) -->
-        <div class="flex items-center gap-1 mb-6 p-1 bg-slate-100 dark:bg-slate-800/60 rounded-xl w-max">
-          <button id="bd-modbtn-stationary" onclick="switchBranchModule('stationary')" class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-colors">
-            <span class="material-symbols-outlined text-base">inventory_2</span>Stationary
-          </button>
-          <button id="bd-modbtn-mailrecord" onclick="switchBranchModule('mailrecord')" class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-colors">
-            <span class="material-symbols-outlined text-base">mail</span>Mail Record
+        <!-- Module Switch + Download -->
+        <div class="flex items-center justify-between gap-3 mb-6 flex-wrap">
+          <div class="flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-800/60 rounded-xl w-max">
+            <button id="bd-modbtn-stationary" onclick="switchBranchModule('stationary')" class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-colors">
+              <span class="material-symbols-outlined text-base">inventory_2</span>Stationary
+            </button>
+            <button id="bd-modbtn-mailrecord" onclick="switchBranchModule('mailrecord')" class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-colors">
+              <span class="material-symbols-outlined text-base">mail</span>Mail Record
+            </button>
+          </div>
+          <button id="bd-download-btn" onclick="downloadStationaryBranchReport()" class="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-bold transition-colors shadow-sm">
+            <span class="material-symbols-outlined text-base">download</span>Download Branch Report
           </button>
         </div>
 
