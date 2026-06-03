@@ -1122,6 +1122,19 @@ function renderBranchDetail() {
   document.getElementById('bd-branch-name').textContent = selectedBranch;
   document.getElementById('bd-branch-badge').textContent = selectedBranch;
 
+  // Last update — most recent stock entry timestamp at this branch (Stationary module)
+  const lastEntry = entries.reduce((latest, e) => {
+    const t = new Date(e.created_at).getTime();
+    return (!latest || t > latest.t) ? { t, e } : latest;
+  }, null);
+  bdStationaryLast = lastEntry
+    ? { text: 'Last stock entry ' + timeAgo(lastEntry.e.created_at) + ' · ' + formatDate(lastEntry.e.created_at), isToday: isTimestampToday(lastEntry.t) }
+    : { text: 'No stock updates yet', isToday: null };
+
+  // Reset module to Stationary on each open; invalidate mail cache for the new branch
+  bdMailLoadedBranch = null;
+  switchBranchModule('stationary');
+
   // Compute per-item inventory from branch entries
   const branchInventory = DEFAULT_INVENTORY.map(item => {
     let qty = 0;
@@ -1224,6 +1237,144 @@ function renderBranchDetail() {
       `;
     }).join('');
   }
+}
+
+// --- BRANCH MODULE SWITCH (Stationary <-> Mail Record) ---
+
+let bdStationaryLast = { text: '--', isToday: null };
+let bdMailLast = { text: '--', isToday: null };
+let bdMailLoadedBranch = null;
+
+function isTimestampToday(t) {
+  const d = new Date(t);
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  return d.getTime() >= today.getTime();
+}
+
+function applyBranchLastUpdate(info) {
+  const badge = document.getElementById('bd-last-update');
+  const text = document.getElementById('bd-last-update-text');
+  if (!text) return;
+  text.textContent = info.text;
+  if (badge) {
+    const tone = info.isToday === null
+      ? 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
+      : (info.isToday
+          ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
+          : 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400');
+    badge.className = 'flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold ' + tone;
+  }
+}
+
+function switchBranchModule(mod) {
+  const isStat = mod === 'stationary';
+  const statMod = document.getElementById('bd-mod-stationary');
+  const mailMod = document.getElementById('bd-mod-mailrecord');
+  if (statMod) statMod.classList.toggle('hidden', !isStat);
+  if (mailMod) mailMod.classList.toggle('hidden', isStat);
+
+  const ACTIVE = ['bg-white', 'dark:bg-[#1c2631]', 'text-primary', 'shadow-sm'];
+  const INACTIVE = ['text-slate-500', 'dark:text-slate-400', 'hover:text-slate-700', 'dark:hover:text-slate-200'];
+  const statBtn = document.getElementById('bd-modbtn-stationary');
+  const mailBtn = document.getElementById('bd-modbtn-mailrecord');
+  if (statBtn && mailBtn) {
+    statBtn.classList.remove(...ACTIVE, ...INACTIVE);
+    mailBtn.classList.remove(...ACTIVE, ...INACTIVE);
+    statBtn.classList.add(...(isStat ? ACTIVE : INACTIVE));
+    mailBtn.classList.add(...(isStat ? INACTIVE : ACTIVE));
+  }
+
+  if (isStat) {
+    applyBranchLastUpdate(bdStationaryLast);
+  } else {
+    applyBranchLastUpdate(bdMailLast);
+    loadBranchMailRecords(selectedBranch);
+  }
+}
+
+function switchBranchMailTab(tab) {
+  const isOut = tab === 'outward';
+  const outPanel = document.getElementById('bd-mailtab-outward');
+  const inPanel = document.getElementById('bd-mailtab-inward');
+  if (outPanel) outPanel.classList.toggle('hidden', !isOut);
+  if (inPanel) inPanel.classList.toggle('hidden', isOut);
+  const ACTIVE = ['border-primary', 'text-primary'];
+  const INACTIVE = ['border-transparent', 'text-slate-500', 'dark:text-slate-400', 'hover:text-slate-700', 'dark:hover:text-slate-200'];
+  const outBtn = document.getElementById('bd-mailtabbtn-outward');
+  const inBtn = document.getElementById('bd-mailtabbtn-inward');
+  if (outBtn && inBtn) {
+    outBtn.classList.remove(...ACTIVE, ...INACTIVE);
+    inBtn.classList.remove(...ACTIVE, ...INACTIVE);
+    outBtn.classList.add(...(isOut ? ACTIVE : INACTIVE));
+    inBtn.classList.add(...(isOut ? INACTIVE : ACTIVE));
+  }
+}
+
+function renderBranchMailRow(r, kind) {
+  const docs = escHtml(r.documents || '--');
+  return `
+    <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
+      <td class="px-6 py-3 text-slate-600 dark:text-slate-300">${escHtml(formatDate(r.created_at))}</td>
+      <td class="px-6 py-3 font-medium text-slate-800 dark:text-slate-200">${escHtml(r.name || '--')}</td>
+      <td class="px-6 py-3 text-slate-500 dark:text-slate-400">${escHtml(r.department || '--')}</td>
+      <td class="px-6 py-3 text-slate-500 dark:text-slate-400">${docs}</td>
+    </tr>`;
+}
+
+async function loadBranchMailRecords(branch) {
+  if (!branch) return;
+  if (bdMailLoadedBranch === branch) return; // already loaded for this branch
+  bdMailLoadedBranch = branch;
+
+  const outTable = document.getElementById('bd-mail-out-table');
+  const inTable = document.getElementById('bd-mail-in-table');
+  if (outTable) outTable.innerHTML = '<tr><td colspan="4" class="px-6 py-8 text-center text-slate-400">Loading...</td></tr>';
+  if (inTable) inTable.innerHTML = '<tr><td colspan="4" class="px-6 py-8 text-center text-slate-400">Loading...</td></tr>';
+
+  let records = [];
+  try {
+    records = await supabaseFetch('mail_records', `select=*&location=eq.${encodeURIComponent(branch)}&order=created_at.desc`) || [];
+  } catch (err) {
+    console.error('Failed to load branch mail records:', err);
+    if (outTable) outTable.innerHTML = '<tr><td colspan="4" class="px-6 py-8 text-center text-red-400">Failed to load mail records</td></tr>';
+    if (inTable) inTable.innerHTML = '<tr><td colspan="4" class="px-6 py-8 text-center text-red-400">Failed to load mail records</td></tr>';
+    bdMailLoadedBranch = null; // allow retry
+    return;
+  }
+
+  const outward = records.filter(r => r.mail_type === 'outward');
+  const inward = records.filter(r => r.mail_type === 'inward');
+
+  // KPIs
+  const setText = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  setText('bd-mail-kpi-out', outward.length.toLocaleString());
+  setText('bd-mail-kpi-in', inward.length.toLocaleString());
+
+  // Last mail entry (records already desc by created_at)
+  const latest = records[0];
+  if (latest) {
+    const t = new Date(latest.created_at).getTime();
+    bdMailLast = { text: 'Last mail entry ' + timeAgo(latest.created_at) + ' · ' + formatDate(latest.created_at), isToday: isTimestampToday(t) };
+    setText('bd-mail-kpi-last', formatDate(latest.created_at));
+  } else {
+    bdMailLast = { text: 'No mail updates yet', isToday: null };
+    setText('bd-mail-kpi-last', '--');
+  }
+  applyBranchLastUpdate(bdMailLast);
+
+  // Tables (last 10 each, already desc)
+  if (outTable) {
+    outTable.innerHTML = outward.length
+      ? outward.slice(0, 10).map(r => renderBranchMailRow(r, 'out')).join('')
+      : '<tr><td colspan="4" class="px-6 py-12 text-center text-slate-400">No outward mail records</td></tr>';
+  }
+  if (inTable) {
+    inTable.innerHTML = inward.length
+      ? inward.slice(0, 10).map(r => renderBranchMailRow(r, 'in')).join('')
+      : '<tr><td colspan="4" class="px-6 py-12 text-center text-slate-400">No inward mail records</td></tr>';
+  }
+
+  switchBranchMailTab('outward');
 }
 
 // --- CLOSING STOCK PAGE (Admin) ---

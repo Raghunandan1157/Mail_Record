@@ -935,11 +935,30 @@
               <p class="text-sm text-slate-500 dark:text-slate-400">Branch Overview</p>
             </div>
           </div>
-          <div class="flex items-center gap-2 px-3 py-1.5 bg-primary/10 text-primary rounded-full text-xs font-bold uppercase tracking-wider">
-            <span class="material-symbols-outlined text-sm">location_on</span>
-            <span id="bd-branch-badge">--</span>
+          <div class="flex items-center gap-3">
+            <div id="bd-last-update" class="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">
+              <span class="material-symbols-outlined text-sm">schedule</span>
+              <span id="bd-last-update-text">--</span>
+            </div>
+            <div class="flex items-center gap-2 px-3 py-1.5 bg-primary/10 text-primary rounded-full text-xs font-bold uppercase tracking-wider">
+              <span class="material-symbols-outlined text-sm">location_on</span>
+              <span id="bd-branch-badge">--</span>
+            </div>
           </div>
         </div>
+
+        <!-- Module Switch (Stationary / Mail Record) -->
+        <div class="flex items-center gap-1 mb-6 p-1 bg-slate-100 dark:bg-slate-800/60 rounded-xl w-max">
+          <button id="bd-modbtn-stationary" onclick="switchBranchModule('stationary')" class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-colors">
+            <span class="material-symbols-outlined text-base">inventory_2</span>Stationary
+          </button>
+          <button id="bd-modbtn-mailrecord" onclick="switchBranchModule('mailrecord')" class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-colors">
+            <span class="material-symbols-outlined text-base">mail</span>Mail Record
+          </button>
+        </div>
+
+        <!-- ===== STATIONARY MODULE ===== -->
+        <div id="bd-mod-stationary">
 
         <!-- KPI Grid -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -1040,6 +1059,94 @@
             </table>
           </div>
         </div>
+
+        </div><!-- /bd-mod-stationary -->
+
+        <!-- ===== MAIL RECORD MODULE ===== -->
+        <div id="bd-mod-mailrecord" class="hidden">
+
+          <!-- Mail KPI Grid -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white dark:bg-[#1c2631] p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+              <div class="flex items-center justify-between mb-4">
+                <span class="p-2 bg-blue-100 dark:bg-blue-900/30 text-primary rounded-lg"><span class="material-symbols-outlined">call_made</span></span>
+              </div>
+              <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Total Outward</p>
+              <h3 class="text-2xl font-bold text-slate-800 dark:text-white mt-1" id="bd-mail-kpi-out">--</h3>
+            </div>
+            <div class="bg-white dark:bg-[#1c2631] p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+              <div class="flex items-center justify-between mb-4">
+                <span class="p-2 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-lg"><span class="material-symbols-outlined">call_received</span></span>
+              </div>
+              <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Total Inward</p>
+              <h3 class="text-2xl font-bold text-slate-800 dark:text-white mt-1" id="bd-mail-kpi-in">--</h3>
+            </div>
+            <div class="bg-white dark:bg-[#1c2631] p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+              <div class="flex items-center justify-between mb-4">
+                <span class="p-2 bg-violet-100 dark:bg-violet-900/30 text-violet-600 dark:text-violet-400 rounded-lg"><span class="material-symbols-outlined">schedule</span></span>
+              </div>
+              <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Last Mail Entry</p>
+              <h3 class="text-base font-bold text-slate-800 dark:text-white mt-1" id="bd-mail-kpi-last">--</h3>
+            </div>
+          </div>
+
+          <!-- Outward / Inward Tabs -->
+          <div class="flex items-center gap-1 mb-6 border-b border-slate-200 dark:border-slate-800">
+            <button id="bd-mailtabbtn-outward" onclick="switchBranchMailTab('outward')" class="flex items-center gap-2 px-5 py-3 text-sm font-bold border-b-2 -mb-px transition-colors">
+              <span class="material-symbols-outlined text-base">call_made</span>Outward
+            </button>
+            <button id="bd-mailtabbtn-inward" onclick="switchBranchMailTab('inward')" class="flex items-center gap-2 px-5 py-3 text-sm font-bold border-b-2 -mb-px transition-colors">
+              <span class="material-symbols-outlined text-base">call_received</span>Inward
+            </button>
+          </div>
+
+          <!-- Outward Table -->
+          <div id="bd-mailtab-outward" class="bg-white dark:bg-[#1c2631] rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden mb-8">
+            <div class="p-6 border-b border-slate-200 dark:border-slate-800">
+              <h4 class="text-lg font-bold text-slate-800 dark:text-white">Recent Outward</h4>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Last 10 outward mail records at this branch</p>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left">
+                <thead class="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider">
+                  <tr>
+                    <th class="px-6 py-4 font-semibold">Date</th>
+                    <th class="px-6 py-4 font-semibold">To</th>
+                    <th class="px-6 py-4 font-semibold">Department</th>
+                    <th class="px-6 py-4 font-semibold">Documents</th>
+                  </tr>
+                </thead>
+                <tbody id="bd-mail-out-table" class="divide-y divide-slate-100 dark:divide-slate-800 text-sm">
+                  <tr><td class="px-6 py-4 text-slate-400 text-center" colspan="4">Loading...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Inward Table -->
+          <div id="bd-mailtab-inward" class="hidden bg-white dark:bg-[#1c2631] rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden mb-8">
+            <div class="p-6 border-b border-slate-200 dark:border-slate-800">
+              <h4 class="text-lg font-bold text-slate-800 dark:text-white">Recent Inward</h4>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Last 10 inward mail records at this branch</p>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left">
+                <thead class="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider">
+                  <tr>
+                    <th class="px-6 py-4 font-semibold">Date</th>
+                    <th class="px-6 py-4 font-semibold">From</th>
+                    <th class="px-6 py-4 font-semibold">Department</th>
+                    <th class="px-6 py-4 font-semibold">Documents</th>
+                  </tr>
+                </thead>
+                <tbody id="bd-mail-in-table" class="divide-y divide-slate-100 dark:divide-slate-800 text-sm">
+                  <tr><td class="px-6 py-4 text-slate-400 text-center" colspan="4">Loading...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div><!-- /bd-mod-mailrecord -->
 
         <!-- Team Members Grid -->
         <div class="bg-white dark:bg-[#1c2631] rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
