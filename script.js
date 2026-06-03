@@ -979,8 +979,13 @@ function renderAdminDashboard() {
     }).join('');
   }
 
-  // Recent activity (last 10)
-  const recent = entries.slice(0, 10);
+  // Preserve active branch search after table rebuild
+  if (document.getElementById('admin-branch-search')?.value) filterAdminBranchTable();
+
+  // Recent activity (last 10) — entries load created_at.asc, sort desc for newest first
+  const recent = [...entries]
+    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+    .slice(0, 10);
   const recentTable = document.getElementById('admin-recent-table');
   if (recent.length === 0) {
     recentTable.innerHTML = '<tr><td class="px-6 py-4 text-slate-400 text-center" colspan="5">No recent activity</td></tr>';
@@ -1054,6 +1059,30 @@ function renderAdminEmployees() {
 
 function filterAdminEmployees() {
   renderAdminEmployees();
+}
+
+function filterAdminBranchTable() {
+  const q = (document.getElementById('admin-branch-search')?.value || '').toLowerCase().trim();
+  const rows = document.querySelectorAll('#admin-branch-table tr[data-branch]');
+  let visible = 0;
+  rows.forEach(row => {
+    const match = (row.dataset.branch || '').toLowerCase().includes(q);
+    row.classList.toggle('hidden', !match);
+    if (match) visible++;
+  });
+  // Toggle an inline "no match" row
+  let emptyRow = document.getElementById('admin-branch-empty');
+  if (visible === 0 && rows.length > 0) {
+    if (!emptyRow) {
+      emptyRow = document.createElement('tr');
+      emptyRow.id = 'admin-branch-empty';
+      emptyRow.innerHTML = '<td class="px-6 py-4 text-slate-400 text-center" colspan="6">No branch matches your search</td>';
+      document.getElementById('admin-branch-table').appendChild(emptyRow);
+    }
+    emptyRow.classList.remove('hidden');
+  } else if (emptyRow) {
+    emptyRow.classList.add('hidden');
+  }
 }
 
 // --- BRANCH DETAIL (Admin) ---
@@ -1830,8 +1859,11 @@ async function renderBranches() {
           '<span class="material-symbols-outlined text-slate-400 text-sm branch-chevron transition-transform duration-200">expand_more</span>' +
         '</div>' +
       '</div>' +
-      '<div class="branch-contacts hidden divide-y divide-slate-50 dark:divide-slate-800 bg-slate-50/50 dark:bg-slate-800/20">' +
-        employeeRows +
+      '<div class="branch-contacts hidden bg-slate-50/50 dark:bg-slate-800/20">' +
+        '<button data-branch="' + escHtml(b.branch) + '" onclick="event.stopPropagation(); openBranchDetail(this.dataset.branch)" class="w-full flex items-center justify-center gap-1.5 px-3 py-2 text-[11px] font-bold text-primary hover:bg-primary/10 transition-colors border-b border-slate-100 dark:border-slate-800">' +
+          '<span class="material-symbols-outlined" style="font-size:14px">open_in_new</span>View Full Branch Details' +
+        '</button>' +
+        '<div class="divide-y divide-slate-50 dark:divide-slate-800">' + employeeRows + '</div>' +
       '</div>' +
     '</div>';
   }
