@@ -1790,6 +1790,11 @@
       s.classList.add(...(isStat ? A : I)); t.classList.add(...(isStat ? I : A));
     }
 
+    function mrBranchMailQuery(branch) {
+      const encodedBranch = encodeURIComponent(branch);
+      return `select=*&or=(location.eq.${encodedBranch},name.ilike.${encodedBranch})&order=created_at.desc`;
+    }
+
     async function loadMrMail(branch) {
       if (!branch || mrMailLoadedBranch === branch) return;
       mrMailLoadedBranch = branch;
@@ -1797,7 +1802,7 @@
       outBody.innerHTML = inBody.innerHTML = '<tr><td colspan="4" class="py-6 text-center text-slate-400">Loading...</td></tr>';
       let recs = [];
       try {
-        recs = await sbGet('mail_records', `select=*&location=eq.${encodeURIComponent(branch)}&order=created_at.desc`) || [];
+        recs = await sbGet('mail_records', mrBranchMailQuery(branch)) || [];
       } catch (e) {
         mrMailLoadedBranch = null;
         outBody.innerHTML = inBody.innerHTML = '<tr><td colspan="4" class="py-6 text-center text-red-400">Failed to load</td></tr>';
@@ -1887,7 +1892,7 @@
 
       try {
         const [mail, stock, empsRes] = await Promise.all([
-          sbGet('mail_records', `select=*&location=eq.${encodeURIComponent(branch)}&order=created_at.desc`).catch(() => []),
+          sbGet('mail_records', mrBranchMailQuery(branch)).catch(() => []),
           sbGet('stock_entries', `select=*&location=eq.${encodeURIComponent(branch)}&order=created_at.desc`).catch(() => []),
           Promise.resolve((mrAllEmployees || []).filter(e => e.location === branch)),
         ]);

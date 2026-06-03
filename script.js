@@ -1319,6 +1319,11 @@ function renderBranchMailRow(r, kind) {
     </tr>`;
 }
 
+function buildBranchMailRecordsQuery(branch) {
+  const encodedBranch = encodeURIComponent(branch);
+  return `select=*&or=(location.eq.${encodedBranch},name.ilike.${encodedBranch})&order=created_at.desc`;
+}
+
 async function loadBranchMailRecords(branch) {
   if (!branch) return;
   if (bdMailLoadedBranch === branch) return; // already loaded for this branch
@@ -1331,7 +1336,7 @@ async function loadBranchMailRecords(branch) {
 
   let records = [];
   try {
-    records = await supabaseFetch('mail_records', `select=*&location=eq.${encodeURIComponent(branch)}&order=created_at.desc`) || [];
+    records = await supabaseFetch('mail_records', buildBranchMailRecordsQuery(branch)) || [];
   } catch (err) {
     console.error('Failed to load branch mail records:', err);
     if (outTable) outTable.innerHTML = '<tr><td colspan="4" class="px-6 py-8 text-center text-red-400">Failed to load mail records</td></tr>';
@@ -1527,14 +1532,27 @@ function exportOutOfStockToExcel() {
   showToast('Out of stock Excel downloaded');
 }
 
-function downloadStationaryBranchReport() {
+async function downloadStationaryBranchReport() {
   if (!selectedBranch) {
     showToast('Open a branch first', 'delete');
     return;
   }
 
+  const btn = document.getElementById('bd-download-btn');
+  const originalHtml = btn ? btn.innerHTML : '';
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<span class="material-symbols-outlined text-base animate-spin">progress_activity</span>Preparing...';
+  }
+
   const branchEntries = adminData.entries.filter(e => e.location === selectedBranch);
   const branchEmployees = adminData.employees.filter(e => e.location === selectedBranch);
+  let branchMailRecords = [];
+  try {
+    branchMailRecords = await supabaseFetch('mail_records', buildBranchMailRecordsQuery(selectedBranch)) || [];
+  } catch (err) {
+    console.error('Failed to load branch mail records for report:', err);
+  }
   const branchInventory = computeBranchInventory(selectedBranch);
   const itemsWithActivity = branchInventory.filter(item =>
     item.qty > 0 || branchEntries.some(e => e.item_name === item.name)
@@ -1548,11 +1566,18 @@ function downloadStationaryBranchReport() {
     .filter(e => e.entry_type === 'out')
     .reduce((sum, e) => sum + e.quantity, 0);
   const lastEntry = [...branchEntries].sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0];
+  const branchMailOutward = branchMailRecords.filter(r => r.mail_type === 'outward');
+  const branchMailInward = branchMailRecords.filter(r => r.mail_type === 'inward');
+  const lastMailEntry = branchMailRecords[0];
 
   const wb = XLSX.utils.book_new();
 
   const wsSummary = XLSX.utils.json_to_sheet([
     { Metric: 'Branch', Value: selectedBranch },
+    { Metric: 'Total Mail Records', Value: branchMailRecords.length },
+    { Metric: 'Mail Outward', Value: branchMailOutward.length },
+    { Metric: 'Mail Inward', Value: branchMailInward.length },
+    { Metric: 'Last Mail Entry', Value: lastMailEntry ? formatDate(lastMailEntry.created_at) : 'No mail updates yet' },
     { Metric: 'Closing Stock', Value: closingStock },
     { Metric: 'Low Stock Items', Value: lowStockItems },
     { Metric: 'Total Stock In', Value: stockInQty },
@@ -1579,6 +1604,34 @@ function downloadStationaryBranchReport() {
   const wsInventory = XLSX.utils.json_to_sheet(inventoryRows);
   wsInventory['!cols'] = [{ wch: 28 }, { wch: 14 }, { wch: 18 }, { wch: 10 }, { wch: 8 }, { wch: 16 }, { wch: 8 }, { wch: 14 }, { wch: 14 }];
   XLSX.utils.book_append_sheet(wb, wsInventory, 'Stationary Items');
+
+  const outwardRows = branchMailOutward.length ? branchMailOutward.map(r => ({
+    'Date': r.date || '',
+    'Recorded': formatDate(r.created_at),
+    'Location': r.location || '',
+    'To': r.name || '',
+    'Department': r.department || '',
+    'Documents': r.documents || '',
+    'Docket No.': r.docket_number || '',
+    'Courier/Post Status': r.courier_status || '',
+    'Created By': r.created_by || '',
+  })) : [{ 'Date': 'No data', 'Recorded': '', 'Location': '', 'To': '', 'Department': '', 'Documents': '', 'Docket No.': '', 'Courier/Post Status': '', 'Created By': '' }];
+  const wsMailOutward = XLSX.utils.json_to_sheet(outwardRows);
+  wsMailOutward['!cols'] = [{ wch: 14 }, { wch: 20 }, { wch: 18 }, { wch: 22 }, { wch: 18 }, { wch: 30 }, { wch: 16 }, { wch: 20 }, { wch: 18 }];
+  XLSX.utils.book_append_sheet(wb, wsMailOutward, 'Mail Outward');
+
+  const inwardRows = branchMailInward.length ? branchMailInward.map(r => ({
+    'Date': r.date || '',
+    'Recorded': formatDate(r.created_at),
+    'Location': r.location || '',
+    'From': r.name || '',
+    'Department': r.department || '',
+    'Documents': r.documents || '',
+    'Created By': r.created_by || '',
+  })) : [{ 'Date': 'No data', 'Recorded': '', 'Location': '', 'From': '', 'Department': '', 'Documents': '', 'Created By': '' }];
+  const wsMailInward = XLSX.utils.json_to_sheet(inwardRows);
+  wsMailInward['!cols'] = [{ wch: 14 }, { wch: 20 }, { wch: 18 }, { wch: 22 }, { wch: 18 }, { wch: 30 }, { wch: 18 }];
+  XLSX.utils.book_append_sheet(wb, wsMailInward, 'Mail Inward');
 
   const transactionRows = branchEntries.length ? [...branchEntries]
     .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
@@ -1608,6 +1661,10 @@ function downloadStationaryBranchReport() {
   const safeBranch = selectedBranch.replace(/[^a-z0-9]/gi, '_');
   XLSX.writeFile(wb, 'Stationary_Branch_Report_' + safeBranch + '_' + new Date().toISOString().slice(0, 10) + '.xlsx');
   showToast('Branch report downloaded');
+  if (btn) {
+    btn.disabled = false;
+    btn.innerHTML = originalHtml;
+  }
 }
 
 // --- STOCK RECEIVED DATE (Branch) ---

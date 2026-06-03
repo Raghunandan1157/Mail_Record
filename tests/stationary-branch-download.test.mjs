@@ -49,6 +49,18 @@ assert.match(
 
 assert.match(
   scriptSource,
+  /XLSX\.utils\.book_append_sheet\(wb, wsMailOutward, 'Mail Outward'\)/,
+  'Stationary branch report must include a Mail Outward sheet'
+);
+
+assert.match(
+  scriptSource,
+  /XLSX\.utils\.book_append_sheet\(wb, wsMailInward, 'Mail Inward'\)/,
+  'Stationary branch report must include a Mail Inward sheet'
+);
+
+assert.match(
+  scriptSource,
   /XLSX\.utils\.book_append_sheet\(wb, wsTransactions, 'Transactions'\)/,
   'Stationary branch report must include a Transactions sheet'
 );
