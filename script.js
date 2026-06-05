@@ -4036,7 +4036,7 @@ function renderEntryCards() {
               class="size-8 flex items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors text-lg font-bold ${qty <= 0 ? 'opacity-40 pointer-events-none' : ''}">
               &minus;
             </button>
-            <input id="qty-display-${item.id}" type="number" min="0" value="${qty}" onclick="event.stopPropagation(); this.select()" oninput="event.stopPropagation(); setEntryQty(${item.id}, this.value)" class="qty-display text-lg font-bold text-slate-800 dark:text-white w-16 text-center bg-transparent border-b border-slate-300 dark:border-slate-600 focus:outline-none focus:border-primary"/>
+            <input id="qty-display-${item.id}" type="number" min="0" value="${qty}" onclick="event.stopPropagation(); this.select()" oninput="event.stopPropagation(); setEntryQty(${item.id}, this.value)" class="qty-display text-lg font-bold text-slate-800 dark:text-white w-24 text-center bg-transparent border-b border-slate-300 dark:border-slate-600 focus:outline-none focus:border-primary"/>
             <button onclick="event.stopPropagation(); updateEntryQty(${item.id}, 1)"
               class="size-8 flex items-center justify-center rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors text-lg font-bold ${isDisabled ? 'opacity-40 pointer-events-none' : ''}">
               +

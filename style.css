@@ -308,3 +308,14 @@ html:not(.dark) .even\:bg-slate-50:nth-child(even) {
 html:not(.dark) .odd\:bg-white:nth-child(odd) {
   background-color: #fffef5 !important;
 }
+
+/* Remove up/down spinner arrows on number inputs (cross-browser) */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
