@@ -634,6 +634,20 @@
     const SK = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpvdm5tbWRmdGhwYnVicm9yc2doIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE1NzE3ODgsImV4cCI6MjA3NzE0Nzc4OH0.92BH2sjUOgkw6iSRj1_4gt0p3eThg3QT4VK-Q4EdmBE';
     const H = { 'apikey': SK, 'Authorization': 'Bearer ' + SK, 'Content-Type': 'application/json', 'Prefer': 'return=representation' };
     async function sbGet(t, p = '') { return (await fetch(`${SB}/rest/v1/${t}?${p}`, { headers: H })).json(); }
+    // Paginated fetch: PostgREST caps responses at 1000 rows. Loop Range until fully drained
+    // so admin-wide queries (no location filter, can exceed 1000) return every row.
+    async function sbGetAll(t, p = '', pageSize = 1000) {
+      const all = [];
+      for (let from = 0; ; from += pageSize) {
+        const to = from + pageSize - 1;
+        const res = await fetch(`${SB}/rest/v1/${t}?${p}`, { headers: { ...H, 'Range-Unit': 'items', 'Range': `${from}-${to}` } });
+        const page = await res.json();
+        if (!Array.isArray(page) || page.length === 0) break;
+        all.push(...page);
+        if (page.length < pageSize) break;
+      }
+      return all;
+    }
     async function sbPost(t, d) { return (await fetch(`${SB}/rest/v1/${t}`, { method: 'POST', headers: H, body: JSON.stringify(d) })).json(); }
     async function sbPatch(t, id, d) { return (await fetch(`${SB}/rest/v1/${t}?id=eq.${id}`, { method: 'PATCH', headers: H, body: JSON.stringify(d) })).json(); }
 
@@ -1599,7 +1613,7 @@
     // ===== ADMIN =====
     async function loadAdminData() {
       const fy = getCurrentFY();
-      adminAllRecords = await sbGet('mail_records', `select=*&date=gte.${fy.start}&date=lte.${fy.end}&order=created_at.asc`);
+      adminAllRecords = await sbGetAll('mail_records', `select=*&date=gte.${fy.start}&date=lte.${fy.end}&order=created_at.asc`);
       adminAllRecords.forEach((r, i) => { r.seq = i + 1; r.customers = normCust(r.customers); });
       const inward = adminAllRecords.filter(r => r.mail_type === 'inward').length;
       const outward = adminAllRecords.filter(r => r.mail_type === 'outward').length;
@@ -1670,7 +1684,7 @@
     async function loadAdminBranches() {
       const fy = getCurrentFY();
       if (!adminAllRecords || !adminAllRecords.length) {
-        adminAllRecords = await sbGet('mail_records', `select=*&date=gte.${fy.start}&date=lte.${fy.end}&order=created_at.asc`);
+        adminAllRecords = await sbGetAll('mail_records', `select=*&date=gte.${fy.start}&date=lte.${fy.end}&order=created_at.asc`);
         adminAllRecords.forEach((r, i) => { r.seq = i + 1; });
       }
       if (!mrAllEmployees) {
@@ -2059,7 +2073,7 @@
       const date = document.getElementById('adminReportDate').value; if (!date) return;
       const recs = await sbGet('mail_records', `select=*&date=eq.${date}&order=location,mail_type,created_at.asc`);
       const fy = getFY(date);
-      const allRecs = await sbGet('mail_records', `select=id,date,mail_type,location&date=gte.${fy.start}&date=lte.${fy.end}&order=created_at.asc`);
+      const allRecs = await sbGetAll('mail_records', `select=id,date,mail_type,location&date=gte.${fy.start}&date=lte.${fy.end}&order=created_at.asc`);
       const seqMap = {}; const counters = {};
       allRecs.forEach(r => { const k = r.mail_type + '|' + r.location; counters[k] = (counters[k] || 0) + 1; seqMap[r.id] = counters[k]; });
 
@@ -2158,8 +2172,8 @@
 
       // Get FY-based sequential IDs
       const [allOut, allIn] = await Promise.all([
-        sbGet('mail_records', `select=id,date&mail_type=eq.outward${locFilter}&date=gte.${fy.start}&date=lte.${fy.end}&order=created_at.asc`),
-        sbGet('mail_records', `select=id,date&mail_type=eq.inward${locFilter}&date=gte.${fy.start}&date=lte.${fy.end}&order=created_at.asc`),
+        sbGetAll('mail_records', `select=id,date&mail_type=eq.outward${locFilter}&date=gte.${fy.start}&date=lte.${fy.end}&order=created_at.asc`),
+        sbGetAll('mail_records', `select=id,date&mail_type=eq.inward${locFilter}&date=gte.${fy.start}&date=lte.${fy.end}&order=created_at.asc`),
       ]);
       const outSeq = {}; allOut.forEach((r, i) => outSeq[r.id] = i + 1);
       const inSeq = {}; allIn.forEach((r, i) => inSeq[r.id] = i + 1);
