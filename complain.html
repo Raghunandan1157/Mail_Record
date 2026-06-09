@@ -807,10 +807,20 @@
     try {
       const empRaw = sessionStorage.getItem("sr_employee") || localStorage.getItem("sr_employee");
       const loc = sessionStorage.getItem("sr_location") || localStorage.getItem("sr_location") || "";
-      const isAdmin = (sessionStorage.getItem("sr_headoffice") || localStorage.getItem("sr_headoffice")) === "true";
+      const headOffice = (sessionStorage.getItem("sr_headoffice") || localStorage.getItem("sr_headoffice")) === "true";
       const deptScopeKey = sessionStorage.getItem("sr_dept_admin") || localStorage.getItem("sr_dept_admin") || null;
+      // Respect the Tab view switcher (mirror mailrecord's applyViewMode): an
+      // admin / Head Office / Corporate Office account can switch to a non-admin
+      // view and must NOT keep seeing the admin view then.
+      const canSwitch = headOffice || loc === "Head Office" || loc === "Corporate Office";
+      const viewMode = sessionStorage.getItem("sr_view_mode") || localStorage.getItem("sr_view_mode")
+        || (headOffice ? "admin" : (loc === "Corporate Office" ? "corporate" : "branch"));
+      const isAdmin = canSwitch ? (viewMode === "admin") : headOffice;
+      let effectiveLoc = loc;
+      if (canSwitch && viewMode === "corporate") effectiveLoc = "Corporate Office";
+      else if (canSwitch && viewMode === "branch") effectiveLoc = "Head Office";
       const emp = empRaw ? JSON.parse(empRaw) : null;
-      return { emp, loc, isAdmin, deptScopeKey };
+      return { emp, loc: effectiveLoc, isAdmin, deptScopeKey };
     } catch { return { emp: null, loc: "", isAdmin: false, deptScopeKey: null }; }
   }
   function goHome() {
