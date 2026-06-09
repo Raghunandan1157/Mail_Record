@@ -534,7 +534,9 @@ function checkSession() {
     const savedViewMode = getStoredViewMode(savedLoc, adminFlag);
     selectedLocation = savedViewMode === 'corporate' ? 'Corporate Office' : savedLoc;
     isAdminUser = canSwitchOfficeViews(savedLoc, adminFlag);
-    isHeadOffice = isAdminUser && ((savedViewMode || 'admin') === 'admin' || savedViewMode === 'corporate');
+    // Only the 'admin' view shows the admin dashboard. Corporate Office restores
+    // as the regular branch UI (matches the fresh-login path above).
+    isHeadOffice = isAdminUser && (savedViewMode || 'admin') === 'admin';
     // Keep both in sync
     sessionStorage.setItem('sr_employee', savedEmp);
     sessionStorage.setItem('sr_location', savedLoc);
@@ -659,38 +661,11 @@ function hideViewSwitchOverlay() {
   }, 400);
 }
 
-function toggleAdminView(targetPage) {
-  if (!isAdminUser || viewSwitchInProgress) return;
-  viewSwitchInProgress = true;
-  const cur = sessionStorage.getItem('sr_view_mode') || localStorage.getItem('sr_view_mode') || 'corporate';
-  const next = cur === 'corporate' ? 'admin' : (cur === 'admin' ? 'branch' : 'corporate');
-  const DURATION = 3000;
-
-  showViewSwitchOverlay(next, DURATION);
-
-  if (next === 'branch') {
-    isHeadOffice = false;
-    sessionStorage.setItem('sr_view_mode', 'branch');
-    localStorage.setItem('sr_view_mode', 'branch');
-  } else {
-    isHeadOffice = true;
-    sessionStorage.setItem('sr_view_mode', next);
-    localStorage.setItem('sr_view_mode', next);
-    if (next === 'corporate') loadAdminData().catch(() => {});
-  }
-
-  setTimeout(() => {
-    if (next === 'branch') {
-      switchToRegularMode();
-      navigateTo(targetPage || 'dashboard');
-    } else {
-      switchToAdminMode();
-      navigateTo(targetPage || 'admin');
-    }
-    hideViewSwitchOverlay();
-    viewSwitchInProgress = false;
-  }, DURATION);
-}
+// NOTE: the legacy in-place toggleAdminView() was removed. View switching is
+// driven by the Tab key handler below, which redirects to index.html#pick (the
+// 3-option picker); that sets sr_view_mode and the regular load path in
+// checkSession() rebuilds the correct UI. The old function had no callers and
+// carried a latent bug (it treated 'corporate' as 'admin').
 
 // Initialize login on load
 document.addEventListener('DOMContentLoaded', () => {

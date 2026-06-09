@@ -1030,6 +1030,10 @@
 
     // ===== SESSION =====
     function startSession() {
+      // Fresh in-module login: drop any stale sr_view_mode from a prior session so
+      // getStoredViewMode() falls back to the correct default for this role.
+      sessionStorage.removeItem('sr_view_mode');
+      localStorage.removeItem('sr_view_mode');
       const s = { employee: currentEmployee, location: selectedLocation, admin: isAdmin, time: Date.now() };
       sessionStorage.setItem('mr_session', JSON.stringify(s)); localStorage.setItem('mr_session', JSON.stringify(s));
       const t = Date.now().toString();
