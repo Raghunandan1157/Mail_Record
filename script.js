@@ -507,11 +507,24 @@ function loginConfirm() {
 
 function updateUserUI() {
   if (!currentEmployee) return;
-  const initials = currentEmployee.name ? currentEmployee.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2) : '??';
+
+  // The sidebar chip reflects the active VIEW, not the raw login identity, so an
+  // admin who switched to Corporate Office / Head Office no longer reads "ADMIN".
+  const viewMode = sessionStorage.getItem('sr_view_mode') || localStorage.getItem('sr_view_mode');
+  let initials, name, role;
+  if (isAdminUser && viewMode) {
+    if (viewMode === 'corporate') { initials = 'CO'; name = 'Corporate Office'; role = 'Corporate Office View'; }
+    else if (viewMode === 'branch') { initials = 'HO'; name = 'Head Office'; role = 'Head Office View'; }
+    else { initials = 'AD'; name = 'Admin'; role = 'Administrator'; }
+  } else {
+    initials = currentEmployee.name ? currentEmployee.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2) : '??';
+    name = currentEmployee.name || 'User';
+    role = currentEmployee.role || 'Staff';
+  }
 
   document.querySelectorAll('.user-initials').forEach(el => el.textContent = initials);
-  document.querySelectorAll('.user-name').forEach(el => el.textContent = currentEmployee.name || 'User');
-  document.querySelectorAll('.user-role').forEach(el => el.textContent = currentEmployee.role || 'Staff');
+  document.querySelectorAll('.user-name').forEach(el => el.textContent = name);
+  document.querySelectorAll('.user-role').forEach(el => el.textContent = role);
 }
 
 function checkSession() {
