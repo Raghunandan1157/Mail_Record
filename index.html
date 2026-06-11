@@ -675,7 +675,7 @@
   }
 
   function logout() {
-    ['sr_employee','sr_location','sr_headoffice','sr_login_time','sr_dept_admin','mr_session','sr_view_mode','sr_auditor','sr_auditor_name'].forEach(k=>{sessionStorage.removeItem(k);localStorage.removeItem(k);});
+    ['sr_employee','sr_location','sr_headoffice','sr_login_time','sr_dept_admin','mr_session','sr_view_mode','sr_auditor','sr_auditor_name','ai_otp'].forEach(k=>{sessionStorage.removeItem(k);localStorage.removeItem(k);});
     currentEmployee=null; selectedLocation=null; isAdmin=false; auditorMode=false; auditorName='';
     document.getElementById('moduleScreen').style.display = 'none';
     document.getElementById('doorScreen').style.display = 'none';
