@@ -111,6 +111,8 @@
           <span class="material-symbols-outlined text-xl">call_received</span>Inward</a>
         <a class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm cursor-pointer" data-page="reports" onclick="navigateTo('reports')">
           <span class="material-symbols-outlined text-xl">bar_chart</span>Reports</a>
+        <a class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm cursor-pointer" data-page="ai" onclick="navigateTo('ai')">
+          <span class="material-symbols-outlined text-xl">smart_toy</span>AI Assistant</a>
       </nav>
 
       <!-- Admin Nav -->
@@ -125,6 +127,8 @@
           <span class="material-symbols-outlined text-xl">edit_note</span>Edit Log</a>
         <a class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm cursor-pointer" data-page="admin-reports" onclick="navigateTo('admin-reports')">
           <span class="material-symbols-outlined text-xl">bar_chart</span>Reports</a>
+        <a class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm cursor-pointer" data-page="ai" onclick="navigateTo('ai')">
+          <span class="material-symbols-outlined text-xl">smart_toy</span>AI Assistant</a>
       </nav>
 
       <!-- User Footer -->
@@ -238,27 +242,30 @@
                 </div>
                 <div><label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Docket Number</label><input type="text" id="outDocket" required placeholder="e.g. DK-001" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"></div>
                 <div><label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Status of the Courier / Post</label><input type="text" id="outCourierStatus" required placeholder="e.g. Speed Post, Courier" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"></div>
-                <div>
-                  <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Particular</label>
-                  <div class="relative">
-                    <input type="text" id="outPartDisplay" readonly placeholder="Select particular..." onclick="toggleDropdown('outPartDrop')" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary cursor-pointer bg-white pr-9">
-                    <span class="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 text-lg pointer-events-none">expand_more</span>
-                    <div id="outPartDrop" class="absolute z-30 left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-xl shadow-xl max-h-56 overflow-y-auto hidden">
-                      <div class="p-2 space-y-0.5" id="outPartOptions"></div>
-                    </div>
-                  </div>
-                  <input type="text" id="outPartOther" placeholder="Other - type here..." class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary mt-2 hidden">
-                  <input type="hidden" id="outParticular">
-                </div>
                 <div><label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Details (optional)</label><input type="text" id="outDetails" placeholder="Additional details" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"></div>
                 <div class="md:col-span-2">
-                  <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Customers</label>
-                  <div class="flex gap-2">
-                    <input type="text" id="outCustomerInput" placeholder="Customer name" onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomer('out')}" class="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary">
-                    <button type="button" onclick="addCustomer('out')" class="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-primary/90 transition">+</button>
+                  <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Customers &amp; Particulars</label>
+                  <input type="text" id="outCustomerInput" placeholder="Customer name" autocomplete="off"
+                    onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomer('out')}"
+                    class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary">
+                  <button type="button" onclick="addCustomer('out')"
+                    class="mt-2 w-full inline-flex items-center justify-center gap-1.5 bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-primary/90 transition">
+                    <span class="material-symbols-outlined text-lg">add</span>Add Customer</button>
+                  <div id="outCustTableWrap" class="mt-3 hidden border border-slate-200 rounded-lg">
+                    <table class="w-full text-sm">
+                      <thead>
+                        <tr class="bg-slate-50 text-left text-[11px] uppercase tracking-wide text-slate-500">
+                          <th class="px-3 py-2 font-semibold w-1/3">Customer</th>
+                          <th class="px-3 py-2 font-semibold">Particulars</th>
+                          <th class="px-3 py-2 font-semibold w-10"></th>
+                        </tr>
+                      </thead>
+                      <tbody id="outCustRows" class="divide-y divide-slate-100"></tbody>
+                    </table>
                   </div>
-                  <div id="outCustomersChips" class="flex flex-wrap gap-2 mt-2"></div>
+                  <p id="outCustEmpty" class="mt-3 text-sm text-slate-400">No customers added yet.</p>
                   <input type="hidden" id="outCustomers" value="[]">
+                  <input type="hidden" id="outParticular">
                 </div>
               </div>
               <div class="flex gap-3 mt-5">
@@ -350,27 +357,30 @@
                   <input type="text" id="inDocsOther" placeholder="Other - type here..." class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent mt-2 hidden">
                   <input type="hidden" id="inDocs">
                 </div>
-                <div>
-                  <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Particular</label>
-                  <div class="relative">
-                    <input type="text" id="inPartDisplay" readonly placeholder="Select particular..." onclick="toggleDropdown('inPartDrop')" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent cursor-pointer bg-white pr-9">
-                    <span class="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 text-lg pointer-events-none">expand_more</span>
-                    <div id="inPartDrop" class="absolute z-30 left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-xl shadow-xl max-h-56 overflow-y-auto hidden">
-                      <div class="p-2 space-y-0.5" id="inPartOptions"></div>
-                    </div>
-                  </div>
-                  <input type="text" id="inPartOther" placeholder="Other - type here..." class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent mt-2 hidden">
-                  <input type="hidden" id="inParticular">
-                </div>
                 <div><label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Details (optional)</label><input type="text" id="inDetails" placeholder="Additional details" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"></div>
                 <div class="md:col-span-2">
-                  <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Customers</label>
-                  <div class="flex gap-2">
-                    <input type="text" id="inCustomerInput" placeholder="Customer name" onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomer('in')}" class="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent">
-                    <button type="button" onclick="addCustomer('in')" class="bg-accent text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-accent/90 transition">+</button>
+                  <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Customers &amp; Particulars</label>
+                  <input type="text" id="inCustomerInput" placeholder="Customer name" autocomplete="off"
+                    onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomer('in')}"
+                    class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent">
+                  <button type="button" onclick="addCustomer('in')"
+                    class="mt-2 w-full inline-flex items-center justify-center gap-1.5 bg-accent text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-accent/90 transition">
+                    <span class="material-symbols-outlined text-lg">add</span>Add Customer</button>
+                  <div id="inCustTableWrap" class="mt-3 hidden border border-slate-200 rounded-lg">
+                    <table class="w-full text-sm">
+                      <thead>
+                        <tr class="bg-slate-50 text-left text-[11px] uppercase tracking-wide text-slate-500">
+                          <th class="px-3 py-2 font-semibold w-1/3">Customer</th>
+                          <th class="px-3 py-2 font-semibold">Particulars</th>
+                          <th class="px-3 py-2 font-semibold w-10"></th>
+                        </tr>
+                      </thead>
+                      <tbody id="inCustRows" class="divide-y divide-slate-100"></tbody>
+                    </table>
                   </div>
-                  <div id="inCustomersChips" class="flex flex-wrap gap-2 mt-2"></div>
+                  <p id="inCustEmpty" class="mt-3 text-sm text-slate-400">No customers added yet.</p>
                   <input type="hidden" id="inCustomers" value="[]">
+                  <input type="hidden" id="inParticular">
                 </div>
               </div>
               <div class="flex gap-3 mt-5">
@@ -484,6 +494,41 @@
             </div>
           </div>
           <div id="adminDailyReportContent"></div>
+        </div>
+
+        <!-- ===== AI ASSISTANT ===== -->
+        <div id="page-ai" class="page fade-in hidden">
+          <div class="bg-white rounded-xl border border-slate-200 shadow-sm flex flex-col" style="height:calc(100vh - 140px)">
+            <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100 bg-slate-50/40">
+              <div class="flex items-center gap-2.5">
+                <div class="w-9 h-9 bg-primary rounded-lg flex items-center justify-center"><span class="material-symbols-outlined text-white text-lg">smart_toy</span></div>
+                <div>
+                  <h3 class="font-bold text-base tracking-tight text-slate-900 leading-tight">AI Assistant</h3>
+                  <p class="text-[11px] text-slate-400" id="aiScopeNote">Ask about mail, customers, dockets, departments…</p>
+                </div>
+              </div>
+              <button onclick="aiClear()" class="flex items-center gap-1.5 px-3 py-1.5 border border-slate-200 rounded-md text-[10px] uppercase tracking-widest font-bold text-slate-600 hover:bg-slate-100 transition"><span class="material-symbols-outlined text-sm opacity-70">restart_alt</span>Clear</button>
+            </div>
+
+            <div id="aiChat" class="flex-1 overflow-y-auto px-5 py-5 space-y-3">
+              <div id="aiEmpty" class="text-center mt-10 max-w-xl mx-auto">
+                <div class="w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mx-auto mb-4"><span class="material-symbols-outlined text-3xl">smart_toy</span></div>
+                <h2 class="text-lg font-bold text-slate-800 mb-1">Ask anything about your records</h2>
+                <p class="text-sm text-slate-500 mb-5">Mail inward/outward, a customer's particulars, dockets, departments, employees. Spelling mistakes are okay.</p>
+                <div class="flex flex-wrap gap-2 justify-center">
+                  <button onclick="aiQuick(this)" class="bg-white border border-slate-200 px-3.5 py-2 rounded-full text-xs text-slate-600 hover:bg-primary hover:text-white hover:border-primary transition">What did Ramesh send?</button>
+                  <button onclick="aiQuick(this)" class="bg-white border border-slate-200 px-3.5 py-2 rounded-full text-xs text-slate-600 hover:bg-primary hover:text-white hover:border-primary transition">Outward mail this month</button>
+                  <button onclick="aiQuick(this)" class="bg-white border border-slate-200 px-3.5 py-2 rounded-full text-xs text-slate-600 hover:bg-primary hover:text-white hover:border-primary transition">Mail count by department</button>
+                  <button onclick="aiQuick(this)" class="bg-white border border-slate-200 px-3.5 py-2 rounded-full text-xs text-slate-600 hover:bg-primary hover:text-white hover:border-primary transition">Which customers have KYC?</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="border-t border-slate-100 p-3 flex items-end gap-2">
+              <textarea id="aiInput" rows="1" placeholder="Ask a question…" oninput="aiAutoGrow(this)" onkeydown="aiKey(event)" class="flex-1 px-3.5 py-2.5 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none max-h-32 overflow-hidden"></textarea>
+              <button id="aiSend" onclick="aiSend()" class="bg-primary text-white h-10 px-5 rounded-lg text-sm font-semibold hover:bg-primary/90 transition disabled:opacity-50 inline-flex items-center gap-1.5"><span class="material-symbols-outlined text-lg">send</span>Send</button>
+            </div>
+          </div>
         </div>
 
         <!-- ===== ADMIN BRANCHES LIST ===== -->
@@ -662,6 +707,27 @@
     // ===== HELPERS =====
     function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
     function normCust(v){ if(Array.isArray(v))return v; if(v==null||v==='')return []; if(typeof v==='string'){try{const p=JSON.parse(v); return Array.isArray(p)?p:[];}catch(_){return v.split(',').map(s=>s.trim()).filter(Boolean);}} return []; }
+    // Coerce stored customers (raw value OR already-normalized array) into [{name, particular}].
+    // Back-compat: old rows store plain strings -> { name:<string>, particular:'' }; objects used as-is.
+    function normalizeCustomers(raw){
+      const arr = normCust(raw);
+      return arr.map(c => {
+        if (c && typeof c === 'object') return { name: String(c.name||'').trim(), particular: String(c.particular||'').trim() };
+        return { name: String(c||'').trim(), particular: '' };
+      }).filter(c => c.name);
+    }
+    // "name: p1, p2 | name2: p3" for export / flat report cells
+    function custToString(raw){
+      return normalizeCustomers(raw).map(c => c.particular ? `${c.name}: ${c.particular}` : c.name).join(' | ');
+    }
+    // compact list-card summary: count + first couple of names
+    function custSummary(raw){
+      const cs = normalizeCustomers(raw);
+      if (!cs.length) return '';
+      const names = cs.slice(0, 2).map(c => c.name).join(', ');
+      const more = cs.length > 2 ? ` +${cs.length - 2}` : '';
+      return `<p class="text-[11px] text-slate-400 mt-1 line-clamp-1 flex items-center gap-1"><span class="material-symbols-outlined text-[13px]">group</span>${cs.length} ${cs.length === 1 ? 'customer' : 'customers'} · ${esc(names)}${more}</p>`;
+    }
     function fmtDate(d){ if(!d) return ''; const s=String(d); const parts=s.match(/^(\d{4})-(\d{2})-(\d{2})/); if(parts){return parts[3]+'-'+parts[2]+'-'+parts[1];} return s; }
     function getInitials(n) { return n ? n.split(/\s+/).map(w => w[0]).join('').substring(0, 2).toUpperCase() : '?'; }
     function setToday(id) { document.getElementById(id).valueAsDate = new Date(); }
@@ -690,12 +756,16 @@
 
     // Close dropdowns on outside click
     document.addEventListener('click', function(e) {
-      ['outDocsDrop', 'inDocsDrop', 'outPartDrop', 'inPartDrop', 'outNameDrop', 'inNameDrop'].forEach(id => {
+      ['outDocsDrop', 'inDocsDrop', 'outNameDrop', 'inNameDrop'].forEach(id => {
         const drop = document.getElementById(id);
         if (!drop) return;
         const parent = drop.closest('.relative');
         if (parent && !parent.contains(e.target)) drop.classList.add('hidden');
       });
+      // per-customer particular comboboxes (dynamic .part-drop)
+      if (!e.target.closest('.part-drop') && !(e.target.closest('.relative') && e.target.closest('.relative').querySelector('.part-drop'))) {
+        document.querySelectorAll('.part-drop').forEach(d => d.classList.add('hidden'));
+      }
     });
 
     function onDocCheck(optionsId, displayId, hiddenId, otherId) {
@@ -753,71 +823,10 @@
       document.getElementById(hiddenId).value = value;
     }
 
-    // ===== PARTICULAR DROPDOWN (multi-select) =====
-    const PARTICULAR_OPTIONS = ['KYC','LEGAL OPINION','BANK CHEQUE','INSURANCE','SALE DEED','TITLE DEED','PANCHYATH UTTARA','E-SWATTU','EC','LOAN AGREEMENT BOND','Bhoja letter','Valuation report','Highmark','VL.tax invoice','Hypothecation letter','Vehicle Key','Others'];
+    // ===== PARTICULAR OPTIONS (shared, drives the per-customer combobox) =====
+    const PARTICULAR_OPTIONS = ['KYC','LEGAL OPINION','BANK CHEQUE','INSURANCE','SALE DEED','TITLE DEED','PANCHYATH UTTARA','E-SWATTU','EC','LOAN AGREEMENT BOND','Bhoja letter','Valuation report','Highmark','VL.tax invoice','Hypothecation letter','Vehicle Key'];
 
-    function initPartDropdown(pre) {
-      const container = document.getElementById(pre + 'PartOptions');
-      if (!container) return;
-      const accent = pre === 'out' ? 'primary' : 'accent';
-      container.innerHTML = PARTICULAR_OPTIONS.map(cat =>
-        `<label class="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-slate-50 cursor-pointer text-sm">
-          <input type="checkbox" value="${esc(cat)}" onchange="onPartCheck('${pre}')" class="w-4 h-4 rounded border-slate-300 text-${accent} focus:ring-${accent}/20">
-          <span>${esc(cat)}</span>
-        </label>`
-      ).join('');
-      document.getElementById(pre + 'PartDisplay').value = '';
-      document.getElementById(pre + 'Particular').value = '';
-      document.getElementById(pre + 'PartOther').value = '';
-      document.getElementById(pre + 'PartOther').classList.add('hidden');
-    }
-
-    function onPartCheck(pre) {
-      const checks = document.querySelectorAll(`#${pre}PartOptions input[type=checkbox]`);
-      const selected = [];
-      let othersChecked = false;
-      checks.forEach(c => {
-        if (c.checked) {
-          if (c.value === 'Others') othersChecked = true;
-          else selected.push(c.value);
-        }
-      });
-      const otherInput = document.getElementById(pre + 'PartOther');
-      if (othersChecked) {
-        otherInput.classList.remove('hidden');
-        const otherVal = otherInput.value.trim();
-        if (otherVal) selected.push('Others: ' + otherVal);
-      } else {
-        otherInput.classList.add('hidden');
-        otherInput.value = '';
-      }
-      document.getElementById(pre + 'PartDisplay').value = selected.join(', ') + (othersChecked && !selected.some(s => s.startsWith('Others:')) ? (selected.length ? ', Others' : 'Others') : '');
-      document.getElementById(pre + 'Particular').value = selected.join(', ') || (othersChecked ? 'Others' : '');
-    }
-
-    function setPartFromValue(pre, value) {
-      const checks = document.querySelectorAll(`#${pre}PartOptions input[type=checkbox]`);
-      const parts = (value || '').split(',').map(s => s.trim()).filter(Boolean);
-      const otherInput = document.getElementById(pre + 'PartOther');
-      checks.forEach(c => { c.checked = false; });
-      otherInput.classList.add('hidden');
-      otherInput.value = '';
-      parts.forEach(p => {
-        if (p.startsWith('Others:')) {
-          const othersBox = [...checks].find(c => c.value === 'Others');
-          if (othersBox) othersBox.checked = true;
-          otherInput.value = p.replace('Others:', '').trim();
-          otherInput.classList.remove('hidden');
-        } else {
-          const box = [...checks].find(c => c.value === p);
-          if (box) box.checked = true;
-        }
-      });
-      document.getElementById(pre + 'PartDisplay').value = value || '';
-      document.getElementById(pre + 'Particular').value = value || '';
-    }
-
-    function resetParticular(pre) { initPartDropdown(pre); }
+    function resetParticular(pre) { resetCustomers(pre); }
 
     // ===== BRANCH RECIPIENT DROPDOWN =====
     async function loadBranchRecipientChoices() {
@@ -914,8 +923,6 @@
     document.addEventListener('input', function(e) {
       if (e.target.id === 'outDocsOther') onDocCheck('outDocsOptions', 'outDocsDisplay', 'outDocs', 'outDocsOther');
       if (e.target.id === 'inDocsOther') onDocCheck('inDocsOptions', 'inDocsDisplay', 'inDocs', 'inDocsOther');
-      if (e.target.id === 'outPartOther') onPartCheck('out');
-      if (e.target.id === 'inPartOther') onPartCheck('in');
     });
     function showToast(msg) { const t = document.getElementById('toast'); document.getElementById('toastMsg').textContent = msg; t.classList.remove('translate-y-24', 'opacity-0'); t.classList.add('translate-y-0', 'opacity-100'); setTimeout(() => { t.classList.add('translate-y-24', 'opacity-0'); t.classList.remove('translate-y-0', 'opacity-100'); }, 2500); }
     function showStep(n) { document.querySelectorAll('.login-step').forEach(s => s.classList.remove('active')); document.getElementById('loginStep' + n).classList.add('active'); }
@@ -938,18 +945,99 @@
       const el = document.getElementById('page-' + page);
       if (el) el.classList.remove('hidden');
       document.querySelectorAll('.nav-link').forEach(l => l.classList.toggle('active', l.dataset.page === page));
-      const titles = { dashboard: 'Dashboard', outward: 'Outward Mail', inward: 'Inward Mail', reports: 'Reports', 'admin-dashboard': 'Admin Dashboard', 'admin-branches': 'Branches', 'branch-detail': 'Branch Detail', 'admin-records': 'All Records', 'admin-editlog': 'Edit Log', 'admin-reports': 'Reports' };
+      const titles = { dashboard: 'Dashboard', outward: 'Outward Mail', inward: 'Inward Mail', reports: 'Reports', ai: 'AI Assistant', 'admin-dashboard': 'Admin Dashboard', 'admin-branches': 'Branches', 'branch-detail': 'Branch Detail', 'admin-records': 'All Records', 'admin-editlog': 'Edit Log', 'admin-reports': 'Reports' };
       document.getElementById('headerTitle').textContent = titles[page] || page;
       document.getElementById('sidebar').classList.remove('open');
       if (page === 'admin-branches') { document.querySelector('.nav-link[data-page="admin-branches"]')?.classList.add('active'); loadAdminBranches(); }
-      if (page === 'outward') { loadRecords('outward'); setToday('outDate'); initDocDropdown('outDocsOptions', 'outDocsDisplay', 'outDocs', 'outDocsOther'); initPartDropdown('out'); loadBranchRecipientChoices().then(() => renderBranchRecipientOptions('out')); }
-      if (page === 'inward') { loadRecords('inward'); setToday('inDate'); initDocDropdown('inDocsOptions', 'inDocsDisplay', 'inDocs', 'inDocsOther'); initPartDropdown('in'); loadBranchRecipientChoices().then(() => renderBranchRecipientOptions('in')); }
+      if (page === 'outward') { loadRecords('outward'); setToday('outDate'); initDocDropdown('outDocsOptions', 'outDocsDisplay', 'outDocs', 'outDocsOther'); resetCustomers('out'); loadBranchRecipientChoices().then(() => renderBranchRecipientOptions('out')); }
+      if (page === 'inward') { loadRecords('inward'); setToday('inDate'); initDocDropdown('inDocsOptions', 'inDocsDisplay', 'inDocs', 'inDocsOther'); resetCustomers('in'); loadBranchRecipientChoices().then(() => renderBranchRecipientOptions('in')); }
       if (page === 'reports') { setToday('reportDate'); renderDailyReport(); }
       if (page === 'admin-dashboard') loadAdminData();
       if (page === 'admin-records') loadAdminData();
       if (page === 'admin-editlog') loadAdminEditLogs();
       if (page === 'admin-reports') { setToday('adminReportDate'); renderAdminDailyReport(); }
+      if (page === 'ai') aiInit();
       if (page === 'dashboard') loadDashboard();
+    }
+
+    // ===== AI ASSISTANT (DeepSeek + Neon, role-scoped) =====
+    const aiMessages = [];
+    function aiInit() {
+      const note = document.getElementById('aiScopeNote');
+      if (note) note.textContent = isAdmin
+        ? 'Admin · all branches · ask about mail, customers, dockets…'
+        : `Branch: ${selectedLocation || '—'} · ask about mail, customers, dockets…`;
+      const inp = document.getElementById('aiInput');
+      if (inp) inp.focus();
+    }
+    function aiAutoGrow(el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 128) + 'px'; }
+    function aiKey(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); aiSend(); } }
+    function aiQuick(el) { const i = document.getElementById('aiInput'); i.value = el.textContent; aiSend(); }
+    function aiRenderMd(text) {
+      let h = esc(text);
+      h = h.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+      h = h.replace(/\*(.+?)\*/g, '<em>$1</em>');
+      h = h.replace(/`([^`]+)`/g, '<code class="bg-slate-100 px-1.5 py-0.5 rounded text-[0.85em]">$1</code>');
+      h = h.replace(/(^|\n)[*\-] (.+)/g, '$1<li>$2</li>');
+      h = h.replace(/(<li>.*?<\/li>(\n|$))+/gs, m => '<ul class="list-disc pl-5 my-1.5 space-y-0.5">' + m.replace(/\n/g, '') + '</ul>');
+      return h.replace(/\n/g, '<br>');
+    }
+    function aiBubble(role, html) {
+      const empty = document.getElementById('aiEmpty'); if (empty) empty.remove();
+      const chat = document.getElementById('aiChat');
+      const wrap = document.createElement('div');
+      wrap.className = 'flex ' + (role === 'user' ? 'justify-end' : 'justify-start');
+      const isUser = role === 'user', isErr = role === 'error';
+      const tone = isUser ? 'bg-primary text-white' : isErr ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-slate-100 text-slate-800';
+      wrap.innerHTML = `<div class="max-w-[85%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${tone}">${html}</div>`;
+      chat.appendChild(wrap);
+      chat.scrollTop = chat.scrollHeight;
+      return wrap;
+    }
+    async function aiSend() {
+      const inp = document.getElementById('aiInput');
+      const btn = document.getElementById('aiSend');
+      const text = (inp.value || '').trim();
+      if (!text) return;
+      inp.value = ''; inp.style.height = 'auto';
+      aiMessages.push({ role: 'user', content: text });
+      aiBubble('user', esc(text));
+      const typing = aiBubble('assistant', '<span class="text-slate-400 italic">Thinking…</span>');
+      btn.disabled = true;
+      try {
+        const res = await fetch('/api/ai-chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ messages: aiMessages, isAdmin: !!isAdmin, location: selectedLocation }),
+        });
+        const data = await res.json();
+        typing.remove();
+        if (!res.ok) { aiBubble('error', esc((data.error || 'Error') + (data.detail ? ': ' + data.detail : ''))); aiMessages.pop(); return; }
+        const reply = data.reply || '(empty reply)';
+        aiMessages.push({ role: 'assistant', content: reply });
+        aiBubble('assistant', aiRenderMd(reply));
+      } catch (err) {
+        typing.remove();
+        aiBubble('error', 'Network error: ' + esc(err.message));
+        aiMessages.pop();
+      } finally {
+        btn.disabled = false; inp.focus();
+      }
+    }
+    function aiClear() {
+      aiMessages.length = 0;
+      const chat = document.getElementById('aiChat');
+      chat.innerHTML = `<div id="aiEmpty" class="text-center mt-10 max-w-xl mx-auto">
+        <div class="w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mx-auto mb-4"><span class="material-symbols-outlined text-3xl">smart_toy</span></div>
+        <h2 class="text-lg font-bold text-slate-800 mb-1">Ask anything about your records</h2>
+        <p class="text-sm text-slate-500 mb-5">Mail inward/outward, a customer's particulars, dockets, departments, employees. Spelling mistakes are okay.</p>
+        <div class="flex flex-wrap gap-2 justify-center">
+          <button onclick="aiQuick(this)" class="bg-white border border-slate-200 px-3.5 py-2 rounded-full text-xs text-slate-600 hover:bg-primary hover:text-white hover:border-primary transition">What did Ramesh send?</button>
+          <button onclick="aiQuick(this)" class="bg-white border border-slate-200 px-3.5 py-2 rounded-full text-xs text-slate-600 hover:bg-primary hover:text-white hover:border-primary transition">Outward mail this month</button>
+          <button onclick="aiQuick(this)" class="bg-white border border-slate-200 px-3.5 py-2 rounded-full text-xs text-slate-600 hover:bg-primary hover:text-white hover:border-primary transition">Mail count by department</button>
+          <button onclick="aiQuick(this)" class="bg-white border border-slate-200 px-3.5 py-2 rounded-full text-xs text-slate-600 hover:bg-primary hover:text-white hover:border-primary transition">Which customers have KYC?</button>
+        </div>
+      </div>`;
     }
 
     // ===== LOGIN =====
@@ -1208,6 +1296,7 @@
           </div>
           <h3 class="text-sm font-bold text-slate-900 leading-tight">${esc(r.name||'—')}</h3>
           <p class="text-xs text-slate-500 mt-1 line-clamp-1">${esc(r.department||'—')} · ${esc(place)} · ${docsCount} items</p>
+          ${custSummary(r.customers)}
           <div class="mt-3 flex items-center justify-between">
             ${statusPill(r.courier_status)}
             <span class="font-mono text-[10px] text-slate-400">#${esc(r.docket_number||'-')}</span>
@@ -1224,7 +1313,7 @@
       if (!r) { el.innerHTML = '<div class="text-slate-400 text-sm text-center py-20">Select a record from the list</div>'; return; }
       const code = formatOutCode(r);
       const docs = (r.documents||'').split(/[,\n]/).map(d=>d.trim()).filter(Boolean);
-      const customers = Array.isArray(r.customers) ? r.customers : [];
+      const customers = normalizeCustomers(r.customers);
       el.innerHTML = `
         <div class="flex items-start justify-between gap-4 mb-6 flex-wrap">
           <div class="flex items-center gap-3 flex-wrap">
@@ -1254,9 +1343,28 @@
             <tbody class="divide-y divide-slate-100">${docs.length ? docs.map((d,i)=>`<tr><td class="px-5 py-3 font-mono text-xs text-slate-700 w-32">${String(i+1).padStart(3,'0')}</td><td class="px-5 py-3 text-slate-900">${esc(d)}</td></tr>`).join('') : '<tr><td colspan="2" class="px-5 py-6 text-center text-slate-400 text-xs">No documents listed</td></tr>'}</tbody>
           </table>
         </div>
-        ${customers.length ? `<div class="border border-slate-200 rounded-lg overflow-hidden mb-6"><div class="bg-slate-50 px-5 py-2.5 text-[10px] uppercase tracking-widest font-bold text-slate-500 border-b border-slate-200">Customers (${customers.length})</div><div class="px-5 py-3 flex flex-wrap gap-2">${customers.map(c=>`<span class="bg-slate-100 text-slate-700 text-xs px-2.5 py-1 rounded-full font-medium">${esc(c)}</span>`).join('')}</div></div>` : ''}
+        ${customers.length ? customersTableHTML(customers, 'primary') : ''}
         ${r.details ? `<div class="border border-dashed border-slate-200 rounded-lg p-5 bg-slate-50/40"><div class="text-[10px] uppercase tracking-widest font-bold text-slate-400 mb-2">Internal Remarks</div><p class="italic text-slate-700">&ldquo;${esc(r.details)}&rdquo;</p></div>` : ''}
       `;
+    }
+
+    // Detail-view customers table: bordered, header "Customer | Particulars", particulars as pills.
+    function customersTableHTML(customers, accent){
+      const pill = accent === 'accent' ? 'bg-accent/10 text-accent' : 'bg-primary/10 text-primary';
+      const rows = customers.map(c => {
+        const parts = (c.particular || '').split(',').map(s => s.trim()).filter(Boolean);
+        const chips = parts.length
+          ? `<div class="flex flex-wrap gap-1.5">${parts.map(p => `<span class="${pill} text-[11px] px-2 py-0.5 rounded-full font-semibold">${esc(p)}</span>`).join('')}</div>`
+          : '<span class="text-slate-300 text-xs">—</span>';
+        return `<tr><td class="px-5 py-3 align-top font-medium text-slate-900 w-1/3">${esc(c.name)}</td><td class="px-5 py-3 align-top">${chips}</td></tr>`;
+      }).join('');
+      return `<div class="border border-slate-200 rounded-lg overflow-hidden mb-6">
+        <div class="bg-slate-900 text-white px-5 py-3 flex items-center justify-between"><span class="text-[11px] font-bold uppercase tracking-widest">Customers &amp; Particulars</span><span class="text-[10px] uppercase tracking-widest opacity-60 font-bold">${customers.length} ${customers.length === 1 ? 'Customer' : 'Customers'}</span></div>
+        <table class="w-full text-sm">
+          <thead class="bg-slate-50"><tr class="text-[10px] uppercase tracking-widest font-bold text-slate-500"><th class="px-5 py-2.5 text-left">Customer</th><th class="px-5 py-2.5 text-left">Particulars</th></tr></thead>
+          <tbody class="divide-y divide-slate-100">${rows}</tbody>
+        </table>
+      </div>`;
     }
 
     let selectedInId = null;
@@ -1307,6 +1415,7 @@
           </div>
           <h3 class="text-sm font-bold text-slate-900 leading-tight">${esc(r.name||'—')}</h3>
           <p class="text-xs text-slate-500 mt-1 line-clamp-1">${esc(r.department||'—')} · ${esc(place)} · ${docsCount} items</p>
+          ${custSummary(r.customers)}
           <div class="mt-3 flex items-center justify-between">
             <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-violet-100 text-violet-700"><span class="size-1.5 rounded-full bg-violet-500"></span>Received</span>
             <span class="font-mono text-[10px] text-slate-400">${esc(r.employee_id||'-')}</span>
@@ -1323,7 +1432,7 @@
       if (!r) { el.innerHTML = '<div class="text-slate-400 text-sm text-center py-20">Select a record from the list</div>'; return; }
       const code = formatInCode(r);
       const docs = (r.documents||'').split(/[,\n]/).map(d=>d.trim()).filter(Boolean);
-      const customers = Array.isArray(r.customers) ? r.customers : [];
+      const customers = normalizeCustomers(r.customers);
       el.innerHTML = `
         <div class="flex items-start justify-between gap-4 mb-6 flex-wrap">
           <div class="flex items-center gap-3 flex-wrap">
@@ -1353,7 +1462,7 @@
             <tbody class="divide-y divide-slate-100">${docs.length ? docs.map((d,i)=>`<tr><td class="px-5 py-3 font-mono text-xs text-slate-700 w-32">${String(i+1).padStart(3,'0')}</td><td class="px-5 py-3 text-slate-900">${esc(d)}</td></tr>`).join('') : '<tr><td colspan="2" class="px-5 py-6 text-center text-slate-400 text-xs">No documents listed</td></tr>'}</tbody>
           </table>
         </div>
-        ${customers.length ? `<div class="border border-slate-200 rounded-lg overflow-hidden mb-6"><div class="bg-slate-50 px-5 py-2.5 text-[10px] uppercase tracking-widest font-bold text-slate-500 border-b border-slate-200">Customers (${customers.length})</div><div class="px-5 py-3 flex flex-wrap gap-2">${customers.map(c=>`<span class="bg-slate-100 text-slate-700 text-xs px-2.5 py-1 rounded-full font-medium">${esc(c)}</span>`).join('')}</div></div>` : ''}
+        ${customers.length ? customersTableHTML(customers, 'accent') : ''}
         ${r.details ? `<div class="border border-dashed border-slate-200 rounded-lg p-5 bg-slate-50/40"><div class="text-[10px] uppercase tracking-widest font-bold text-slate-400 mb-2">Internal Remarks</div><p class="italic text-slate-700">&ldquo;${esc(r.details)}&rdquo;</p></div>` : ''}
       `;
     }
@@ -1426,32 +1535,151 @@
       catch(e){ showToast('Delete failed'); }
     }
 
-    // ---------- Customer chips helpers ----------
-    function getCustomers(pre){ try{return JSON.parse(document.getElementById(pre+'Customers').value||'[]');}catch(_){return [];} }
-    function setCustomers(pre,list){
-      const arr = Array.isArray(list)?list.filter(x=>x):[];
-      document.getElementById(pre+'Customers').value = JSON.stringify(arr);
-      const host = document.getElementById(pre+'CustomersChips');
-      if (!host) return;
-      host.innerHTML = arr.map((c,i)=>`<span class="inline-flex items-center gap-1 bg-slate-100 text-slate-700 px-3 py-1 rounded-full text-xs"><span>${esc(c)}</span><button type="button" onclick="removeCustomer('${pre}',${i})" class="text-slate-400 hover:text-red-500 font-bold">&times;</button></span>`).join('');
+    // ---------- Per-customer particulars (table + combobox), parameterized by pre ('out'|'in') ----------
+    // In-memory state per form: { out: [{name, particulars:[...]}], in: [...] }
+    const custState = { out: [], in: [] };
+
+    function getCustomers(pre){
+      // returns the saved shape [{name, particular}] (particular = comma-joined string)
+      return (custState[pre] || []).map(c => ({ name: c.name, particular: (c.particulars || []).join(', ') }));
     }
+    function setCustomers(pre, list){
+      // accepts raw stored value (strings or {name,particular}) and loads it into state
+      custState[pre] = normalizeCustomers(list).map(c => ({
+        name: c.name,
+        particulars: c.particular ? c.particular.split(',').map(s => s.trim()).filter(Boolean) : []
+      }));
+      renderCustomers(pre);
+    }
+    function resetCustomers(pre){
+      custState[pre] = [];
+      const i = document.getElementById(pre + 'CustomerInput'); if (i) i.value = '';
+      renderCustomers(pre);
+    }
+
     function addCustomer(pre){
-      const input = document.getElementById(pre+'CustomerInput');
-      const name = (input.value||'').trim();
+      const input = document.getElementById(pre + 'CustomerInput');
+      const name = (input.value || '').trim();
       if (!name) return;
-      const arr = getCustomers(pre);
-      if (arr.some(x => x.toLowerCase() === name.toLowerCase())) { input.value=''; return; }
-      arr.push(name);
-      setCustomers(pre, arr);
-      input.value = '';
-      input.focus();
+      if ((custState[pre] || []).some(c => c.name.toLowerCase() === name.toLowerCase())) { input.value = ''; return; }
+      custState[pre].push({ name, particulars: [] });
+      input.value = ''; input.focus();
+      renderCustomers(pre);
     }
-    function removeCustomer(pre, idx){
-      const arr = getCustomers(pre);
-      arr.splice(idx,1);
-      setCustomers(pre, arr);
+    function removeCustomer(pre, i){ custState[pre].splice(i, 1); renderCustomers(pre); }
+
+    // combobox: type-to-filter, exact match shrinks dropdown, "+" adds typed (custom or matched)
+    function openDrop(pre, i){
+      document.querySelectorAll('.part-drop').forEach(d => d.classList.add('hidden'));
+      renderSuggestions(pre, i);
     }
-    function resetCustomers(pre){ setCustomers(pre, []); const i=document.getElementById(pre+'CustomerInput'); if(i)i.value=''; }
+    function renderSuggestions(pre, i){
+      const inp  = document.getElementById(pre + 'PartInput' + i);
+      const drop = document.getElementById(pre + 'PartDrop' + i);
+      if (!inp || !drop) return;
+      const raw = (inp.value || '').trim();
+      const q   = raw.toLowerCase();
+      const sel = (custState[pre][i].particulars || []).map(p => p.toLowerCase());
+      const exact = PARTICULAR_OPTIONS.some(o => o.toLowerCase() === q) || sel.includes(q);
+      if (q && exact){ drop.classList.add('hidden'); return; }
+
+      let opts = PARTICULAR_OPTIONS.filter(o => !sel.includes(o.toLowerCase()));
+      if (q) opts = opts.filter(o => o.toLowerCase().includes(q));
+
+      let html = opts.map(o =>
+        `<button type="button" data-v="${esc(o)}" onclick="addPart('${pre}',${i}, this.dataset.v)"
+           class="w-full text-left px-3 py-1.5 rounded-lg hover:bg-slate-50 text-sm">${esc(o)}</button>`
+      ).join('');
+      if (q){
+        html += `<button type="button" onclick="addPartFromInput('${pre}',${i})"
+           class="w-full text-left px-3 py-1.5 rounded-lg hover:bg-emerald-50 text-sm text-accent font-semibold flex items-center gap-1">
+           <span class="material-symbols-outlined text-base">add</span>Add "${esc(raw)}"</button>`;
+      }
+      if (!html){ drop.classList.add('hidden'); return; }
+      drop.querySelector('.drop-inner').innerHTML = html;
+      drop.classList.remove('hidden');
+    }
+    function addPart(pre, i, value){
+      const v = (value || '').trim();
+      if (!v) return;
+      if (!custState[pre][i].particulars.some(p => p.toLowerCase() === v.toLowerCase()))
+        custState[pre][i].particulars.push(v);
+      renderCustomers(pre);
+      const ni = document.getElementById(pre + 'PartInput' + i); if (ni) ni.focus();
+    }
+    function addPartFromInput(pre, i){
+      const inp = document.getElementById(pre + 'PartInput' + i);
+      addPart(pre, i, inp ? inp.value : '');
+    }
+    function removePart(pre, i, value){
+      custState[pre][i].particulars = custState[pre][i].particulars.filter(p => p !== value);
+      renderCustomers(pre);
+    }
+
+    function renderCustomers(pre){
+      const wrap  = document.getElementById(pre + 'CustTableWrap');
+      const empty = document.getElementById(pre + 'CustEmpty');
+      const rows  = document.getElementById(pre + 'CustRows');
+      const hidden = document.getElementById(pre + 'Customers');
+      const list = custState[pre] || [];
+      // sync hidden field (saved shape) + union particular
+      if (hidden) hidden.value = JSON.stringify(getCustomers(pre));
+      const partField = document.getElementById(pre + 'Particular');
+      if (partField) partField.value = unionParticulars(pre);
+
+      if (!rows || !wrap || !empty) return;
+      if (!list.length){ wrap.classList.add('hidden'); empty.classList.remove('hidden'); rows.innerHTML = ''; return; }
+      wrap.classList.remove('hidden'); empty.classList.add('hidden');
+      const accent = pre === 'out' ? 'primary' : 'accent';
+
+      rows.innerHTML = list.map((c, i) => {
+        const chips = (c.particulars || []).map(p =>
+          `<span class="inline-flex items-center gap-1 bg-slate-100 text-slate-700 px-2 py-0.5 rounded-full text-xs">
+             <span>${esc(p)}</span>
+             <button type="button" data-v="${esc(p)}" onclick="removePart('${pre}',${i}, this.dataset.v)" class="text-slate-400 hover:text-red-500 font-bold">&times;</button>
+           </span>`).join('');
+        return `
+        <tr>
+          <td class="px-3 py-2 align-top font-medium text-slate-800">${esc(c.name)}</td>
+          <td class="px-3 py-2 align-top">
+            ${chips ? `<div class="flex flex-wrap gap-1 mb-1.5">${chips}</div>` : ''}
+            <div class="relative">
+              <div class="flex gap-1.5">
+                <input type="text" id="${pre}PartInput${i}" placeholder="Type or pick particular…" autocomplete="off"
+                  onfocus="openDrop('${pre}',${i})" oninput="renderSuggestions('${pre}',${i})"
+                  onkeydown="if(event.key==='Enter'){event.preventDefault();addPartFromInput('${pre}',${i})}"
+                  class="flex-1 px-3 py-1.5 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-${accent}/20 focus:border-${accent}">
+                <button type="button" onclick="addPartFromInput('${pre}',${i})" title="Add particular"
+                  class="shrink-0 inline-flex items-center justify-center w-9 bg-${accent} text-white rounded-lg hover:bg-${accent}/90 transition">
+                  <span class="material-symbols-outlined text-lg">add</span></button>
+              </div>
+              <div id="${pre}PartDrop${i}" class="part-drop hidden absolute z-30 left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-xl shadow-xl max-h-56 overflow-y-auto">
+                <div class="drop-inner p-2 space-y-0.5"></div>
+              </div>
+            </div>
+          </td>
+          <td class="px-3 py-2 align-top text-center">
+            <button type="button" onclick="removeCustomer('${pre}',${i})" class="text-slate-400 hover:text-red-500">
+              <span class="material-symbols-outlined text-lg">delete</span>
+            </button>
+          </td>
+        </tr>`;
+      }).join('');
+    }
+
+    // union of all per-customer particulars, deduped case-insensitive, comma-joined
+    function unionParticulars(pre){
+      const seen = new Map();
+      (custState[pre] || []).forEach(c => (c.particulars || []).forEach(p => {
+        const k = p.toLowerCase(); if (!seen.has(k)) seen.set(k, p);
+      }));
+      return [...seen.values()].join(', ');
+    }
+    // every customer has >=1 particular
+    function allCustomersHaveParticular(pre){
+      const list = custState[pre] || [];
+      return list.length > 0 && list.every(c => (c.particulars || []).length > 0);
+    }
 
 
     async function submitRecord(e, type) {
@@ -1463,17 +1691,19 @@
       if (!docsVal) { showToast('Please select at least one document category'); return false; }
       const deptVal = document.getElementById(pre + 'Dept').value.trim();
       if (!deptVal) { showToast('Please select a department'); return false; }
-      onPartCheck(pre);
-      const partVal = document.getElementById(pre + 'Particular').value.trim();
-      if (!partVal) { showToast('Please select at least one particular'); return false; }
+      // Per-customer particulars validation: need >=1 customer AND every customer has >=1 particular
+      const customers = getCustomers(pre); // [{name, particular}]
+      if (!customers.length) { showToast('Please add at least one customer'); return false; }
+      if (!allCustomersHaveParticular(pre)) { showToast('Each customer needs at least one particular'); return false; }
+      const partVal = unionParticulars(pre); // union, deduped, comma-joined
       const data = {
         mail_type: type, date: document.getElementById(pre + 'Date').value,
         employee_id: document.getElementById(pre + 'EmpId').value.trim(), name: document.getElementById(pre + 'Name').value.trim(),
         department: document.getElementById(pre + 'Dept').value.trim(), documents: docsVal,
         docket_number: type === 'outward' ? document.getElementById('outDocket').value.trim() : '',
         courier_status: type === 'outward' ? document.getElementById('outCourierStatus').value.trim() : '',
-        particular: document.getElementById(pre + 'Particular').value.trim(), details: document.getElementById(pre + 'Details').value.trim(),
-        customers: getCustomers(pre),
+        particular: partVal, details: document.getElementById(pre + 'Details').value.trim(),
+        customers: customers,
         location: selectedLocation, created_by: currentEmployee.name,
       };
       const editId = type === 'outward' ? editingOutId : editingInId;
@@ -1490,9 +1720,8 @@
           document.getElementById(pre === 'out' ? 'outwardForm' : 'inwardForm').reset();
           setToday(pre + 'Date');
           resetDept(pre);
-          resetParticular(pre);
-          resetBranchRecipient(pre);
           resetCustomers(pre);
+          resetBranchRecipient(pre);
           if (pre === 'out') closeOutForm(); else closeInForm();
         }
         await loadRecords(type);
@@ -1508,9 +1737,8 @@
       setDocFromValue('outDocsOptions', 'outDocsDisplay', 'outDocs', 'outDocsOther', r.documents);
       document.getElementById('outDocket').value = r.docket_number || '';
       document.getElementById('outCourierStatus').value = r.courier_status || '';
-      setPartFromValue('out', r.particular || '');
       document.getElementById('outDetails').value = r.details || '';
-      setCustomers('out', Array.isArray(r.customers) ? r.customers : (typeof r.customers === 'string' ? (function(){try{return JSON.parse(r.customers);}catch(_){return [];}})() : []));
+      setCustomers('out', r.customers);
       document.getElementById('outSubmitBtn').textContent = 'Update Record';
       document.getElementById('outCancelBtn').classList.remove('hidden');
       openOutForm();
@@ -1524,9 +1752,9 @@
       editingInId = id;
       document.getElementById('inDate').value = (r.date||'').slice(0,10); document.getElementById('inEmpId').value = r.employee_id;
       setBranchRecipientValue('in', r.name); setDeptValue('in', r.department);
-      setDocFromValue('inDocsOptions', 'inDocsDisplay', 'inDocs', 'inDocsOther', r.documents); setPartFromValue('in', r.particular || '');
+      setDocFromValue('inDocsOptions', 'inDocsDisplay', 'inDocs', 'inDocsOther', r.documents);
       document.getElementById('inDetails').value = r.details || '';
-      setCustomers('in', Array.isArray(r.customers) ? r.customers : (typeof r.customers === 'string' ? (function(){try{return JSON.parse(r.customers);}catch(_){return [];}})() : []));
+      setCustomers('in', r.customers);
       document.getElementById('inSubmitBtn').textContent = 'Update Record';
       document.getElementById('inCancelBtn').classList.remove('hidden');
       openInForm();
@@ -1598,7 +1826,7 @@
       html += `<div class="bg-white rounded-xl border border-slate-200 p-5 mb-6"><h3 class="font-semibold text-sm text-primary mb-3 flex items-center gap-2"><span class="material-symbols-outlined text-lg">call_made</span>Outward (${out.length})</h3>`;
       if (out.length) {
         html += `<div class="overflow-x-auto"><table class="w-full text-sm" id="reportOutTable"><thead><tr class="text-xs text-slate-400 uppercase border-b"><th class="pb-2 text-left">ID</th><th class="pb-2 text-left">Sl No</th><th class="pb-2 text-left">Emp ID</th><th class="pb-2 text-left">To</th><th class="pb-2 text-left">Dept</th><th class="pb-2 text-left">Documents Sent</th><th class="pb-2 text-left">Docket No.</th><th class="pb-2 text-left">Courier/Post Status</th><th class="pb-2 text-left">Particular</th><th class="pb-2 text-left">Details</th><th class="pb-2 text-left">Customers</th></tr></thead><tbody>`;
-        html += out.map(r => { const seq = outSeqMap[r.id]||'-'; return `<tr class="border-b border-slate-50"><td class="py-2 font-semibold text-primary text-xs">OUT/${eId}/${seq}</td><td class="py-2">${seq}</td><td class="py-2">${esc(r.employee_id)}</td><td class="py-2">${esc(r.name)}</td><td class="py-2">${esc(r.department)}</td><td class="py-2">${esc(r.documents)}</td><td class="py-2 font-medium">${esc(r.docket_number||'')}</td><td class="py-2">${esc(r.courier_status||'')}</td><td class="py-2">${esc(r.particular)}</td><td class="py-2 text-slate-400">${esc(r.details||'')}</td><td class=\"py-2 text-slate-400\">${esc((Array.isArray(r.customers)?r.customers:[]).join(', '))}</td></tr>`; }).join('');
+        html += out.map(r => { const seq = outSeqMap[r.id]||'-'; return `<tr class="border-b border-slate-50"><td class="py-2 font-semibold text-primary text-xs">OUT/${eId}/${seq}</td><td class="py-2">${seq}</td><td class="py-2">${esc(r.employee_id)}</td><td class="py-2">${esc(r.name)}</td><td class="py-2">${esc(r.department)}</td><td class="py-2">${esc(r.documents)}</td><td class="py-2 font-medium">${esc(r.docket_number||'')}</td><td class="py-2">${esc(r.courier_status||'')}</td><td class="py-2">${esc(r.particular)}</td><td class="py-2 text-slate-400">${esc(r.details||'')}</td><td class=\"py-2 text-slate-400\">${esc(custToString(r.customers))}</td></tr>`; }).join('');
         html += `</tbody></table></div>`;
       } else html += `<p class="text-sm text-slate-300">No outward records for this date.</p>`;
       html += `</div>`;
@@ -1606,7 +1834,7 @@
       html += `<div class="bg-white rounded-xl border border-slate-200 p-5"><h3 class="font-semibold text-sm text-accent mb-3 flex items-center gap-2"><span class="material-symbols-outlined text-lg">call_received</span>Inward (${inn.length})</h3>`;
       if (inn.length) {
         html += `<div class="overflow-x-auto"><table class="w-full text-sm" id="reportInTable"><thead><tr class="text-xs text-slate-400 uppercase border-b"><th class="pb-2 text-left">ID</th><th class="pb-2 text-left">Sl No</th><th class="pb-2 text-left">Emp ID</th><th class="pb-2 text-left">From</th><th class="pb-2 text-left">Dept</th><th class="pb-2 text-left">Documents Received</th><th class="pb-2 text-left">Particular</th><th class="pb-2 text-left">Details</th><th class="pb-2 text-left">Customers</th></tr></thead><tbody>`;
-        html += inn.map(r => { const seq = inSeqMap[r.id]||'-'; return `<tr class="border-b border-slate-50"><td class="py-2 font-semibold text-accent text-xs">IN/${eId}/${seq}</td><td class="py-2">${seq}</td><td class="py-2">${esc(r.employee_id)}</td><td class="py-2">${esc(r.name)}</td><td class="py-2">${esc(r.department)}</td><td class="py-2">${esc(r.documents)}</td><td class="py-2">${esc(r.particular)}</td><td class="py-2 text-slate-400">${esc(r.details||'')}</td><td class=\"py-2 text-slate-400\">${esc((Array.isArray(r.customers)?r.customers:[]).join(', '))}</td></tr>`; }).join('');
+        html += inn.map(r => { const seq = inSeqMap[r.id]||'-'; return `<tr class="border-b border-slate-50"><td class="py-2 font-semibold text-accent text-xs">IN/${eId}/${seq}</td><td class="py-2">${seq}</td><td class="py-2">${esc(r.employee_id)}</td><td class="py-2">${esc(r.name)}</td><td class="py-2">${esc(r.department)}</td><td class="py-2">${esc(r.documents)}</td><td class="py-2">${esc(r.particular)}</td><td class="py-2 text-slate-400">${esc(r.details||'')}</td><td class=\"py-2 text-slate-400\">${esc(custToString(r.customers))}</td></tr>`; }).join('');
         html += `</tbody></table></div>`;
       } else html += `<p class="text-sm text-slate-300">No inward records for this date.</p>`;
       html += `</div>`;
@@ -1970,7 +2198,7 @@
           To: r.name || '', Department: r.department || '', Documents: r.documents || '',
           'Docket No.': r.docket_number || '', 'Courier/Post Status': r.courier_status || '',
           Particular: r.particular || '', Details: r.details || '',
-          Customers: Array.isArray(r.customers) ? r.customers.join(', ') : (r.customers || ''),
+          Customers: custToString(r.customers),
           'By': r.created_by || '',
         }));
         addSheet('Mail Outward', outRows, { Date: 'No data', To: '', Department: '', Documents: '' });
@@ -1980,7 +2208,7 @@
           Date: fmtDate(r.date), Recorded: mrFmtDateTime(r.created_at), 'Employee ID': r.employee_id || '',
           From: r.name || '', Department: r.department || '', Documents: r.documents || '',
           Particular: r.particular || '', Details: r.details || '',
-          Customers: Array.isArray(r.customers) ? r.customers.join(', ') : (r.customers || ''),
+          Customers: custToString(r.customers),
           'By': r.created_by || '',
         }));
         addSheet('Mail Inward', inRows, { Date: 'No data', From: '', Department: '', Documents: '' });
@@ -2121,17 +2349,17 @@
       }
 
       if (type === 'outward') {
-        data = outRecords.map(r => ({ 'ID': makeRecordId(r), 'Sl No': r.seq, 'Date': fmtDate(r.date), 'Employee ID': r.employee_id, 'To': r.name, 'Department': r.department, 'Documents Sent': r.documents, 'Docket No.': r.docket_number || '', 'Courier/Post Status': r.courier_status || '', 'Particular': r.particular, 'Details': r.details || '', 'Customers': (Array.isArray(r.customers)?r.customers:[]).join(', ') }));
+        data = outRecords.map(r => ({ 'ID': makeRecordId(r), 'Sl No': r.seq, 'Date': fmtDate(r.date), 'Employee ID': r.employee_id, 'To': r.name, 'Department': r.department, 'Documents Sent': r.documents, 'Docket No.': r.docket_number || '', 'Courier/Post Status': r.courier_status || '', 'Particular': r.particular, 'Details': r.details || '', 'Customers': custToString(r.customers) }));
         sheetName = 'Outward';
         title = `Outward Mail Register - ${selectedLocation}`;
         filename = `Outward_${selectedLocation}_${fy.label.replace(/\s/g,'_')}.xlsx`;
       } else if (type === 'inward') {
-        data = inRecords.map(r => ({ 'ID': makeRecordId(r), 'Sl No': r.seq, 'Date': fmtDate(r.date), 'Employee ID': r.employee_id, 'From': r.name, 'Department': r.department, 'Documents Received': r.documents, 'Particular': r.particular, 'Details': r.details || '', 'Customers': (Array.isArray(r.customers)?r.customers:[]).join(', ') }));
+        data = inRecords.map(r => ({ 'ID': makeRecordId(r), 'Sl No': r.seq, 'Date': fmtDate(r.date), 'Employee ID': r.employee_id, 'From': r.name, 'Department': r.department, 'Documents Received': r.documents, 'Particular': r.particular, 'Details': r.details || '', 'Customers': custToString(r.customers) }));
         sheetName = 'Inward';
         title = `Inward Mail Register - ${selectedLocation}`;
         filename = `Inward_${selectedLocation}_${fy.label.replace(/\s/g,'_')}.xlsx`;
       } else {
-        data = adminAllRecords.map(r => ({ 'ID': makeRecordId(r), 'Branch Name': r.location, 'Sl No': r.seq, 'Date': fmtDate(r.date), 'Type': r.mail_type.toUpperCase(), 'Employee ID': r.employee_id, 'To/From': r.name, 'Department': r.department, 'Documents': r.documents, 'Docket No.': r.docket_number || '', 'Courier/Post Status': r.courier_status || '', 'Particular': r.particular, 'Details': r.details || '', 'Customers': (Array.isArray(r.customers)?r.customers:[]).join(', '), 'Created By': r.created_by }));
+        data = adminAllRecords.map(r => ({ 'ID': makeRecordId(r), 'Branch Name': r.location, 'Sl No': r.seq, 'Date': fmtDate(r.date), 'Type': r.mail_type.toUpperCase(), 'Employee ID': r.employee_id, 'To/From': r.name, 'Department': r.department, 'Documents': r.documents, 'Docket No.': r.docket_number || '', 'Courier/Post Status': r.courier_status || '', 'Particular': r.particular, 'Details': r.details || '', 'Customers': custToString(r.customers), 'Created By': r.created_by }));
         sheetName = 'All Records';
         title = 'All Mail Records';
         filename = `All_Records_${fy.label.replace(/\s/g,'_')}.xlsx`;
@@ -2191,7 +2419,7 @@
       if (outRecs.length) {
         const data = outRecs.map(r => {
           const seq = outSeq[r.id] || '-';
-          const base = { 'ID': `OUT/${eId}/${seq}` }; if (admin) base['Branch Name'] = r.location; return { ...base, 'Sl No': seq, 'Date': fmtDate(r.date), 'Employee ID': r.employee_id, 'To': r.name, 'Department': r.department, 'Documents Sent': r.documents, 'Docket No.': r.docket_number || '', 'Courier/Post Status': r.courier_status || '', 'Particular': r.particular, 'Details': r.details || '', 'Customers': (Array.isArray(r.customers)?r.customers:[]).join(', '), 'Created By': r.created_by };
+          const base = { 'ID': `OUT/${eId}/${seq}` }; if (admin) base['Branch Name'] = r.location; return { ...base, 'Sl No': seq, 'Date': fmtDate(r.date), 'Employee ID': r.employee_id, 'To': r.name, 'Department': r.department, 'Documents Sent': r.documents, 'Docket No.': r.docket_number || '', 'Courier/Post Status': r.courier_status || '', 'Particular': r.particular, 'Details': r.details || '', 'Customers': custToString(r.customers), 'Created By': r.created_by };
         });
         const headerRows = [['Outward Mail Register - Daily Report'], [dateStr, '', branch, '', fy.label], []];
         const ws = XLSX.utils.aoa_to_sheet(headerRows);
@@ -2206,7 +2434,7 @@
       if (inRecs.length) {
         const data = inRecs.map(r => {
           const seq = inSeq[r.id] || '-';
-          const base = { 'ID': `IN/${eId}/${seq}` }; if (admin) base['Branch Name'] = r.location; return { ...base, 'Sl No': seq, 'Date': fmtDate(r.date), 'Employee ID': r.employee_id, 'From': r.name, 'Department': r.department, 'Documents Received': r.documents, 'Particular': r.particular, 'Details': r.details || '', 'Customers': (Array.isArray(r.customers)?r.customers:[]).join(', '), 'Created By': r.created_by };
+          const base = { 'ID': `IN/${eId}/${seq}` }; if (admin) base['Branch Name'] = r.location; return { ...base, 'Sl No': seq, 'Date': fmtDate(r.date), 'Employee ID': r.employee_id, 'From': r.name, 'Department': r.department, 'Documents Received': r.documents, 'Particular': r.particular, 'Details': r.details || '', 'Customers': custToString(r.customers), 'Created By': r.created_by };
         });
         const headerRows = [['Inward Mail Register - Daily Report'], [dateStr, '', branch, '', fy.label], []];
         const ws = XLSX.utils.aoa_to_sheet(headerRows);

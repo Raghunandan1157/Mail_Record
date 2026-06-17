@@ -30,9 +30,13 @@ CREATE TABLE mail_records (
   name TEXT NOT NULL,
   department TEXT NOT NULL,
   documents TEXT NOT NULL,
+  docket_number TEXT DEFAULT '',
   courier_status TEXT DEFAULT '',
-  particular TEXT NOT NULL,
+  particular TEXT NOT NULL,                 -- union of all per-customer particulars (comma-joined, deduped)
   details TEXT DEFAULT '',
+  -- customers holds an array of objects: [{name, particular}] (particular = comma-joined string).
+  -- Legacy rows may store a plain string array ["Ramesh","Suresh"]; app coerces both shapes.
+  customers JSONB NOT NULL DEFAULT '[]',
   location TEXT NOT NULL,
   created_by TEXT NOT NULL,
   created_at TIMESTAMPTZ DEFAULT NOW(),

@@ -67,7 +67,6 @@
   }
 
   // Access control: AI Assistant restricted to Admin view. Available to admin + Head Office + Corporate Office accounts.
-  const otp = sessionStorage.getItem('ai_otp') || localStorage.getItem('ai_otp');
   const isAdminFlag = (sessionStorage.getItem('sr_headoffice') || localStorage.getItem('sr_headoffice')) === 'true';
   const loc = sessionStorage.getItem('sr_location') || localStorage.getItem('sr_location') || '';
   const canSwitchView = isAdminFlag || loc === 'Head Office' || loc === 'Corporate Office';
@@ -152,7 +151,7 @@
       const res = await fetch('/api/ai-chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ otp, messages })
+        body: JSON.stringify({ messages, isAdmin: isAdminFlag, location: loc || null })
       });
       const data = await res.json();
       typing.remove();
