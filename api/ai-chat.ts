@@ -1,9 +1,8 @@
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
 
-// Node (Fluid Compute), not edge: MAIN's data volume + the DeepSeek call overrun
-// the ~25s edge ceiling. The Supabase client runs fine in Node (unlike the Neon
-// http driver), so maxDuration gives the request room.
-export const config = { maxDuration: 60 };
+// Edge required: the Web Request/Response handler hangs in this account's Node
+// runtime. Context is trimmed hard so the DeepSeek call lands under the edge cap.
+export const config = { runtime: "edge" };
 
 const DEEPSEEK_ENDPOINT = "https://api.deepseek.com/v1/chat/completions";
 
@@ -46,11 +45,11 @@ async function buildContext(scope: Scope): Promise<string> {
 
   const mailQ = db.from("mail_records")
     .select("id, mail_type, date, name, department, employee_id, particular, docket_number, courier_status, customers, location")
-    .order("date", { ascending: false }).limit(400);
+    .order("date", { ascending: false }).limit(150);
   const complaintsQ = db.from("complaint_records")
     .select("id, branch, date, department_id, subject, status").order("raised_at", { ascending: false }).limit(100);
-  const stockQ = db.from("stock_entries").select("item_name, entry_type, quantity, location").limit(120);
-  const employeesQ = db.from("employees").select("emp_id, name, role, location").limit(120);
+  const stockQ = db.from("stock_entries").select("item_name, entry_type, quantity, location").limit(40);
+  const employeesQ = db.from("employees").select("emp_id, name, role, location").limit(60);
   const deptsQ = db.from("complaint_dept_config").select("dept_key, name, active").limit(30);
 
   const [mail, complaints, stock, employees, depts] = await Promise.all([
