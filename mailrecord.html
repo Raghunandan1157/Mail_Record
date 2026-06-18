@@ -498,7 +498,7 @@
 
         <!-- ===== AI ASSISTANT ===== -->
         <div id="page-ai" class="page fade-in hidden">
-          <div class="bg-white rounded-xl border border-slate-200 shadow-sm flex flex-col" style="height:calc(100vh - 140px)">
+          <div class="relative bg-white rounded-xl border border-slate-200 shadow-sm flex flex-col" style="height:calc(100vh - 140px)">
             <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100 bg-slate-50/40">
               <div class="flex items-center gap-2.5">
                 <div class="w-9 h-9 bg-primary rounded-lg flex items-center justify-center"><span class="material-symbols-outlined text-white text-lg">smart_toy</span></div>
@@ -507,7 +507,20 @@
                   <p class="text-[11px] text-slate-400" id="aiScopeNote">Ask about mail, customers, dockets, departments…</p>
                 </div>
               </div>
-              <button onclick="aiClear()" class="flex items-center gap-1.5 px-3 py-1.5 border border-slate-200 rounded-md text-[10px] uppercase tracking-widest font-bold text-slate-600 hover:bg-slate-100 transition"><span class="material-symbols-outlined text-sm opacity-70">restart_alt</span>Clear</button>
+              <div class="flex items-center gap-2">
+                <button onclick="aiToggleHistory()" class="flex items-center gap-1.5 px-3 py-1.5 border border-slate-200 rounded-md text-[10px] uppercase tracking-widest font-bold text-slate-600 hover:bg-slate-100 transition"><span class="material-symbols-outlined text-sm opacity-70">history</span>History</button>
+                <button onclick="aiNewChat()" class="flex items-center gap-1.5 px-3 py-1.5 border border-slate-200 rounded-md text-[10px] uppercase tracking-widest font-bold text-slate-600 hover:bg-slate-100 transition"><span class="material-symbols-outlined text-sm opacity-70">add</span>New</button>
+                <button onclick="aiClear()" class="flex items-center gap-1.5 px-3 py-1.5 border border-slate-200 rounded-md text-[10px] uppercase tracking-widest font-bold text-slate-600 hover:bg-slate-100 transition"><span class="material-symbols-outlined text-sm opacity-70">restart_alt</span>Clear</button>
+              </div>
+            </div>
+
+            <!-- History drawer (anchored top-right inside the card) -->
+            <div id="aiHistoryPanel" class="hidden absolute top-[68px] right-4 z-20 w-80 max-w-[calc(100%-2rem)] bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden">
+              <div class="flex items-center justify-between px-4 py-2.5 border-b border-slate-100 bg-slate-50/60">
+                <span class="text-[11px] uppercase tracking-widest font-bold text-slate-500">Chat History</span>
+                <button onclick="aiHideHistory()" class="text-slate-400 hover:text-slate-700 transition"><span class="material-symbols-outlined text-base">close</span></button>
+              </div>
+              <div id="aiHistoryList" class="max-h-80 overflow-y-auto"></div>
             </div>
 
             <div id="aiChat" class="flex-1 overflow-y-auto px-5 py-5 space-y-3">
@@ -961,14 +974,38 @@
     }
 
     // ===== AI ASSISTANT (DeepSeek + Neon, role-scoped) =====
-    const aiMessages = [];
+    let aiMessages = [];
+    let aiChatId = null;
     function aiInit() {
       const note = document.getElementById('aiScopeNote');
       if (note) note.textContent = isAdmin
         ? 'Admin · all branches · ask about mail, customers, dockets…'
         : `Branch: ${selectedLocation || '—'} · ask about mail, customers, dockets…`;
+      // Every visit/reload starts a fresh empty chat (no growing single chat).
+      aiNewChat();
       const inp = document.getElementById('aiInput');
       if (inp) inp.focus();
+    }
+    // Shared empty-state markup so aiNewChat/aiClear render an identical fresh chat.
+    function aiEmptyHTML() {
+      return `<div id="aiEmpty" class="text-center mt-10 max-w-xl mx-auto">
+        <div class="w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mx-auto mb-4"><span class="material-symbols-outlined text-3xl">smart_toy</span></div>
+        <h2 class="text-lg font-bold text-slate-800 mb-1">Ask anything about your records</h2>
+        <p class="text-sm text-slate-500 mb-5">Mail inward/outward, a customer's particulars, dockets, departments, employees. Spelling mistakes are okay.</p>
+        <div class="flex flex-wrap gap-2 justify-center">
+          <button onclick="aiQuick(this)" class="bg-white border border-slate-200 px-3.5 py-2 rounded-full text-xs text-slate-600 hover:bg-primary hover:text-white hover:border-primary transition">What did Ramesh send?</button>
+          <button onclick="aiQuick(this)" class="bg-white border border-slate-200 px-3.5 py-2 rounded-full text-xs text-slate-600 hover:bg-primary hover:text-white hover:border-primary transition">Outward mail this month</button>
+          <button onclick="aiQuick(this)" class="bg-white border border-slate-200 px-3.5 py-2 rounded-full text-xs text-slate-600 hover:bg-primary hover:text-white hover:border-primary transition">Mail count by department</button>
+          <button onclick="aiQuick(this)" class="bg-white border border-slate-200 px-3.5 py-2 rounded-full text-xs text-slate-600 hover:bg-primary hover:text-white hover:border-primary transition">Which customers have KYC?</button>
+        </div>
+      </div>`;
+    }
+    function aiNewChat() {
+      aiMessages = [];
+      aiChatId = null;
+      const chat = document.getElementById('aiChat');
+      if (chat) chat.innerHTML = aiEmptyHTML();
+      aiHideHistory();
     }
     function aiAutoGrow(el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 128) + 'px'; }
     function aiKey(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); aiSend(); } }
@@ -1008,7 +1045,12 @@
         const res = await fetch('/api/ai-chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ messages: aiMessages, isAdmin: !!isAdmin, location: selectedLocation }),
+          body: JSON.stringify({
+            messages: aiMessages, isAdmin: !!isAdmin, location: selectedLocation,
+            chatId: aiChatId,
+            user_key: (currentEmployee && currentEmployee.emp_id) || '',
+            user_name: (currentEmployee && currentEmployee.name) || '',
+          }),
         });
         const data = await res.json();
         typing.remove();
@@ -1016,6 +1058,7 @@
         const reply = data.reply || '(empty reply)';
         aiMessages.push({ role: 'assistant', content: reply });
         aiBubble('assistant', aiRenderMd(reply));
+        if (data.chatId) aiChatId = data.chatId;
       } catch (err) {
         typing.remove();
         aiBubble('error', 'Network error: ' + esc(err.message));
@@ -1024,20 +1067,61 @@
         btn.disabled = false; inp.focus();
       }
     }
-    function aiClear() {
-      aiMessages.length = 0;
-      const chat = document.getElementById('aiChat');
-      chat.innerHTML = `<div id="aiEmpty" class="text-center mt-10 max-w-xl mx-auto">
-        <div class="w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mx-auto mb-4"><span class="material-symbols-outlined text-3xl">smart_toy</span></div>
-        <h2 class="text-lg font-bold text-slate-800 mb-1">Ask anything about your records</h2>
-        <p class="text-sm text-slate-500 mb-5">Mail inward/outward, a customer's particulars, dockets, departments, employees. Spelling mistakes are okay.</p>
-        <div class="flex flex-wrap gap-2 justify-center">
-          <button onclick="aiQuick(this)" class="bg-white border border-slate-200 px-3.5 py-2 rounded-full text-xs text-slate-600 hover:bg-primary hover:text-white hover:border-primary transition">What did Ramesh send?</button>
-          <button onclick="aiQuick(this)" class="bg-white border border-slate-200 px-3.5 py-2 rounded-full text-xs text-slate-600 hover:bg-primary hover:text-white hover:border-primary transition">Outward mail this month</button>
-          <button onclick="aiQuick(this)" class="bg-white border border-slate-200 px-3.5 py-2 rounded-full text-xs text-slate-600 hover:bg-primary hover:text-white hover:border-primary transition">Mail count by department</button>
-          <button onclick="aiQuick(this)" class="bg-white border border-slate-200 px-3.5 py-2 rounded-full text-xs text-slate-600 hover:bg-primary hover:text-white hover:border-primary transition">Which customers have KYC?</button>
-        </div>
-      </div>`;
+    // Clear = start a fresh chat (resets messages + chatId so the next send INSERTs a new row).
+    function aiClear() { aiNewChat(); }
+
+    // ===== AI CHAT HISTORY =====
+    function aiHideHistory() {
+      const p = document.getElementById('aiHistoryPanel');
+      if (p) p.classList.add('hidden');
+    }
+    function aiToggleHistory() {
+      const p = document.getElementById('aiHistoryPanel');
+      if (!p) return;
+      if (p.classList.contains('hidden')) { p.classList.remove('hidden'); aiLoadHistory(); }
+      else p.classList.add('hidden');
+    }
+    async function aiLoadHistory() {
+      const list = document.getElementById('aiHistoryList');
+      if (list) list.innerHTML = '<div class="px-4 py-6 text-center text-sm text-slate-400">Loading…</div>';
+      try {
+        const scope = isAdmin ? '' : ('&location=eq.' + encodeURIComponent(selectedLocation || ''));
+        const rows = await sbGet('ai_chat_history', 'select=id,title,updated_at&order=updated_at.desc&limit=50' + scope);
+        if (!Array.isArray(rows) || !rows.length) {
+          if (list) list.innerHTML = '<div class="px-4 py-6 text-center text-sm text-slate-400">No previous chats.</div>';
+          return;
+        }
+        if (list) list.innerHTML = rows.map(r => {
+          const d = r.updated_at ? new Date(r.updated_at).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) : '';
+          const title = esc(r.title || 'Untitled chat');
+          return `<button onclick="aiOpenChat(${r.id})" class="w-full text-left px-4 py-2.5 border-b border-slate-100 hover:bg-primary/5 transition">
+            <div class="text-sm font-medium text-slate-800 truncate">${title}</div>
+            <div class="text-[11px] text-slate-400 mt-0.5">${esc(d)}</div>
+          </button>`;
+        }).join('');
+      } catch (err) {
+        if (list) list.innerHTML = '<div class="px-4 py-6 text-center text-sm text-red-500">Failed to load history.</div>';
+      }
+    }
+    async function aiOpenChat(id) {
+      try {
+        const locFilter = isAdmin ? '' : ('&location=eq.' + encodeURIComponent(selectedLocation || ''));
+        const r = await sbGet('ai_chat_history', 'select=transcript&id=eq.' + id + locFilter);
+        const t = (Array.isArray(r) ? r[0] : r);
+        if (!t) { aiBubble('error', 'Chat not found.'); aiHideHistory(); return; }
+        aiMessages = t.transcript || [];
+        aiChatId = Number(id) || null;
+        const chat = document.getElementById('aiChat');
+        if (chat) chat.innerHTML = '';
+        for (const m of aiMessages) {
+          if (m.role === 'user') aiBubble('user', esc(m.content || ''));
+          else if (m.role === 'assistant') aiBubble('assistant', aiRenderMd(m.content || ''));
+        }
+        if (!aiMessages.length && chat) chat.innerHTML = aiEmptyHTML();
+        aiHideHistory();
+      } catch (err) {
+        aiBubble('error', 'Failed to open chat: ' + esc(err.message));
+      }
     }
 
     // ===== LOGIN =====
@@ -1691,11 +1775,10 @@
       if (!docsVal) { showToast('Please select at least one document category'); return false; }
       const deptVal = document.getElementById(pre + 'Dept').value.trim();
       if (!deptVal) { showToast('Please select a department'); return false; }
-      // Per-customer particulars validation: need >=1 customer AND every customer has >=1 particular
-      const customers = getCustomers(pre); // [{name, particular}]
-      if (!customers.length) { showToast('Please add at least one customer'); return false; }
-      if (!allCustomersHaveParticular(pre)) { showToast('Each customer needs at least one particular'); return false; }
-      const partVal = unionParticulars(pre); // union, deduped, comma-joined
+      // Customers/particulars are OPTIONAL — an entry can be saved with zero customers
+      // and added later via the edit flow. Documents + department remain required.
+      const customers = getCustomers(pre); // [{name, particular}] — may be []
+      const partVal = unionParticulars(pre); // union, deduped, comma-joined — may be ''
       const data = {
         mail_type: type, date: document.getElementById(pre + 'Date').value,
         employee_id: document.getElementById(pre + 'EmpId').value.trim(), name: document.getElementById(pre + 'Name').value.trim(),

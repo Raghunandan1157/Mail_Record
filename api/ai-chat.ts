@@ -114,7 +114,7 @@ ${JSON.stringify(depts.data ?? [])}`;
 export default async function handler(req: Request): Promise<Response> {
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
 
-  let body: { messages?: Msg[]; isAdmin?: boolean; location?: string };
+  let body: { messages?: Msg[]; isAdmin?: boolean; location?: string; chatId?: number | null; user_key?: string; user_name?: string };
   try {
     body = await req.json();
   } catch {
@@ -179,5 +179,37 @@ ${context}`;
 
   const data = await res.json();
   const reply = data.choices?.[0]?.message?.content ?? "(no reply)";
-  return json({ reply });
+
+  // Persist the conversation. A save failure must never break the chat reply.
+  // Accept chatId as number OR numeric string (defensive against JSON typing).
+  const rawChatId = body.chatId as unknown;
+  let chatId: number | null = (rawChatId != null && rawChatId !== "" && Number.isFinite(Number(rawChatId))) ? Number(rawChatId) : null;
+  try {
+    const db = getDb();
+    // Clamp to the last 100 messages so a long conversation can't bloat the row.
+    const trimmed = messages.length > 100 ? messages.slice(messages.length - 100) : messages;
+    const transcript = [...trimmed, { role: "assistant", content: reply }];
+    const title = String(messages.find(m => m.role === "user")?.content || "").slice(0, 80);
+    if (chatId) {
+      await db.from("ai_chat_history").update({ transcript, updated_at: new Date().toISOString() }).eq("id", chatId);
+    } else {
+      const { data: ins } = await db
+        .from("ai_chat_history")
+        .insert({
+          user_key: String(body.user_key || ""),
+          user_name: String(body.user_name || ""),
+          location: location || "",
+          is_admin: isAdmin,
+          title,
+          transcript,
+        })
+        .select("id")
+        .single();
+      chatId = ins?.id != null ? Number(ins.id) : null;
+    }
+  } catch {
+    // swallow — saving history is best-effort
+  }
+
+  return json({ reply, chatId });
 }

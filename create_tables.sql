@@ -118,3 +118,16 @@ CREATE INDEX IF NOT EXISTS idx_shipments_batch ON shipments(batch_id);
 ALTER TABLE shipments ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Allow all on shipments" ON shipments;
 CREATE POLICY "Allow all on shipments" ON shipments FOR ALL USING (true) WITH CHECK (true);
+-- AI assistant chat history (one row per conversation; transcript = [{role,content}])
+CREATE TABLE IF NOT EXISTS ai_chat_history (
+  id BIGSERIAL PRIMARY KEY,
+  user_key TEXT,
+  user_name TEXT,
+  location TEXT NOT NULL DEFAULT '',
+  is_admin BOOLEAN NOT NULL DEFAULT false,
+  title TEXT NOT NULL DEFAULT '',
+  transcript JSONB NOT NULL DEFAULT '[]'::jsonb,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_ai_chat_history_loc ON ai_chat_history(location, updated_at DESC);
