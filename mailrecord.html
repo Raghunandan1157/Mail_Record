@@ -1236,6 +1236,8 @@
       showApp();
     }
     function checkSession() {
+      // Valid only with a signed token; pre-token / expired sessions re-login.
+      if (!sessionToken) return false;
       const raw = sessionStorage.getItem('mr_session') || localStorage.getItem('mr_session');
       if (!raw) return false; const s = JSON.parse(raw);
       if (Date.now() - s.time > 86400000) { logout(); return false; }
@@ -1307,6 +1309,7 @@
     async function loadRecords(type) {
       const fy = getCurrentFY();
       const allRecs = await sbGet('mail_records', `select=*&mail_type=eq.${type}&location=eq.${encodeURIComponent(selectedLocation)}&date=gte.${fy.start}&date=lte.${fy.end}&order=created_at.asc`);
+      if (!Array.isArray(allRecs)) { logout(); return; }
       allRecs.forEach((r, i) => { r.seq = i + 1; r.customers = normCust(r.customers); });
       const recs = allRecs;
       if (type === 'outward') { outRecords = recs; renderOutward(); }
