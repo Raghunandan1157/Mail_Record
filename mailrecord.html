@@ -244,7 +244,7 @@
                 <div><label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Status of the Courier / Post</label><input type="text" id="outCourierStatus" required placeholder="e.g. Speed Post, Courier" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"></div>
                 <div><label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Details (optional)</label><input type="text" id="outDetails" placeholder="Additional details" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"></div>
                 <div class="md:col-span-2">
-                  <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Customers &amp; Particulars</label>
+                  <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Customers</label>
                   <input type="text" id="outCustomerInput" placeholder="Customer name" autocomplete="off"
                     onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomer('out')}"
                     class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary">
@@ -256,7 +256,6 @@
                       <thead>
                         <tr class="bg-slate-50 text-left text-[11px] uppercase tracking-wide text-slate-500">
                           <th class="px-3 py-2 font-semibold w-1/3">Customer</th>
-                          <th class="px-3 py-2 font-semibold">Particulars</th>
                           <th class="px-3 py-2 font-semibold w-10"></th>
                         </tr>
                       </thead>
@@ -359,7 +358,7 @@
                 </div>
                 <div><label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Details (optional)</label><input type="text" id="inDetails" placeholder="Additional details" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"></div>
                 <div class="md:col-span-2">
-                  <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Customers &amp; Particulars</label>
+                  <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Customers</label>
                   <input type="text" id="inCustomerInput" placeholder="Customer name" autocomplete="off"
                     onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomer('in')}"
                     class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent">
@@ -371,7 +370,6 @@
                       <thead>
                         <tr class="bg-slate-50 text-left text-[11px] uppercase tracking-wide text-slate-500">
                           <th class="px-3 py-2 font-semibold w-1/3">Customer</th>
-                          <th class="px-3 py-2 font-semibold">Particulars</th>
                           <th class="px-3 py-2 font-semibold w-10"></th>
                         </tr>
                       </thead>
@@ -1434,18 +1432,13 @@
 
     // Detail-view customers table: bordered, header "Customer | Particulars", particulars as pills.
     function customersTableHTML(customers, accent){
-      const pill = accent === 'accent' ? 'bg-accent/10 text-accent' : 'bg-primary/10 text-primary';
-      const rows = customers.map(c => {
-        const parts = (c.particular || '').split(',').map(s => s.trim()).filter(Boolean);
-        const chips = parts.length
-          ? `<div class="flex flex-wrap gap-1.5">${parts.map(p => `<span class="${pill} text-[11px] px-2 py-0.5 rounded-full font-semibold">${esc(p)}</span>`).join('')}</div>`
-          : '<span class="text-slate-300 text-xs">—</span>';
-        return `<tr><td class="px-5 py-3 align-top font-medium text-slate-900 w-1/3">${esc(c.name)}</td><td class="px-5 py-3 align-top">${chips}</td></tr>`;
-      }).join('');
+      const rows = customers.map(c =>
+        `<tr><td class="px-5 py-3 align-top font-medium text-slate-900">${esc(c.name)}</td></tr>`
+      ).join('');
       return `<div class="border border-slate-200 rounded-lg overflow-hidden mb-6">
-        <div class="bg-slate-900 text-white px-5 py-3 flex items-center justify-between"><span class="text-[11px] font-bold uppercase tracking-widest">Customers &amp; Particulars</span><span class="text-[10px] uppercase tracking-widest opacity-60 font-bold">${customers.length} ${customers.length === 1 ? 'Customer' : 'Customers'}</span></div>
+        <div class="bg-slate-900 text-white px-5 py-3 flex items-center justify-between"><span class="text-[11px] font-bold uppercase tracking-widest">Customers</span><span class="text-[10px] uppercase tracking-widest opacity-60 font-bold">${customers.length} ${customers.length === 1 ? 'Customer' : 'Customers'}</span></div>
         <table class="w-full text-sm">
-          <thead class="bg-slate-50"><tr class="text-[10px] uppercase tracking-widest font-bold text-slate-500"><th class="px-5 py-2.5 text-left">Customer</th><th class="px-5 py-2.5 text-left">Particulars</th></tr></thead>
+          <thead class="bg-slate-50"><tr class="text-[10px] uppercase tracking-widest font-bold text-slate-500"><th class="px-5 py-2.5 text-left">Customer</th></tr></thead>
           <tbody class="divide-y divide-slate-100">${rows}</tbody>
         </table>
       </div>`;
@@ -1709,46 +1702,20 @@
       // sync hidden field (saved shape) + union particular
       if (hidden) hidden.value = JSON.stringify(getCustomers(pre));
       const partField = document.getElementById(pre + 'Particular');
-      if (partField) partField.value = unionParticulars(pre);
+      if (partField) partField.value = '';
 
       if (!rows || !wrap || !empty) return;
       if (!list.length){ wrap.classList.add('hidden'); empty.classList.remove('hidden'); rows.innerHTML = ''; return; }
       wrap.classList.remove('hidden'); empty.classList.add('hidden');
-      const accent = pre === 'out' ? 'primary' : 'accent';
-
-      rows.innerHTML = list.map((c, i) => {
-        const chips = (c.particulars || []).map(p =>
-          `<span class="inline-flex items-center gap-1 bg-slate-100 text-slate-700 px-2 py-0.5 rounded-full text-xs">
-             <span>${esc(p)}</span>
-             <button type="button" data-v="${esc(p)}" onclick="removePart('${pre}',${i}, this.dataset.v)" class="text-slate-400 hover:text-red-500 font-bold">&times;</button>
-           </span>`).join('');
-        return `
+      rows.innerHTML = list.map((c, i) => `
         <tr>
           <td class="px-3 py-2 align-top font-medium text-slate-800">${esc(c.name)}</td>
-          <td class="px-3 py-2 align-top">
-            ${chips ? `<div class="flex flex-wrap gap-1 mb-1.5">${chips}</div>` : ''}
-            <div class="relative">
-              <div class="flex gap-1.5">
-                <input type="text" id="${pre}PartInput${i}" placeholder="Type or pick particular…" autocomplete="off"
-                  onfocus="openDrop('${pre}',${i})" oninput="renderSuggestions('${pre}',${i})"
-                  onkeydown="if(event.key==='Enter'){event.preventDefault();addPartFromInput('${pre}',${i})}"
-                  class="flex-1 px-3 py-1.5 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-${accent}/20 focus:border-${accent}">
-                <button type="button" onclick="addPartFromInput('${pre}',${i})" title="Add particular"
-                  class="shrink-0 inline-flex items-center justify-center w-9 bg-${accent} text-white rounded-lg hover:bg-${accent}/90 transition">
-                  <span class="material-symbols-outlined text-lg">add</span></button>
-              </div>
-              <div id="${pre}PartDrop${i}" class="part-drop hidden absolute z-30 left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-xl shadow-xl max-h-56 overflow-y-auto">
-                <div class="drop-inner p-2 space-y-0.5"></div>
-              </div>
-            </div>
-          </td>
-          <td class="px-3 py-2 align-top text-center">
+          <td class="px-3 py-2 align-top text-center w-10">
             <button type="button" onclick="removeCustomer('${pre}',${i})" class="text-slate-400 hover:text-red-500">
               <span class="material-symbols-outlined text-lg">delete</span>
             </button>
           </td>
-        </tr>`;
-      }).join('');
+        </tr>`).join('');
     }
 
     // union of all per-customer particulars, deduped case-insensitive, comma-joined
