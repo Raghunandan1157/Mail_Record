@@ -26,7 +26,11 @@ const auditSource = existsSync(new URL('../audit.html', import.meta.url))
   ? readFileSync(new URL('../audit.html', import.meta.url), 'utf8')
   : '';
 
-assert.match(indexSource, /is_auditor/, 'hub login must read is_auditor from branch_credentials');
+// The auditor flag is now resolved server-side by /api/login (which reads
+// is_auditor from branch_credentials) and returned as isAuditor; the hub login
+// consumes that instead of querying branch_credentials directly. The SQL-column
+// assertion below still verifies the is_auditor column itself exists.
+assert.match(indexSource, /isAuditor/, 'hub login must read the auditor flag (isAuditor) from the /api/login response');
 assert.match(indexSource, /sr_auditor/, 'hub login must persist sr_auditor session flag');
 assert.match(indexSource, /sr_auditor_name/, 'hub login must persist the real auditor name');
 assert.match(indexSource, /openModule\('audit'\)/, 'hub must expose an Audit module route');

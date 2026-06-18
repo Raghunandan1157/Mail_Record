@@ -51,9 +51,11 @@
         <h1 class="font-bold">Mail Record</h1>
         <p class="sub">Select your branch to continue</p>
         <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Branch / Location</label>
-        <select id="loginLocation" class="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"><option value="">Loading locations...</option></select>
+        <select id="loginLocation" class="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"><option value="">Loading locations...</option></select>
+        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Password</label>
+        <input type="password" id="loginPassword" placeholder="Branch password" autocomplete="off" onkeydown="if(event.key==='Enter')loginSelectLocation()" class="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary">
         <div class="login-error" id="loginError1"></div>
-        <button onclick="loginSelectLocation()" class="w-full bg-primary text-white py-2.5 rounded-lg font-semibold text-sm hover:bg-primary/90 transition">Continue</button>
+        <button id="loginContinueBtn" onclick="loginSelectLocation()" class="w-full bg-primary text-white py-2.5 rounded-lg font-semibold text-sm hover:bg-primary/90 transition">Continue</button>
         <div class="text-center mt-4"><a onclick="loginAdminStart()" class="text-primary text-xs cursor-pointer underline">Login as Admin</a></div>
       </div>
       <div class="login-step" id="loginStep2">
@@ -686,17 +688,22 @@
 
   <script>
     // ===== SUPABASE =====
-    const SB = 'https://zovnmmdfthpbubrorsgh.supabase.co';
-    const SK = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpvdm5tbWRmdGhwYnVicm9yc2doIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE1NzE3ODgsImV4cCI6MjA3NzE0Nzc4OH0.92BH2sjUOgkw6iSRj1_4gt0p3eThg3QT4VK-Q4EdmBE';
-    const H = { 'apikey': SK, 'Authorization': 'Bearer ' + SK, 'Content-Type': 'application/json', 'Prefer': 'return=representation' };
-    async function sbGet(t, p = '') { return (await fetch(`${SB}/rest/v1/${t}?${p}`, { headers: H })).json(); }
+    const SB = '/api';
+    const SK = '';
+    // Session token (HMAC, issued by /api/login). Sent as the Bearer on every
+    // data request; the proxy rejects calls without a valid one.
+    let sessionToken = sessionStorage.getItem('mr_token') || localStorage.getItem('mr_token') || '';
+    function setSessionToken(t) { sessionToken = t || ''; if (t) { sessionStorage.setItem('mr_token', t); localStorage.setItem('mr_token', t); } else { sessionStorage.removeItem('mr_token'); localStorage.removeItem('mr_token'); } }
+    const H = { 'apikey': SK, 'Content-Type': 'application/json', 'Prefer': 'return=representation' };
+    function authH() { return { ...H, 'Authorization': 'Bearer ' + (sessionToken || '') }; }
+    async function sbGet(t, p = '') { return (await fetch(`${SB}/rest/v1/${t}?${p}`, { headers: authH() })).json(); }
     // Paginated fetch: PostgREST caps responses at 1000 rows. Loop Range until fully drained
     // so admin-wide queries (no location filter, can exceed 1000) return every row.
     async function sbGetAll(t, p = '', pageSize = 1000) {
       const all = [];
       for (let from = 0; ; from += pageSize) {
         const to = from + pageSize - 1;
-        const res = await fetch(`${SB}/rest/v1/${t}?${p}`, { headers: { ...H, 'Range-Unit': 'items', 'Range': `${from}-${to}` } });
+        const res = await fetch(`${SB}/rest/v1/${t}?${p}`, { headers: { ...authH(), 'Range-Unit': 'items', 'Range': `${from}-${to}` } });
         const page = await res.json();
         if (!Array.isArray(page) || page.length === 0) break;
         all.push(...page);
@@ -704,8 +711,8 @@
       }
       return all;
     }
-    async function sbPost(t, d) { return (await fetch(`${SB}/rest/v1/${t}`, { method: 'POST', headers: H, body: JSON.stringify(d) })).json(); }
-    async function sbPatch(t, id, d) { return (await fetch(`${SB}/rest/v1/${t}?id=eq.${id}`, { method: 'PATCH', headers: H, body: JSON.stringify(d) })).json(); }
+    async function sbPost(t, d) { return (await fetch(`${SB}/rest/v1/${t}`, { method: 'POST', headers: authH(), body: JSON.stringify(d) })).json(); }
+    async function sbPatch(t, id, d) { return (await fetch(`${SB}/rest/v1/${t}?id=eq.${id}`, { method: 'PATCH', headers: authH(), body: JSON.stringify(d) })).json(); }
 
     // ===== STATE =====
     let currentEmployee = null, selectedLocation = null, isAdmin = false;
@@ -844,20 +851,12 @@
       if (branchRecipientChoices.length) return branchRecipientChoices;
       if (branchRecipientLoad) return branchRecipientLoad;
       branchRecipientLoad = (async () => {
-        const names = [];
-        const [empRes, credRes] = await Promise.allSettled([
-          sbGet('employees', 'select=location&location=not.is.null'),
-          sbGet('branch_credentials', 'select=branch,username')
-        ]);
-        if (empRes.status === 'fulfilled' && Array.isArray(empRes.value)) {
-          empRes.value.forEach(e => { if (e.location) names.push(e.location); });
-        }
-        if (credRes.status === 'fulfilled' && Array.isArray(credRes.value)) {
-          credRes.value.forEach(c => {
-            const name = c.branch || c.username;
-            if (name) names.push(name);
-          });
-        }
+        let names = [];
+        try {
+          const res = await fetch('/api/branches');
+          const list = await res.json();
+          if (Array.isArray(list)) names = list.slice();
+        } catch (e) { /* fall back to the defaults below */ }
         names.push('Head Office', 'Corporate Office');
         branchRecipientChoices = [...new Set(names.map(n => String(n).trim()).filter(Boolean))]
           .sort((a, b) => a.localeCompare(b));
@@ -1042,9 +1041,9 @@
       try {
         const res = await fetch('/api/ai-chat', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + sessionToken },
           body: JSON.stringify({
-            messages: aiMessages, isAdmin: !!isAdmin, location: selectedLocation,
+            messages: aiMessages,
             chatId: aiChatId,
             user_key: (currentEmployee && currentEmployee.emp_id) || '',
             user_name: (currentEmployee && currentEmployee.name) || '',
@@ -1125,18 +1124,29 @@
     // ===== LOGIN =====
     async function initLogin() {
       try {
-        const emps = await sbGet('employees', 'select=location&location=not.is.null');
-        const locs = [...new Set(emps.map(e => e.location))].sort();
-        if (!locs.includes('Head Office')) locs.push('Head Office');
-        locs.sort();
-        document.getElementById('loginLocation').innerHTML = '<option value="">-- Select Branch --</option>' + locs.map(l => `<option value="${esc(l)}">${esc(l)}</option>`).join('');
+        const res = await fetch('/api/branches');
+        const locs = await res.json();
+        const list = Array.isArray(locs) ? locs : [];
+        document.getElementById('loginLocation').innerHTML = '<option value="">-- Select Branch --</option>' + list.map(l => `<option value="${esc(l)}">${esc(l)}</option>`).join('');
       } catch (e) { showLoginError(1, 'Failed to load locations'); }
     }
 
     async function loginSelectLocation() {
       const loc = document.getElementById('loginLocation').value;
+      const pwd = document.getElementById('loginPassword').value || '';
       if (!loc) { showLoginError(1, 'Please select a branch'); return; }
-      selectedLocation = loc;
+      if (!pwd) { showLoginError(1, 'Please enter your password'); return; }
+      const cbtn = document.getElementById('loginContinueBtn'); const cbtnTxt = cbtn.textContent; cbtn.disabled = true; cbtn.textContent = 'Checking…';
+      try {
+        const lr = await fetch('/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: loc, password: pwd }) });
+        const ld = await lr.json();
+        if (!lr.ok) { showLoginError(1, ld.error || 'Invalid branch or password'); cbtn.disabled = false; cbtn.textContent = cbtnTxt; return; }
+        setSessionToken(ld.token);
+        isAdmin = !!ld.isAdmin;
+        selectedLocation = ld.location || loc;
+      } catch (e) { showLoginError(1, 'Login failed. Try again.'); cbtn.disabled = false; cbtn.textContent = cbtnTxt; return; }
+      cbtn.disabled = false; cbtn.textContent = cbtnTxt;
+      document.getElementById('loginPassword').value = '';
       if (loc === 'Head Office' || loc === 'Corporate Office') {
         currentEmployee = { id: 0, emp_id: loc === 'Head Office' ? 'HO-USER' : 'CO-USER', name: loc === 'Head Office' ? 'Santosh' : 'Chetan', role: 'Admin Executive', location: loc };
         startSession(); return;
@@ -1192,9 +1202,10 @@
       const otp = [...document.querySelectorAll('.otp-inputs input')].map(i => i.value).join('');
       if (otp.length < 4) { showLoginError(3, 'Enter all 4 digits'); return; }
       try {
-        const c = await sbGet('app_config', 'select=value&key=eq.admin_otp');
-        if (c.length && c[0].value === otp) { isAdmin = true; showStep(4); }
-        else showLoginError(3, 'Invalid OTP');
+        const lr = await fetch('/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mode: 'admin', otp }) });
+        const ld = await lr.json();
+        if (lr.ok && ld.token) { setSessionToken(ld.token); isAdmin = true; showStep(4); }
+        else showLoginError(3, ld.error || 'Invalid OTP');
       } catch (e) { showLoginError(3, 'Verification failed'); }
     }
 
@@ -1286,6 +1297,7 @@
       else { document.getElementById('navRegular').classList.remove('hidden'); document.getElementById('navAdmin').classList.add('hidden'); navigateTo('dashboard'); }
     }
     function logout() {
+      setSessionToken('');
       sessionStorage.removeItem('mr_session'); localStorage.removeItem('mr_session');
       ['sr_employee','sr_location','sr_headoffice','sr_login_time','sr_view_mode'].forEach(k => { sessionStorage.removeItem(k); localStorage.removeItem(k); });
       window.location.href = 'index.html';
@@ -1599,7 +1611,7 @@
 
     // ---------- Delete record helpers ----------
     async function sbDel(t, id){
-      return await fetch(`${SB}/rest/v1/${t}?id=eq.${id}`, { method: 'DELETE', headers: H });
+      return await fetch(`${SB}/rest/v1/${t}?id=eq.${id}`, { method: 'DELETE', headers: authH() });
     }
     async function deleteOutRecord(id){
       if (!confirm('Delete this outward record? This cannot be undone.')) return;

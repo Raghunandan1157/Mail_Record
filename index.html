@@ -375,10 +375,15 @@
 <style>@keyframes vswSpin{to{transform:rotate(360deg);}}</style>
 
 <script>
-  const SB = 'https://zovnmmdfthpbubrorsgh.supabase.co';
-  const SK = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpvdm5tbWRmdGhwYnVicm9yc2doIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE1NzE3ODgsImV4cCI6MjA3NzE0Nzc4OH0.92BH2sjUOgkw6iSRj1_4gt0p3eThg3QT4VK-Q4EdmBE';
-  const H = { 'apikey': SK, 'Authorization': 'Bearer ' + SK, 'Content-Type': 'application/json' };
-  async function sbGet(t, p='') { return (await fetch(`${SB}/rest/v1/${t}?${p}`, { headers: H })).json(); }
+  const SB = '/api';
+  const SK = '';
+  // Session token (HMAC, issued by /api/login). Shared with the feature pages
+  // via localStorage so they inherit this login.
+  let sessionToken = sessionStorage.getItem('mr_token') || localStorage.getItem('mr_token') || '';
+  function setSessionToken(t) { sessionToken = t || ''; if (t) { sessionStorage.setItem('mr_token', t); localStorage.setItem('mr_token', t); } else { sessionStorage.removeItem('mr_token'); localStorage.removeItem('mr_token'); } }
+  const H = { 'apikey': SK, 'Content-Type': 'application/json' };
+  function authH() { return { ...H, 'Authorization': 'Bearer ' + (sessionToken || '') }; }
+  async function sbGet(t, p='') { return (await fetch(`${SB}/rest/v1/${t}?${p}`, { headers: authH() })).json(); }
 
   let currentEmployee = null, selectedLocation = null, isAdmin = false, auditorMode = false, auditorName = '';
   let selectedProfileIdx = -1, profilesList = [];
@@ -394,8 +399,11 @@
 
   async function initLogin() {
     try {
-      const rows = await sbGet('branch_credentials', 'select=username&order=username.asc');
-      allUsernames = (rows || []).map(r => r.username).filter(Boolean);
+      // Public, names-only endpoint — no passwords leave the server. Usernames
+      // are the branch names in upper case; the server matches case-insensitively.
+      const res = await fetch('/api/branches');
+      const list = await res.json();
+      allUsernames = (Array.isArray(list) ? list : []).map(n => String(n).toUpperCase()).filter(Boolean);
     } catch(e) { console.error('cred load failed', e); }
     const u = document.getElementById('loginUsername'); if (u) setTimeout(()=>u.focus(), 50);
   }
@@ -446,13 +454,15 @@
     const p = document.getElementById('loginPassword').value || '';
     if (!u || !p) { showLoginError(1, 'Username and password required'); return; }
     try {
-      const rows = await sbGet('branch_credentials', `select=*&username=eq.${encodeURIComponent(u)}&password=eq.${encodeURIComponent(p)}`);
-      if (!rows || !rows.length) { showLoginError(1, 'Invalid credentials'); return; }
-      const row = rows[0];
-      isAdmin = !!row.is_admin;
-      auditorMode = !!row.is_auditor;
+      // Password is verified server-side; only a signed token comes back.
+      const lr = await fetch('/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: u, password: p }) });
+      const ld = await lr.json();
+      if (!lr.ok || !ld.token) { showLoginError(1, ld.error || 'Invalid credentials'); return; }
+      setSessionToken(ld.token);
+      isAdmin = !!ld.isAdmin;
+      auditorMode = !!ld.isAuditor;
       auditorName = '';
-      const branch = row.branch;
+      const branch = ld.location || u;
       if (auditorMode) {
         const enteredName = (window.prompt('Enter auditor name') || '').trim();
         if (!enteredName) { showLoginError(1, 'Auditor name required'); return; }
@@ -508,6 +518,9 @@
   }
 
   function checkSession() {
+    // A session is only valid if we also hold a signed token. Pre-token sessions
+    // (from before this build) are treated as logged out so the user re-logs in.
+    if (!sessionToken) return false;
     let emp = sessionStorage.getItem('sr_employee') || localStorage.getItem('sr_employee');
     let loc = sessionStorage.getItem('sr_location') || localStorage.getItem('sr_location');
     let lt = sessionStorage.getItem('sr_login_time') || localStorage.getItem('sr_login_time');
@@ -660,21 +673,12 @@
     else if (mod === 'audit') window.location.href = 'audit.html';
   }
 
-  function makeAiToken(otp) {
-    sessionStorage.setItem('ai_otp', otp);
-    localStorage.setItem('ai_otp', otp);
-  }
-
-  async function ensureAiToken() {
-    if (!canSwitchView()) return false;
-    const configs = await sbGet('app_config', 'select=value&key=eq.admin_otp');
-    const otp = configs && configs[0] && configs[0].value;
-    if (!otp) throw new Error('admin_otp not found');
-    makeAiToken(String(otp));
-    return true;
-  }
+  // The AI endpoint now authenticates with the session token (which already
+  // encodes admin scope), so there is no separate OTP to fetch or store.
+  async function ensureAiToken() { return !!isAdmin; }
 
   function logout() {
+    setSessionToken('');
     ['sr_employee','sr_location','sr_headoffice','sr_login_time','sr_dept_admin','mr_session','sr_view_mode','sr_auditor','sr_auditor_name','ai_otp'].forEach(k=>{sessionStorage.removeItem(k);localStorage.removeItem(k);});
     currentEmployee=null; selectedLocation=null; isAdmin=false; auditorMode=false; auditorName='';
     document.getElementById('moduleScreen').style.display = 'none';
@@ -750,7 +754,7 @@
     const deptScope = sessionStorage.getItem('sr_dept_admin') || localStorage.getItem('sr_dept_admin');
     if (deptScope) { window.location.href = 'complain.html'; }
     else {
-      // Refresh AI token for existing sessions so stale login passwords do not reach /api/ai-chat.
+      // AI access is gated by the session token (which encodes admin scope); no OTP refresh needed.
       if (canSwitchView()) ensureAiToken().catch(e => console.warn('AI token refresh failed', e));
       // Reload — skip door, go straight to modules with name on top
       showModuleScreen();

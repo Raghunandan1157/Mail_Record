@@ -149,9 +149,11 @@
 </div>
 
 <script>
-  const SUPABASE_URL = 'https://zovnmmdfthpbubrorsgh.supabase.co';
-  const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpvdm5tbWRmdGhwYnVicm9yc2doIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE1NzE3ODgsImV4cCI6MjA3NzE0Nzc4OH0.92BH2sjUOgkw6iSRj1_4gt0p3eThg3QT4VK-Q4EdmBE';
-  const HEADERS = { apikey: SUPABASE_ANON, Authorization: 'Bearer ' + SUPABASE_ANON, 'Content-Type': 'application/json' };
+  const SUPABASE_URL = '/api';
+  const SUPABASE_ANON = '';
+  const sessionToken = sessionStorage.getItem('mr_token') || localStorage.getItem('mr_token') || '';
+  if (!sessionToken) { window.location.href = 'index.html'; }
+  const HEADERS = { apikey: SUPABASE_ANON, Authorization: 'Bearer ' + sessionToken, 'Content-Type': 'application/json' };
   const statusColors = {
     pending: { color: '#111827', label: 'Pending' },
     in_progress: { color: '#16a34a', label: 'In Progress' },
@@ -241,10 +243,11 @@
   }
 
   async function loadBranches() {
-    const creds = await sbGet('branch_credentials', 'select=branch,username,is_admin,is_auditor&order=branch.asc');
-    const names = creds
-      .filter(row => !row.is_admin && !row.is_auditor)
-      .map(row => row.branch || row.username)
+    const res = await fetch(`${SUPABASE_URL}/branches`, { headers: HEADERS });
+    if (!res.ok) throw new Error(`branches read failed: ${res.status}`);
+    const list = await res.json();
+    const names = (Array.isArray(list) ? list : [])
+      .map(item => (typeof item === 'string' ? item : (item && (item.branch || item.name || item.username))))
       .filter(Boolean)
       .filter(name => !['Head Office', 'Corporate Office', 'Internal Audit'].includes(name));
     branches = [...new Set(names)].sort((a, b) => a.localeCompare(b));

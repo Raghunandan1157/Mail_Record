@@ -67,6 +67,9 @@
   }
 
   // Access control: AI Assistant restricted to Admin view. Available to admin + Head Office + Corporate Office accounts.
+  // Scope is enforced server-side from the session token; these flags are only for local UI and the pre-flight guard.
+  const sessionToken = sessionStorage.getItem('mr_token') || localStorage.getItem('mr_token') || '';
+  if (!sessionToken) { window.location.href = 'index.html'; }
   const isAdminFlag = (sessionStorage.getItem('sr_headoffice') || localStorage.getItem('sr_headoffice')) === 'true';
   const loc = sessionStorage.getItem('sr_location') || localStorage.getItem('sr_location') || '';
   const canSwitchView = isAdminFlag || loc === 'Head Office' || loc === 'Corporate Office';
@@ -150,8 +153,8 @@
     try {
       const res = await fetch('/api/ai-chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages, isAdmin: isAdminFlag, location: loc || null })
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + sessionToken },
+        body: JSON.stringify({ messages })
       });
       const data = await res.json();
       typing.remove();

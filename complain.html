@@ -732,21 +732,20 @@
 </div>
 
 <script>
-  const SB = 'https://zovnmmdfthpbubrorsgh.supabase.co';
-  const SK = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpvdm5tbWRmdGhwYnVicm9yc2doIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE1NzE3ODgsImV4cCI6MjA3NzE0Nzc4OH0.92BH2sjUOgkw6iSRj1_4gt0p3eThg3QT4VK-Q4EdmBE';
-  const H = { 'apikey': SK, 'Authorization': 'Bearer ' + SK, 'Content-Type': 'application/json' };
+  const SB = '/api';
+  const SK = '';
+  // Session token issued by /api/login (shared via localStorage). Every data
+  // call carries it; without it the proxy returns 401, so bounce to login.
+  const sessionToken = sessionStorage.getItem('mr_token') || localStorage.getItem('mr_token') || '';
+  if (!sessionToken) { alert('Please sign in first. Redirecting...'); window.location.href = 'index.html'; }
+  const H = { 'apikey': SK, 'Authorization': 'Bearer ' + sessionToken, 'Content-Type': 'application/json' };
 
   // DEPARTMENTS loaded from complaint_dept_config table at runtime.
   let DEPARTMENTS = [];
   let ADMIN_OTP_VALUE = '';
-  async function sbLoadAdminOtp() {
-    try {
-      const res = await fetch(`${SB}/rest/v1/app_config?select=value&key=eq.admin_otp`, { headers: H });
-      if (!res.ok) return '';
-      const rows = await res.json();
-      return rows[0]?.value || '';
-    } catch { return ''; }
-  }
+  // The admin OTP is no longer exposed to the client (app_config is not
+  // client-reachable); this guard value is intentionally empty now.
+  async function sbLoadAdminOtp() { return ''; }
   const STATUSES = [
     { id: "pending", label: "Pending", tone: "amber" },
     { id: "in_progress", label: "In Progress", tone: "blue" },
@@ -1417,11 +1416,12 @@
 
   async function loadBranchList_combo() {
     try {
-      const res = await fetch(`${SB}/rest/v1/branch_credentials?select=branch&order=branch.asc`, { headers: H });
+      // Names-only public endpoint (branch_credentials is no longer client-reachable).
+      const res = await fetch('/api/branches');
       if (!res.ok) return [];
-      const rows = await res.json();
+      const list = await res.json();
       const set = new Set();
-      rows.forEach(r => { if (r.branch) set.add(r.branch); });
+      (Array.isArray(list) ? list : []).forEach(b => { if (b) set.add(b); });
       return Array.from(set).sort((a, b) => a.localeCompare(b));
     } catch {
       return [];

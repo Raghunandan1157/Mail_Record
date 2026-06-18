@@ -1,4 +1,5 @@
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
+import { getScope, clientIp, rateLimit } from "./_auth";
 
 // Edge required: the Web Request/Response handler hangs in this account's Node
 // runtime. Coverage comes from the mail_context RPC (exact aggregates + a
@@ -124,9 +125,16 @@ export default async function handler(req: Request): Promise<Response> {
   const messages = body.messages;
   if (!Array.isArray(messages) || messages.length === 0) return json({ error: "messages array required" }, 400);
 
-  const isAdmin = body.isAdmin === true;
-  const location = typeof body.location === "string" && body.location.trim() ? body.location.trim() : null;
-  if (!isAdmin && !location) return json({ error: "Missing branch location for non-admin session" }, 401);
+  // Scope from the signed token, not the request body — a client can no longer
+  // claim admin or another branch's data.
+  const secret = process.env.SESSION_SECRET;
+  if (!secret) return json({ error: "SESSION_SECRET not configured" }, 500);
+  const sess = await getScope(req, secret);
+  if (!sess) return json({ error: "Unauthorized" }, 401);
+  if (!rateLimit("ai:" + clientIp(req), 30, 60000)) return json({ error: "Too many requests. Slow down a moment." }, 429);
+  const isAdmin = !!sess.adm || !!sess.aud;
+  const location = isAdmin ? null : (sess.loc || null);
+  if (!isAdmin && !location) return json({ error: "Invalid session scope" }, 401);
 
   const deepseekKey = process.env.DEEPSEEK_KEY;
   if (!deepseekKey) return json({ error: "DEEPSEEK_KEY not configured" }, 500);
