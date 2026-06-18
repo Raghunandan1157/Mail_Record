@@ -5,8 +5,12 @@
 
 // --- SUPABASE ---
 
-const SUPABASE_URL = 'https://zovnmmdfthpbubrorsgh.supabase.co';
-const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpvdm5tbWRmdGhwYnVicm9yc2doIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE1NzE3ODgsImV4cCI6MjA3NzE0Nzc4OH0.92BH2sjUOgkw6iSRj1_4gt0p3eThg3QT4VK-Q4EdmBE';
+// Route through the authenticated /api forwarder (the old direct-Supabase + anon
+// key path was revoked in the security pass). The bearer is now the signed
+// session token from /api/login, read at load; kept the SUPABASE_ANON name so the
+// header sites below are unchanged.
+const SUPABASE_URL = '/api';
+const SUPABASE_ANON = sessionStorage.getItem('mr_token') || localStorage.getItem('mr_token') || '';
 
 // FIX #4: WARNING: The anon key is exposed in client-side code. This is by design for Supabase,
 // but requires Row Level Security (RLS) to be enabled on ALL tables to prevent unauthorized access.
@@ -1309,7 +1313,7 @@ function renderBranchMailRow(r, kind) {
 
 function buildBranchMailRecordsQuery(branch) {
   const encodedBranch = encodeURIComponent(branch);
-  return `select=*&or=(location.eq.${encodedBranch},name.ilike.${encodedBranch})&order=created_at.desc`;
+  return `select=*&or=(location.eq.${encodedBranch},name.ilike.*${encodedBranch}*)&order=created_at.desc`;
 }
 
 async function loadBranchMailRecords(branch) {
