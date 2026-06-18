@@ -14,7 +14,7 @@ assert.match(
 
 assert.match(
   scriptSource,
-  /function buildBranchMailRecordsQuery\(branch\)[\s\S]*or=\(location\.eq\.\$\{encodedBranch\},name\.ilike\.\$\{encodedBranch\}\)/,
+  /function buildBranchMailRecordsQuery\(branch\)[\s\S]*or=\(location\.eq\.\$\{encodedBranch\},name\.ilike\.\*\$\{encodedBranch\}\*\)/,
   'Stationary branch detail must load mail records where the branch is either the recording location or the mail party name'
 );
 
@@ -32,7 +32,7 @@ assert.match(
 
 assert.match(
   mailrecordSource,
-  /function mrBranchMailQuery\(branch\)[\s\S]*or=\(location\.eq\.\$\{encodedBranch\},name\.ilike\.\$\{encodedBranch\}\)/,
+  /function mrBranchMailQuery\(branch\)[\s\S]*or=\(location\.eq\.\$\{encodedBranch\},name\.ilike\.\*\$\{encodedBranch\}\*\)/,
   'Mail Record branch detail must share the same branch involvement query'
 );
 
@@ -50,7 +50,7 @@ assert.match(
 
 assert.match(
   auditSource,
-  /function auditBranchMailQuery\(branch, type, range\)[\s\S]*or=\(location\.eq\.\$\{encodedBranch\},name\.ilike\.\$\{encodedBranch\}\)/,
+  /function auditBranchMailQuery\(branch, type, range\)[\s\S]*or=\(location\.eq\.\$\{encodedBranch\},name\.ilike\.\*\$\{encodedBranch\}\*\)/,
   'Auditor monthly branch counts must use the same branch involvement query'
 );
 

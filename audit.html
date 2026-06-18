@@ -222,7 +222,7 @@
 
   function auditBranchMailQuery(branch, type, range) {
     const encodedBranch = encodeURIComponent(branch);
-    return `select=id&mail_type=eq.${type}&or=(location.eq.${encodedBranch},name.ilike.${encodedBranch})&date=gte.${range.start}&date=lte.${range.end}`;
+    return `select=id&mail_type=eq.${type}&or=(location.eq.${encodedBranch},name.ilike.*${encodedBranch}*)&date=gte.${range.start}&date=lte.${range.end}`;
   }
 
   function monthLabel() {

@@ -2103,7 +2103,7 @@
 
     function mrBranchMailQuery(branch) {
       const encodedBranch = encodeURIComponent(branch);
-      return `select=*&or=(location.eq.${encodedBranch},name.ilike.${encodedBranch})&order=created_at.desc`;
+      return `select=*&or=(location.eq.${encodedBranch},name.ilike.*${encodedBranch}*)&order=created_at.desc`;
     }
 
     async function loadMrMail(branch) {
