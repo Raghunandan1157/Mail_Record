@@ -229,6 +229,10 @@
                     <button type="button" onclick="deptBackToList('out')" class="text-xs text-primary mt-1 hover:underline">← Back to list</button>
                   </div>
                   <input type="hidden" id="outDept">
+                  <div class="mt-2">
+                    <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Department Incharge</label>
+                    <input type="text" id="outDeptIncharge" placeholder="Incharge name (optional)" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary">
+                  </div>
                 </div>
                 <div class="md:col-span-2">
                   <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">List of Documents Sent</label>
@@ -348,6 +352,10 @@
                     <button type="button" onclick="deptBackToList('in')" class="text-xs text-accent mt-1 hover:underline">← Back to list</button>
                   </div>
                   <input type="hidden" id="inDept">
+                  <div class="mt-2">
+                    <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Department Incharge</label>
+                    <input type="text" id="inDeptIncharge" placeholder="Incharge name (optional)" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent">
+                  </div>
                 </div>
                 <div class="md:col-span-2">
                   <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">List of Documents Received</label>
@@ -1433,6 +1441,7 @@
         <p class="text-slate-500 text-sm mb-8">${esc(r.department||'—')} · ${esc(r.particular||'—')}</p>
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
           <div><div class="text-[10px] uppercase tracking-widest font-bold text-slate-400 mb-1.5">Department / Unit</div><div class="font-bold text-slate-900">${esc(r.department||'—')}</div></div>
+          <div><div class="text-[10px] uppercase tracking-widest font-bold text-slate-400 mb-1.5">Department Incharge</div><div class="font-bold text-slate-900">${esc(r.department_incharge||'—')}</div></div>
           <div><div class="text-[10px] uppercase tracking-widest font-bold text-slate-400 mb-1.5">Date Dispatched</div><div class="font-bold text-slate-900">${esc(fmtFullDate(r.date))}</div></div>
           <div><div class="text-[10px] uppercase tracking-widest font-bold text-slate-400 mb-1.5">Employee ID</div><div class="font-bold text-slate-900 font-mono">${esc(r.employee_id||'—')}</div></div>
           <div><div class="text-[10px] uppercase tracking-widest font-bold text-slate-400 mb-1.5">Courier Docket No.</div><div class="font-bold text-slate-900 font-mono">${esc(r.docket_number||'—')}</div></div>
@@ -1550,6 +1559,7 @@
           <div><div class="text-[10px] uppercase tracking-widest font-bold text-slate-400 mb-1.5">Date Received</div><div class="font-bold text-slate-900">${esc(fmtFullDate(r.date))}</div></div>
           <div><div class="text-[10px] uppercase tracking-widest font-bold text-slate-400 mb-1.5">Employee ID</div><div class="font-bold text-slate-900 font-mono">${esc(r.employee_id||'—')}</div></div>
           <div><div class="text-[10px] uppercase tracking-widest font-bold text-slate-400 mb-1.5">Department / Unit</div><div class="font-bold text-slate-900">${esc(r.department||'—')}</div></div>
+          <div><div class="text-[10px] uppercase tracking-widest font-bold text-slate-400 mb-1.5">Department Incharge</div><div class="font-bold text-slate-900">${esc(r.department_incharge||'—')}</div></div>
           <div><div class="text-[10px] uppercase tracking-widest font-bold text-slate-400 mb-1.5">Total Documents</div><div class="font-bold text-slate-900">${docs.length} items</div></div>
           <div><div class="text-[10px] uppercase tracking-widest font-bold text-slate-400 mb-1.5">Status</div><div class="flex items-center gap-2"><span class="size-2 rounded-full bg-violet-500"></span><span class="font-bold text-slate-900 text-sm">Received</span></div></div>
         </div>
@@ -1769,7 +1779,7 @@
       const data = {
         mail_type: type, date: document.getElementById(pre + 'Date').value,
         employee_id: document.getElementById(pre + 'EmpId').value.trim(), name: document.getElementById(pre + 'Name').value.trim(),
-        department: document.getElementById(pre + 'Dept').value.trim(), documents: docsVal,
+        department: document.getElementById(pre + 'Dept').value.trim(), department_incharge: document.getElementById(pre + 'DeptIncharge').value.trim(), documents: docsVal,
         docket_number: type === 'outward' ? document.getElementById('outDocket').value.trim() : '',
         courier_status: type === 'outward' ? document.getElementById('outCourierStatus').value.trim() : '',
         particular: partVal, details: document.getElementById(pre + 'Details').value.trim(),
@@ -1810,6 +1820,7 @@
       document.getElementById('outDetails').value = r.details || '';
       setCustomers('out', r.customers);
       document.getElementById('outParticular').value = r.particular || '';
+      document.getElementById('outDeptIncharge').value = r.department_incharge || '';
       document.getElementById('outSubmitBtn').textContent = 'Update Record';
       document.getElementById('outCancelBtn').classList.remove('hidden');
       openOutForm();
@@ -1827,6 +1838,7 @@
       document.getElementById('inDetails').value = r.details || '';
       setCustomers('in', r.customers);
       document.getElementById('inParticular').value = r.particular || '';
+      document.getElementById('inDeptIncharge').value = r.department_incharge || '';
       document.getElementById('inSubmitBtn').textContent = 'Update Record';
       document.getElementById('inCancelBtn').classList.remove('hidden');
       openInForm();
