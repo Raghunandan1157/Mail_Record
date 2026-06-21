@@ -525,7 +525,7 @@
     let loc = sessionStorage.getItem('sr_location') || localStorage.getItem('sr_location');
     let lt = sessionStorage.getItem('sr_login_time') || localStorage.getItem('sr_login_time');
     if (emp && loc) {
-      if (Date.now() - parseInt(lt||'0') > 86400000) { logout(); return false; }
+      if (Date.now() - parseInt(lt||'0') > 2592000000) { logout(); return false; }
       currentEmployee = JSON.parse(emp); selectedLocation = loc;
       isAdmin = (sessionStorage.getItem('sr_headoffice') || localStorage.getItem('sr_headoffice')) === 'true';
       auditorMode = (sessionStorage.getItem('sr_auditor') || localStorage.getItem('sr_auditor')) === 'true';
@@ -535,7 +535,7 @@
     const raw = sessionStorage.getItem('mr_session') || localStorage.getItem('mr_session');
     if (raw) {
       const s = JSON.parse(raw);
-      if (Date.now()-s.time>86400000){logout();return false;}
+      if (Date.now()-s.time>2592000000){logout();return false;}
       currentEmployee=s.employee; selectedLocation=s.location; isAdmin=s.admin; auditorMode=!!s.auditor; auditorName=s.auditorName || '';
       return true;
     }

@@ -32,7 +32,7 @@ async function hmacKey(secret: string): Promise<CryptoKey> {
   return crypto.subtle.importKey("raw", buf(enc.encode(secret)), { name: "HMAC", hash: "SHA-256" }, false, ["sign", "verify"]);
 }
 
-export async function signToken(payload: { loc: string | null; adm: boolean; aud?: boolean }, secret: string, ttlSeconds = 86400): Promise<string> {
+export async function signToken(payload: { loc: string | null; adm: boolean; aud?: boolean }, secret: string, ttlSeconds = 2592000): Promise<string> {
   const body = { loc: payload.loc ?? null, adm: !!payload.adm, aud: !!payload.aud, exp: nowSec() + ttlSeconds };
   const data = b64urlFromString(JSON.stringify(body));
   const key = await hmacKey(secret);
