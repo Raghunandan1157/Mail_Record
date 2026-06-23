@@ -76,7 +76,9 @@ export default async function handler(req: Request): Promise<Response> {
   if (!rateLimit("rest:" + clientIp(req), 600, 60000)) return jerr("Too many requests", 429);
 
   // Admins and auditors are unscoped (auditors legitimately review all branches).
-  const privileged = !!scope.adm || !!scope.aud;
+  // Office accounts (Head Office / Corporate Office) are likewise authorized to see
+  // every branch — they reach the all-branches Admin view via the Tab view-switch.
+  const privileged = !!scope.adm || !!scope.aud || !!scope.off;
   const loc = scope.loc || "";
   const cfg = SCOPE[table];
   const method = req.method;

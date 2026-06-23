@@ -5,7 +5,12 @@
 const enc = new TextEncoder();
 const dec = new TextDecoder();
 
-export type Scope = { loc: string | null; adm: boolean; aud: boolean; exp: number };
+// `off` = office account (Head Office / Corporate Office). These accounts default
+// to their own office view client-side but are authorized to see ALL branches when
+// they switch to Admin view, so the proxy treats them as privileged. Kept separate
+// from `adm` so the client still defaults office accounts to the corporate/branch
+// view instead of the full-admin identity.
+export type Scope = { loc: string | null; adm: boolean; aud: boolean; off?: boolean; exp: number };
 
 function b64urlFromBytes(bytes: Uint8Array): string {
   let s = "";
@@ -32,8 +37,8 @@ async function hmacKey(secret: string): Promise<CryptoKey> {
   return crypto.subtle.importKey("raw", buf(enc.encode(secret)), { name: "HMAC", hash: "SHA-256" }, false, ["sign", "verify"]);
 }
 
-export async function signToken(payload: { loc: string | null; adm: boolean; aud?: boolean }, secret: string, ttlSeconds = 2592000): Promise<string> {
-  const body = { loc: payload.loc ?? null, adm: !!payload.adm, aud: !!payload.aud, exp: nowSec() + ttlSeconds };
+export async function signToken(payload: { loc: string | null; adm: boolean; aud?: boolean; off?: boolean }, secret: string, ttlSeconds = 2592000): Promise<string> {
+  const body = { loc: payload.loc ?? null, adm: !!payload.adm, aud: !!payload.aud, off: !!payload.off, exp: nowSec() + ttlSeconds };
   const data = b64urlFromString(JSON.stringify(body));
   const key = await hmacKey(secret);
   const sig = new Uint8Array(await crypto.subtle.sign("HMAC", key, buf(enc.encode(data))));

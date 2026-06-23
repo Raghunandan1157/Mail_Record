@@ -65,6 +65,11 @@ export default async function handler(req: Request): Promise<Response> {
   const adm = !!row.is_admin;
   const aud = !!row.is_auditor;
   const loc = row.branch || row.username;
-  const token = await signToken({ loc: adm ? null : loc, adm, aud }, secret);
+  // Office accounts (Head Office / Corporate Office) keep their own location + a
+  // non-admin client identity, but are authorized to view ALL branches when they
+  // switch to Admin view. `off` makes the proxy treat them as privileged without
+  // flipping the client's default view to full-admin.
+  const off = loc === "Head Office" || loc === "Corporate Office";
+  const token = await signToken({ loc: adm ? null : loc, adm, aud, off }, secret);
   return json({ token, isAdmin: adm, isAuditor: aud, location: adm ? null : loc });
 }
