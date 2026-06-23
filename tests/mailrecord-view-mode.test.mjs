@@ -62,3 +62,19 @@ assert.deepEqual(
   { selectedLocation: 'Head Office', isAdmin: true },
   'admin-capable users can switch to Admin view'
 );
+
+// Regression: a Corporate Office login (NOT a real admin) that switches to Admin view
+// must reach the admin all-branches dashboard. This is the exact reported bug — guard it
+// so the admin gate in applyViewMode() cannot silently ping-pong back to corporate again.
+assert.deepEqual(
+  runApplyViewMode({ storedViewMode: 'admin', sessionLocation: 'Corporate Office', sessionIsAdmin: false }),
+  { selectedLocation: 'Corporate Office', isAdmin: true },
+  'Corporate Office user switching to Admin view must get the admin dashboard'
+);
+
+// Suppress-half: the same account left in Corporate view must NOT show the admin dashboard.
+assert.deepEqual(
+  runApplyViewMode({ storedViewMode: 'corporate', sessionLocation: 'Corporate Office', sessionIsAdmin: false }),
+  { selectedLocation: 'Corporate Office', isAdmin: false },
+  'Corporate Office view must stay on the corporate dashboard, not admin'
+);
