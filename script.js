@@ -567,9 +567,11 @@ function checkSession() {
   const savedLoc = sessionStorage.getItem('sr_location') || localStorage.getItem('sr_location');
   const savedHO = sessionStorage.getItem('sr_headoffice') || localStorage.getItem('sr_headoffice');
 
-  // FIX #7: Check session expiry (24hr TTL)
+  // FIX #7: Check session expiry (30-day TTL, matches the mr_token TTL minted by
+  // /api/login and commit 4a8141b — a shorter client TTL would force-logout users
+  // who still hold a valid token).
   const loginTime = sessionStorage.getItem('sr_login_time') || localStorage.getItem('sr_login_time');
-  const SESSION_TTL = 24 * 60 * 60 * 1000; // 24 hours
+  const SESSION_TTL = 30 * 24 * 60 * 60 * 1000; // 30 days
   if (loginTime && (Date.now() - parseInt(loginTime, 10)) > SESSION_TTL) {
     logout();
     return false;

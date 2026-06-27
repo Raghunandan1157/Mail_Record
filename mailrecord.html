@@ -717,6 +717,7 @@
     function handleMrAuthExpiry() {
       if (_mrAuthExpired) return;
       _mrAuthExpired = true;
+      setSessionToken('');   // null the in-memory token so in-flight calls stop sending the dead one
       ['sr_employee', 'sr_location', 'sr_headoffice', 'sr_dept_admin', 'sr_view_mode',
        'sr_login_time', 'mr_token', 'mr_session'].forEach(k => {
         try { sessionStorage.removeItem(k); localStorage.removeItem(k); } catch (_) {}
