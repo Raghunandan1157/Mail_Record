@@ -37,13 +37,24 @@ async function fetchWithTimeout(url, options = {}, timeoutMs = FETCH_TIMEOUT) {
 
 async function fetchWithRetry(url, options = {}, retries = MAX_RETRIES) {
   for (let attempt = 1; attempt <= retries; attempt++) {
+    let res;
     try {
-      return await fetchWithTimeout(url, options);
+      res = await fetchWithTimeout(url, options);
     } catch (err) {
       if (attempt === retries) throw err;
       // Exponential backoff: 1s, 2s, 4s
       await new Promise(r => setTimeout(r, 1000 * Math.pow(2, attempt - 1)));
+      continue;
     }
+    // Expired / missing session token -> the /api proxy returns 401. The cached
+    // identity (sr_employee) keeps the UI looking logged-in while every write
+    // silently fails, so a branch can stop syncing for weeks without noticing.
+    // Force a visible re-login instead of losing data. Do NOT retry a 401.
+    if (res.status === 401) {
+      handleAuthExpiry();
+      throw new Error('Session expired. Please log in again.');
+    }
+    return res;
   }
 }
 
@@ -531,6 +542,25 @@ function updateUserUI() {
   document.querySelectorAll('.user-role').forEach(el => el.textContent = role);
 }
 
+// Auth token (mr_token) is minted only by the login hub (index.html /api/login)
+// and shared with the feature pages. When it expires/goes missing the proxy
+// returns 401 on every call; this clears the dead session and sends the user
+// back to the hub to mint a fresh token. Guarded so it fires only once.
+let _authExpiryHandled = false;
+function handleAuthExpiry() {
+  if (_authExpiryHandled) return;
+  _authExpiryHandled = true;
+  try {
+    ['sr_employee', 'sr_location', 'sr_headoffice', 'sr_dept_admin', 'sr_view_mode',
+     'sr_login_time', 'mr_token', 'mr_session'].forEach(k => {
+      sessionStorage.removeItem(k);
+      localStorage.removeItem(k);
+    });
+  } catch (_) { /* storage may be unavailable; redirect regardless */ }
+  alert('Your session has expired. Please log in again to continue.');
+  window.location.href = 'index.html';
+}
+
 function checkSession() {
   // Check sessionStorage first (current tab), then localStorage (persistent across tabs/sessions)
   const savedEmp = sessionStorage.getItem('sr_employee') || localStorage.getItem('sr_employee');
@@ -541,6 +571,15 @@ function checkSession() {
   const loginTime = sessionStorage.getItem('sr_login_time') || localStorage.getItem('sr_login_time');
   const SESSION_TTL = 24 * 60 * 60 * 1000; // 24 hours
   if (loginTime && (Date.now() - parseInt(loginTime, 10)) > SESSION_TTL) {
+    logout();
+    return false;
+  }
+
+  // A cached identity with no auth token would silently 401 on every write
+  // (the exact cause of branches "not uploading"). Refuse the phantom session
+  // and route back to the hub login, which mints a fresh mr_token.
+  const token = sessionStorage.getItem('mr_token') || localStorage.getItem('mr_token');
+  if (savedEmp && savedLoc && !token) {
     logout();
     return false;
   }
@@ -597,6 +636,10 @@ function logout() {
   // Redirect to hub
   sessionStorage.removeItem('mr_session');
   localStorage.removeItem('mr_session');
+  // Clear the auth token too, so the hub forces a fresh /api/login (mints a new
+  // mr_token) instead of reusing a possibly-expired one.
+  sessionStorage.removeItem('mr_token');
+  localStorage.removeItem('mr_token');
   window.location.href = 'index.html';
 }
 
