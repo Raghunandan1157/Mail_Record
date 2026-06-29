@@ -420,7 +420,14 @@
                 <button onclick="openInForm()" class="flex items-center gap-1.5 px-3.5 py-1.5 bg-accent text-white rounded-md text-sm font-semibold hover:bg-accent/90 transition shadow-sm"><span class="material-symbols-outlined text-base">add</span>New Record</button>
               </div>
             </div>
-            <div id="inDeptTabsWrap" class="px-5 pt-4 pb-3 border-b border-slate-100 bg-slate-50/20">
+            <div id="inDeptTabsWrap" class="px-5 pt-4 pb-3 border-b border-slate-100 bg-slate-50/20 flex items-center gap-3">
+              <div class="relative shrink-0">
+                <input type="date" id="inDateFilter" onchange="setInDateFilter(this.value)" title="Filter by date"
+                  class="peer pl-9 pr-8 py-1.5 rounded-md border border-slate-200 bg-white text-sm font-semibold text-slate-900 shadow-sm focus:border-accent outline-none cursor-pointer">
+                <span class="material-symbols-outlined text-[18px] text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none">calendar_month</span>
+                <button type="button" onclick="clearInDateFilter()" id="inDateClear" title="Clear date" class="hidden absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700"><span class="material-symbols-outlined text-[16px]">close</span></button>
+              </div>
+              <span class="h-5 w-px bg-slate-300 shrink-0"></span>
               <div id="inDeptTabs" class="flex gap-2 overflow-x-auto"></div>
             </div>
             <div class="grid grid-cols-1 lg:grid-cols-[380px_1fr] min-h-[560px]">
@@ -1508,6 +1515,9 @@
 
     let selectedInId = null;
     let inDeptFilter = 'All Depts';
+    let inDateFilter = '';
+    function setInDateFilter(v){ inDateFilter = v || ''; document.getElementById('inDateClear').classList.toggle('hidden', !inDateFilter); renderInward(); }
+    function clearInDateFilter(){ inDateFilter = ''; const el=document.getElementById('inDateFilter'); if(el) el.value=''; document.getElementById('inDateClear').classList.add('hidden'); renderInward(); }
 
     function formatInCode(r){
       const y = String(r.date||'').slice(0,4) || new Date().getFullYear();
@@ -1540,6 +1550,7 @@
       const f = (document.getElementById('inSearch').value || '').toLowerCase();
       let filtered = inRecords.filter(r => !f || Object.values(r).some(v => String(v).toLowerCase().includes(f)));
       if (inDeptFilter !== 'All Depts') filtered = filtered.filter(r => canonDept(r.department) === inDeptFilter);
+      if (inDateFilter) filtered = filtered.filter(r => String(r.date||'').slice(0,10) === inDateFilter);
 
       document.getElementById('inCount').textContent = filtered.length + ' Total';
 
