@@ -421,7 +421,7 @@
               </div>
             </div>
             <div id="inDeptTabsWrap" class="px-5 pt-4 pb-3 border-b border-slate-100 bg-slate-50/20">
-              <div id="inDeptTabs" class="flex gap-2 items-center"></div>
+              <div id="inDeptTabs" class="flex gap-2 overflow-x-auto"></div>
             </div>
             <div class="grid grid-cols-1 lg:grid-cols-[380px_1fr] min-h-[560px]">
               <div id="inList" class="border-r border-slate-100 max-h-[720px] overflow-y-auto divide-y divide-slate-100"></div>
@@ -1514,29 +1514,47 @@
       const n = String(r.seq||r.id||0).padStart(4,'0');
       return `IN-${y}-${n}`;
     }
+    // Canonical department name: merges variants/typos/case into one label.
+    const DEPT_ALIASES = {
+      accounts:'Accounts', account:'Accounts', ac:'Accounts', acc:'Accounts', accts:'Accounts',
+      accountsdept:'Accounts', accountsdepartment:'Accounts', accts_dept:'Accounts',
+      hr:'HR', humanresources:'HR',
+      it:'IT',
+      legal:'Legal',
+      admin:'Admin', administration:'Admin',
+      audit:'Audit',
+      credit:'Credit', credi:'Credit'
+    };
+    function canonDept(raw){
+      const d = String(raw||'').trim();
+      if(!d) return '';
+      const key = d.toLowerCase().replace(/[^a-z0-9]/g,'');
+      if(DEPT_ALIASES[key]) return DEPT_ALIASES[key];
+      // fallback: title-case so case-only variants (Bulb/BULB/bulb) merge
+      return d.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+    }
     function setInDeptFilter(d){ inDeptFilter = d; renderInward(); }
     function selectInRecord(id){ selectedInId = id; renderInward(); }
 
     function renderInward() {
       const f = (document.getElementById('inSearch').value || '').toLowerCase();
       let filtered = inRecords.filter(r => !f || Object.values(r).some(v => String(v).toLowerCase().includes(f)));
-      if (inDeptFilter !== 'All Depts') filtered = filtered.filter(r => (r.department||'') === inDeptFilter);
+      if (inDeptFilter !== 'All Depts') filtered = filtered.filter(r => canonDept(r.department) === inDeptFilter);
 
       document.getElementById('inCount').textContent = filtered.length + ' Total';
 
-      const dCounts = {}; inRecords.forEach(r => { if(r.department) dCounts[r.department] = (dCounts[r.department]||0)+1; }); const depts = ['All Depts', ...Object.keys(dCounts).sort((a,b)=>dCounts[b]-dCounts[a] || a.localeCompare(b))];
+      // Merge duplicate/variant dept names (ACCOUNTS / A/c / Accounts dept, case variants) into one canonical tab.
+      const dCounts = {}; inRecords.forEach(r => { const c = canonDept(r.department); if(c) dCounts[c] = (dCounts[c]||0)+1; });
+      const depts = ['All Depts', ...Object.keys(dCounts).sort((a,b)=>dCounts[b]-dCounts[a] || a.localeCompare(b))];
       if (!depts.includes(inDeptFilter)) inDeptFilter = 'All Depts';
-      const deptOpts = depts.map(d => {
+      document.getElementById('inDeptTabs').innerHTML = depts.map(d => {
+        const active = inDeptFilter===d;
         const count = d === 'All Depts' ? inRecords.length : (dCounts[d] || 0);
-        const sel = inDeptFilter === d ? ' selected' : '';
-        return `<option value="${esc(d)}"${sel}>${esc(d)} (${count})</option>`;
+        const cls = active
+          ? 'bg-white border-slate-200 font-bold text-slate-900 shadow-sm'
+          : 'bg-transparent border-transparent text-slate-500 hover:bg-white hover:border-slate-200 font-medium';
+        return `<button onclick="setInDeptFilter('${esc(d).replace(/'/g,"&#39;")}')" class="px-3 py-1 rounded text-xs whitespace-nowrap border transition ${cls}">${esc(d)} <span class="opacity-60">${count}</span></button>`;
       }).join('');
-      document.getElementById('inDeptTabs').innerHTML = `
-        <label class="text-[11px] uppercase tracking-widest font-bold text-slate-400 mr-1">Department</label>
-        <div class="relative inline-block">
-          <select onchange="setInDeptFilter(this.value)" class="appearance-none pl-3 pr-9 py-1.5 rounded-md border border-slate-200 bg-white text-sm font-semibold text-slate-900 shadow-sm focus:border-accent outline-none cursor-pointer min-w-[200px]">${deptOpts}</select>
-          <span class="material-symbols-outlined text-[18px] text-slate-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none">expand_more</span>
-        </div>`;
 
       const list = [...filtered].reverse();
       document.getElementById('inEmpty').style.display = list.length ? 'none' : 'block';
