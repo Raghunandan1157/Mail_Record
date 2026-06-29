@@ -735,11 +735,19 @@
     // so admin-wide queries (no location filter, can exceed 1000) return every row.
     async function sbGetAll(t, p = '', pageSize = 1000) {
       const all = [];
-      for (let from = 0; ; from += pageSize) {
+      const MAX_PAGES = 100;
+      let firstPageSignature = '';
+      for (let pageNo = 0; pageNo < MAX_PAGES; pageNo++) {
+        const from = pageNo * pageSize;
         const to = from + pageSize - 1;
         const res = await sbFetch(`${SB}/rest/v1/${t}?${p}`, { headers: { ...authH(), 'Range-Unit': 'items', 'Range': `${from}-${to}` } });
         const page = await res.json();
         if (!Array.isArray(page) || page.length === 0) break;
+        const pageSignature = page.length
+          ? `${page[0]?.id ?? ''}|${page[0]?.created_at ?? ''}|${page[page.length - 1]?.id ?? ''}|${page[page.length - 1]?.created_at ?? ''}`
+          : '';
+        if (pageNo > 0 && pageSignature && pageSignature === firstPageSignature) break;
+        if (pageNo === 0) firstPageSignature = pageSignature;
         all.push(...page);
         if (page.length < pageSize) break;
       }
@@ -1342,7 +1350,7 @@
     // ===== RECORDS CRUD =====
     async function loadRecords(type) {
       const fy = getCurrentFY();
-      const allRecs = await sbGet('mail_records', `select=*&mail_type=eq.${type}&location=eq.${encodeURIComponent(selectedLocation)}&date=gte.${fy.start}&date=lte.${fy.end}&order=created_at.asc`);
+      const allRecs = await sbGetAll('mail_records', `select=*&mail_type=eq.${type}&location=eq.${encodeURIComponent(selectedLocation)}&date=gte.${fy.start}&date=lte.${fy.end}&order=created_at.asc`);
       if (!Array.isArray(allRecs)) { logout(); return; }
       allRecs.forEach((r, i) => { r.seq = i + 1; r.customers = normCust(r.customers); });
       const recs = allRecs;
