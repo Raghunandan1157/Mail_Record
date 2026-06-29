@@ -1683,11 +1683,14 @@
       const w = window.open('', '_blank', 'width=900,height=700');
       if (!w) { showToast('Allow pop-ups to print'); return; }
       w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Mail Record</title>
+        <meta name="color-scheme" content="light only">
+        <meta name="supported-color-schemes" content="light">
         <script src="https://cdn.tailwindcss.com"><\/script>
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
         <style>
-          html,body{background:#fff!important;}
+          :root{color-scheme:light only!important;}
+          html,body{background:#ffffff!important;}
           body{font-family:Inter,system-ui,sans-serif;padding:32px;color:#000;}
           @page{margin:14mm;}
           .material-symbols-outlined{font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;}
