@@ -1934,8 +1934,8 @@
 
       html += `<div class="bg-white rounded-xl border border-slate-200 p-5"><h3 class="font-semibold text-sm text-accent mb-3 flex items-center gap-2"><span class="material-symbols-outlined text-lg">call_received</span>Inward (${inn.length})</h3>`;
       if (inn.length) {
-        html += `<div class="overflow-x-auto"><table class="w-full text-sm" id="reportInTable"><thead><tr class="text-xs text-slate-400 uppercase border-b"><th class="pb-2 text-left">ID</th><th class="pb-2 text-left">Sl No</th><th class="pb-2 text-left">Emp ID</th><th class="pb-2 text-left">From</th><th class="pb-2 text-left">Dept</th><th class="pb-2 text-left">Documents Received</th><th class="pb-2 text-left">Particular</th><th class="pb-2 text-left">Details</th><th class="pb-2 text-left">Customers</th></tr></thead><tbody>`;
-        html += inn.map(r => { const seq = inSeqMap[r.id]||'-'; return `<tr class="border-b border-slate-50"><td class="py-2 font-semibold text-accent text-xs">IN/${eId}/${seq}</td><td class="py-2">${seq}</td><td class="py-2">${esc(r.employee_id)}</td><td class="py-2">${esc(r.name)}</td><td class="py-2">${esc(r.department)}</td><td class="py-2">${esc(r.documents)}</td><td class="py-2">${esc(r.particular)}</td><td class="py-2 text-slate-400">${esc(r.details||'')}</td><td class=\"py-2 text-slate-400\">${esc(custToString(r.customers))}</td></tr>`; }).join('');
+        html += `<div class="overflow-x-auto"><table class="w-full text-sm" id="reportInTable"><thead><tr class="text-xs text-slate-400 uppercase border-b"><th class="pb-2 text-left">ID</th><th class="pb-2 text-left">Sl No</th><th class="pb-2 text-left">Emp ID</th><th class="pb-2 text-left">From</th><th class="pb-2 text-left">Receiver</th><th class="pb-2 text-left">Dept</th><th class="pb-2 text-left">Documents Received</th><th class="pb-2 text-left">Particular</th><th class="pb-2 text-left">Details</th><th class="pb-2 text-left">Customers</th></tr></thead><tbody>`;
+        html += inn.map(r => { const seq = inSeqMap[r.id]||'-'; return `<tr class="border-b border-slate-50"><td class="py-2 font-semibold text-accent text-xs">IN/${eId}/${seq}</td><td class="py-2">${seq}</td><td class="py-2">${esc(r.employee_id)}</td><td class="py-2">${esc(r.name)}</td><td class="py-2">${esc(r.receiver_name||'—')}</td><td class="py-2">${esc(r.department)}</td><td class="py-2">${esc(r.documents)}</td><td class="py-2">${esc(r.particular)}</td><td class="py-2 text-slate-400">${esc(r.details||'')}</td><td class=\"py-2 text-slate-400\">${esc(custToString(r.customers))}</td></tr>`; }).join('');
         html += `</tbody></table></div>`;
       } else html += `<p class="text-sm text-slate-300">No inward records for this date.</p>`;
       html += `</div>`;
@@ -2415,8 +2415,8 @@
       let html = `<div class="mb-2 text-sm text-slate-500">${dateStr}</div>`;
       for (const [loc, lrecs] of Object.entries(byLoc)) {
         html += `<div class="bg-white rounded-xl border border-slate-200 p-5 mb-4"><h3 class="font-semibold text-sm mb-3">${esc(loc)} <span class="text-slate-400 font-normal">(${lrecs.length} records)</span></h3>`;
-        html += `<div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr class="text-xs text-slate-400 uppercase border-b"><th class="pb-2 text-left">ID</th><th class="pb-2 text-left">Branch Name</th><th class="pb-2 text-left">Type</th><th class="pb-2 text-left">To/From</th><th class="pb-2 text-left">Dept</th><th class="pb-2 text-left">Documents</th><th class="pb-2 text-left">By</th></tr></thead><tbody>`;
-        html += lrecs.map(r => `<tr class="border-b border-slate-50"><td class="py-2 font-semibold">${seqMap[r.id]||'-'}</td><td class="py-2">${esc(r.location)}</td><td class="py-2"><span class="inline-block px-2 py-0.5 rounded-full text-xs font-semibold badge-${r.mail_type}">${r.mail_type}</span></td><td class="py-2">${esc(r.name)}</td><td class="py-2">${esc(r.department)}</td><td class="py-2">${esc(r.documents)}</td><td class="py-2 text-slate-400">${esc(r.created_by)}</td></tr>`).join('');
+        html += `<div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr class="text-xs text-slate-400 uppercase border-b"><th class="pb-2 text-left">ID</th><th class="pb-2 text-left">Branch Name</th><th class="pb-2 text-left">Type</th><th class="pb-2 text-left">To/From</th><th class="pb-2 text-left">Receiver</th><th class="pb-2 text-left">Dept</th><th class="pb-2 text-left">Documents</th><th class="pb-2 text-left">By</th></tr></thead><tbody>`;
+        html += lrecs.map(r => `<tr class="border-b border-slate-50"><td class="py-2 font-semibold">${seqMap[r.id]||'-'}</td><td class="py-2">${esc(r.location)}</td><td class="py-2"><span class="inline-block px-2 py-0.5 rounded-full text-xs font-semibold badge-${r.mail_type}">${r.mail_type}</span></td><td class="py-2">${esc(r.name)}</td><td class="py-2">${esc(r.receiver_name||'—')}</td><td class="py-2">${esc(r.department)}</td><td class="py-2">${esc(r.documents)}</td><td class="py-2 text-slate-400">${esc(r.created_by)}</td></tr>`).join('');
         html += `</tbody></table></div></div>`;
       }
       if (!Object.keys(byLoc).length) html += `<div class="bg-white rounded-xl border p-8 text-center text-slate-300">No records for this date.</div>`;
@@ -2455,12 +2455,12 @@
         title = `Outward Mail Register - ${selectedLocation}`;
         filename = `Outward_${selectedLocation}_${fy.label.replace(/\s/g,'_')}.xlsx`;
       } else if (type === 'inward') {
-        data = inRecords.map(r => ({ 'ID': makeRecordId(r), 'Sl No': r.seq, 'Date': fmtDate(r.date), 'Employee ID': r.employee_id, 'From': r.name, 'Department': r.department, 'Documents Received': r.documents, 'Particular': r.particular, 'Details': r.details || '', 'Customers': custToString(r.customers) }));
+        data = inRecords.map(r => ({ 'ID': makeRecordId(r), 'Sl No': r.seq, 'Date': fmtDate(r.date), 'Employee ID': r.employee_id, 'From': r.name, 'Receiver Name': r.receiver_name || '', 'Department': r.department, 'Documents Received': r.documents, 'Particular': r.particular, 'Details': r.details || '', 'Customers': custToString(r.customers) }));
         sheetName = 'Inward';
         title = `Inward Mail Register - ${selectedLocation}`;
         filename = `Inward_${selectedLocation}_${fy.label.replace(/\s/g,'_')}.xlsx`;
       } else {
-        data = adminAllRecords.map(r => ({ 'ID': makeRecordId(r), 'Branch Name': r.location, 'Sl No': r.seq, 'Date': fmtDate(r.date), 'Type': r.mail_type.toUpperCase(), 'Employee ID': r.employee_id, 'To/From': r.name, 'Department': r.department, 'Documents': r.documents, 'Docket No.': r.docket_number || '', 'Courier/Post Status': r.courier_status || '', 'Particular': r.particular, 'Details': r.details || '', 'Customers': custToString(r.customers), 'Created By': r.created_by }));
+        data = adminAllRecords.map(r => ({ 'ID': makeRecordId(r), 'Branch Name': r.location, 'Sl No': r.seq, 'Date': fmtDate(r.date), 'Type': r.mail_type.toUpperCase(), 'Employee ID': r.employee_id, 'To/From': r.name, 'Receiver Name': r.receiver_name || '', 'Department': r.department, 'Documents': r.documents, 'Docket No.': r.docket_number || '', 'Courier/Post Status': r.courier_status || '', 'Particular': r.particular, 'Details': r.details || '', 'Customers': custToString(r.customers), 'Created By': r.created_by }));
         sheetName = 'All Records';
         title = 'All Mail Records';
         filename = `All_Records_${fy.label.replace(/\s/g,'_')}.xlsx`;
@@ -2535,7 +2535,7 @@
       if (inRecs.length) {
         const data = inRecs.map(r => {
           const seq = inSeq[r.id] || '-';
-          const base = { 'ID': `IN/${eId}/${seq}` }; if (admin) base['Branch Name'] = r.location; return { ...base, 'Sl No': seq, 'Date': fmtDate(r.date), 'Employee ID': r.employee_id, 'From': r.name, 'Department': r.department, 'Documents Received': r.documents, 'Particular': r.particular, 'Details': r.details || '', 'Customers': custToString(r.customers), 'Created By': r.created_by };
+          const base = { 'ID': `IN/${eId}/${seq}` }; if (admin) base['Branch Name'] = r.location; return { ...base, 'Sl No': seq, 'Date': fmtDate(r.date), 'Employee ID': r.employee_id, 'From': r.name, 'Receiver Name': r.receiver_name || '', 'Department': r.department, 'Documents Received': r.documents, 'Particular': r.particular, 'Details': r.details || '', 'Customers': custToString(r.customers), 'Created By': r.created_by };
         });
         const headerRows = [['Inward Mail Register - Daily Report'], [dateStr, '', branch, '', fy.label], []];
         const ws = XLSX.utils.aoa_to_sheet(headerRows);
