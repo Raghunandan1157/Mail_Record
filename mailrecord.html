@@ -1379,9 +1379,12 @@
     }
     function fmtFullDate(d){
       if(!d) return '—';
+      const s=String(d); const parts=s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+      if(parts){ return parts[3]+'-'+parts[2]+'-'+parts[1]; }
       const dt = new Date(d);
       if (isNaN(dt.getTime())) return d;
-      return dt.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+      const p=n=>String(n).padStart(2,'0');
+      return p(dt.getDate())+'-'+p(dt.getMonth()+1)+'-'+dt.getFullYear();
     }
     function statusInline(s){
       const v=(s||'').trim(); if(!v) return '<span class="text-slate-400 text-sm">—</span>';
