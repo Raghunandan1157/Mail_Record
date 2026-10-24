@@ -2,13 +2,17 @@
   "name": "mail-record",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "scripts": {
+    "build:aws": "node aws/build.mjs",
+    "start": "node aws/server.js",
     "test": "node tests/auditor-flow.test.mjs && node tests/mailrecord-view-mode.test.mjs && node tests/mailrecord-history-pagination.test.mjs && node tests/stationary-branch-download.test.mjs && node tests/branch-mail-involvement.test.mjs && node tests/ai-assistant-access.test.mjs && node tests/index-ai-tile-visibility.test.mjs && node tests/stationary-view-mode.test.mjs && node tests/view-mode-helpers.test.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0"
   },
   "devDependencies": {
-    "@types/node": "^25.9.1"
+    "@types/node": "^25.9.1",
+    "esbuild": "^0.28.2"
   }
 }

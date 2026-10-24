@@ -1,0 +1,7 @@
+*.sql
+CLAUDE.md
+AI_ASSISTANT_SETUP.md
+tests
+aws
+dist
+.env*

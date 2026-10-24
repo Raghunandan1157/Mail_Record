@@ -2,9 +2,11 @@
 
 Minimal DeepSeek-only text chat for global admin. Read-only data snapshot Q&A.
 
-## Required Vercel env vars
+## Required env vars
 
-Vercel dashboard → mail-record → Settings → Environment Variables → add for **Production + Preview + Development**:
+The site runs on Vercel as project `navachetana-mailrecord` (team raghu-45b8): Settings → Environment
+Variables, **Production**. A standby copy runs on the AWS server as `mail-record` with the same settings
+in `/opt/sites/mail-record/shared/.env` (`~/Desktop/AWS-Hosting/local/push-env.sh mail-record <file>`):
 
 | Key | Value |
 |---|---|
@@ -12,12 +14,13 @@ Vercel dashboard → mail-record → Settings → Environment Variables → add 
 | `DEEPSEEK_MODEL` | `deepseek-chat` (V3.2) or `deepseek-reasoner` (R1) — anything else is rejected and falls back to `deepseek-chat` |
 | `SUPABASE_URL` | `https://zovnmmdfthpbubrorsgh.supabase.co` |
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase dashboard → Settings → API → `service_role` key |
+| `SESSION_SECRET` | random string that signs login tokens (`openssl rand -hex 32`) |
 
-After setting → Deployments → latest → ⋯ → Redeploy.
+Deploy: `vercel deploy --prod` from a clean copy of the repo (the AWS standby: `~/Desktop/AWS-Hosting/local/deploy-mail-record.sh`).
 
 ## Verify env is loaded
 
-Hit `https://mail-record.vercel.app/api/health` in the browser. Returns:
+Hit `https://navachetana-mailrecord.vercel.app/api/health` in the browser. Returns:
 
 ```json
 {
